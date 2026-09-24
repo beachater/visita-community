@@ -1,0 +1,47 @@
+---
+import type { GetStaticPaths } from "astro";
+import type { Tables } from "@visita/shared-types";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Placeholder from "../../../components/Placeholder.astro";
+import PersonalizedSlot from "../../../components/PersonalizedSlot.astro";
+import { readPublic } from "../../../lib/public-data";
+
+export const prerender = true;
+
+type CafePage = Pick<Tables<"venues">, "slug" | "name" | "splat_url">;
+
+// Built from published cafes at deploy time. Publishing or rescanning a
+// venue must trigger a Cloudflare deploy hook (TODO) so this page exists.
+export const getStaticPaths = (async () => {
+  const cafes = await readPublic<CafePage>(
+    "venues?select=slug,name,splat_url&venue_type=eq.cafe&is_published=eq.true",
+  );
+  return cafes.map((cafe) => ({ params: { slug: cafe.slug }, props: { cafe } }));
+}) satisfies GetStaticPaths;
+
+const { cafe } = Astro.props;
+const scanned = cafe.splat_url !== null;
+---
+
+<BaseLayout
+  title={cafe.name}
+  description={scanned
+    ? `Step inside ${cafe.name} before you go: a real, unedited 3D walkthrough.`
+    : `${cafe.name} in Cagayan de Oro, on Visita.`}
+>
+  <Placeholder route="/cafe/[slug]" mode="prerendered">
+    <h1>{cafe.name}</h1>
+    <p>{scanned ? "Scanned cafe" : "Listed cafe, not yet scanned"}</p>
+
+    <!-- Static for every visitor: open-now pill (computed client-side from
+         hours), scan date, amenity cards, opening hours, menu. -->
+
+    <!-- TODO scanned: .sog viewer island, client:visible, code-split.
+         TODO unscanned: "No walkthrough yet" plus the "I want to see inside" demand button. -->
+    {scanned ? <div id="walkthrough-island"></div> : <div id="demand-island"></div>}
+
+    <!-- Fresh per request while the shell above stays cached. -->
+    <PersonalizedSlot server:defer label="saved heart and check-in state" />
+    <PersonalizedSlot server:defer label="reviews, including your own" />
+  </Placeholder>
+</BaseLayout>

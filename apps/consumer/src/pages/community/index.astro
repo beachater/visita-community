@@ -1,0 +1,15 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Placeholder from "../../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout title="Community">
+  <Placeholder route="/community" mode="prerendered">
+    <h1>Community</h1>
+    <!-- TODO: leaderboard and most-awarded reviews (static shell). -->
+    <!-- TODO: recent activity changes constantly; render as a server island. -->
+    <p><a href="/community/badges">Badges</a></p>
+  </Placeholder>
+</BaseLayout>

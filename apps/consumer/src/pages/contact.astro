@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout title="Contact">
+  <Placeholder route="/contact" mode="prerendered">
+    <h1>Contact</h1>
+    <!-- TODO: contact details. The form submits to a Worker endpoint later. -->
+  </Placeholder>
+</BaseLayout>

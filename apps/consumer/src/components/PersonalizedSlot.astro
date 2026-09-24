@@ -1,0 +1,14 @@
+---
+// Rendered as a server island (`server:defer`) inside prerendered pages, so
+// per-visitor content loads fresh while the page shell stays cached.
+interface Props {
+  label: string;
+}
+
+const { label } = Astro.props;
+const user = Astro.locals.user;
+---
+
+<section>
+  <p>TODO: {label} ({user ? "signed in" : "signed out"})</p>
+</section>

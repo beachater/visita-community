@@ -1,0 +1,9 @@
+{
+  "name": "@visita/embed",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev . --port 4323"
+  }
+}

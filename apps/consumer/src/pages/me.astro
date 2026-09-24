@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Your points">
+  <Placeholder route="/me" mode="server-rendered">
+    <h1>Your points</h1>
+    <!-- TODO: points balance (point_balances view) and earned badges. -->
+  </Placeholder>
+</BaseLayout>

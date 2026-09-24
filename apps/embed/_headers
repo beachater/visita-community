@@ -1,0 +1,4 @@
+# Served inside third-party pages via <iframe>, so any site may frame it.
+/*
+  Content-Security-Policy: frame-ancestors *
+  X-Content-Type-Options: nosniff

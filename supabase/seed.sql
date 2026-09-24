@@ -1,0 +1,2 @@
+-- Intentionally empty. Visita never ships fake venues, reviews or users
+-- ("never show anything that is not real"). Add real data through the admin app.

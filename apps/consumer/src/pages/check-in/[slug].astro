@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Placeholder from "../../components/Placeholder.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Check in">
+  <Placeholder route="/check-in/[slug]" mode="server-rendered">
+    <h1>Check in</h1>
+    <!-- TODO: GPS + dwell flow; the Worker verifies and writes check_ins. -->
+    <p>Venue: {Astro.params.slug}</p>
+  </Placeholder>
+</BaseLayout>

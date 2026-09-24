@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Visita walkthrough</title>
+    <style>
+      html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
+      #viewer { position: absolute; inset: 0; background: #042c53; }
+      #badge {
+        position: absolute; right: 12px; bottom: 12px;
+        padding: 6px 10px; border-radius: 6px;
+        background: #ffffff; color: #042c53;
+        font-size: 13px; text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="viewer"></div>
+    <a id="badge" href="https://visita.ph" target="_blank" rel="noopener">Powered by Visita</a>
+    <script src="./embed.js" type="module"></script>
+  </body>
+</html>

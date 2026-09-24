@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Referrals">
+  <Placeholder route="/referrals" mode="server-rendered">
+    <h1>Referrals</h1>
+    <!-- TODO: your referral code and referral progress. -->
+  </Placeholder>
+</BaseLayout>

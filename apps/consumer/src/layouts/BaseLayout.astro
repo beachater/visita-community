@@ -1,0 +1,58 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const pageTitle = title === "Visita" ? title : `${title} · Visita`;
+// Prerendered pages see their output file (/cafe/sonnys.html) as the path;
+// share URLs never carry the extension.
+const canonicalPath = Astro.url.pathname.replace(/(\/index)?\.html$/, "") || "/";
+const canonical = new URL(canonicalPath, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={pageTitle} />
+    {description && <meta property="og:description" content={description} />}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap"
+    />
+    <style is:global>
+      /* Brand tokens (PRD 2). Amber means "scanned and verified" only. */
+      :root {
+        --navy: #042c53;
+        --ocean: #185fa5;
+        --sky: #378add;
+        --mist: #b5d4f4;
+        --cloud: #e6f1fb;
+        --amber: #ef9f27;
+        --gold: #fac775;
+        --amber-deep: #a85f0a;
+        --font-display: "Playfair Display", Georgia, serif;
+        --font-body: "DM Sans", system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font-body);
+        color: var(--navy);
+        background: var(--cloud);
+      }
+    </style>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

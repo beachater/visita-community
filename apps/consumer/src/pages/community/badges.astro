@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Placeholder from "../../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout title="Badges">
+  <Placeholder route="/community/badges" mode="prerendered">
+    <h1>Badges</h1>
+    <!-- TODO: badge showcase from the badges table. -->
+  </Placeholder>
+</BaseLayout>

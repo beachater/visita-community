@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout title="FAQ">
+  <Placeholder route="/faq" mode="prerendered">
+    <h1>FAQ</h1>
+    <!-- TODO: questions and answers. -->
+  </Placeholder>
+</BaseLayout>

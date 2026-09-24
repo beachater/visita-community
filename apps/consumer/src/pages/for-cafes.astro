@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout title="For cafes">
+  <Placeholder route="/for-cafes" mode="prerendered">
+    <h1>For cafes</h1>
+    <!-- TODO: pricing (onboarding + subscription, founder pricing) and owner sign-up. -->
+  </Placeholder>
+</BaseLayout>

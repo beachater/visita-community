@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Placeholder from "../../components/Placeholder.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Sign in">
+  <Placeholder route="/auth/login" mode="server-rendered">
+    <h1>Sign in</h1>
+    <!-- TODO: Google sign-in via Supabase Auth (the only provider). -->
+  </Placeholder>
+</BaseLayout>

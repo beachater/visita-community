@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout title="Privacy policy">
+  <Placeholder route="/privacy" mode="prerendered">
+    <h1>Privacy policy</h1>
+    <!-- TODO: privacy policy and storage consent (RA 10173). -->
+  </Placeholder>
+</BaseLayout>

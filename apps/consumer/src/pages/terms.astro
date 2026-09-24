@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout title="Terms of use">
+  <Placeholder route="/terms" mode="prerendered">
+    <h1>Terms of use</h1>
+    <!-- TODO: terms of use. -->
+  </Placeholder>
+</BaseLayout>

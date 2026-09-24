@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Vouchers">
+  <Placeholder route="/vouchers" mode="server-rendered">
+    <h1>Vouchers</h1>
+    <!-- TODO: vouchers. No table yet; this feature is out of scope for session 1. -->
+  </Placeholder>
+</BaseLayout>

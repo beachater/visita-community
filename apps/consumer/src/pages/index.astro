@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import MapExplorer from "../components/MapExplorer.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="Visita"
+  description="Step inside a cafe before you go. Real, unedited 3D walkthroughs of cafes in Cagayan de Oro."
+>
+  <!-- The map is the hero. It should pause rendering once scrolled out of view. -->
+  <MapExplorer />
+
+  <Placeholder route="/" mode="prerendered">
+    <!-- TODO: marketing sections, in order: the problem, how it works (find it,
+         step inside, go), featured cafes (link to /cafe/<slug>), for cafe
+         owners (pricing teaser → /for-cafes), about (→ /about). -->
+    <p><a href="/explore">Explore the map</a></p>
+  </Placeholder>
+</BaseLayout>

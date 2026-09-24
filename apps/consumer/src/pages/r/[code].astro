@@ -1,0 +1,15 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Placeholder from "../../components/Placeholder.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="You were invited">
+  <Placeholder route="/r/[code]" mode="server-rendered">
+    <h1>You were invited</h1>
+    <!-- TODO: store the referral code in a cookie, then send to /auth/login.
+         Redemption and fraud checks happen in a Worker. -->
+    <p>Code: {Astro.params.code}</p>
+  </Placeholder>
+</BaseLayout>

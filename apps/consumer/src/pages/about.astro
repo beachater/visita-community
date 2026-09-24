@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = true;
+---
+
+<BaseLayout title="About">
+  <Placeholder route="/about" mode="prerendered">
+    <h1>About</h1>
+    <!-- TODO: mission, the honesty argument, the team. -->
+  </Placeholder>
+</BaseLayout>

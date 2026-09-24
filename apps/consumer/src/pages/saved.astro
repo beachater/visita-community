@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Saved cafes">
+  <Placeholder route="/saved" mode="server-rendered">
+    <h1>Saved cafes</h1>
+    <!-- TODO: redirect to /auth/login when signed out; list saved venues. -->
+  </Placeholder>
+</BaseLayout>

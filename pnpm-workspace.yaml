@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Native binaries: esbuild (Astro/Vite bundling) and workerd (wrangler's local
+# Workers runtime). Everything else stays blocked from running install scripts.
+onlyBuiltDependencies:
+  - esbuild
+  - workerd

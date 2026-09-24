@@ -1,0 +1,11 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import MapExplorer from "../components/MapExplorer.astro";
+
+export const prerender = true;
+---
+
+<!-- The app on its own: the same map explorer as /, without the marketing. -->
+<BaseLayout title="Explore" description="Find a cafe in Cagayan de Oro and step inside before you go.">
+  <MapExplorer />
+</BaseLayout>

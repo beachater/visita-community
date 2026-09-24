@@ -1,0 +1,24 @@
+{
+  "name": "visita",
+  "private": true,
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:consumer": "pnpm --filter @visita/consumer dev",
+    "dev:admin": "pnpm --filter @visita/admin dev",
+    "dev:embed": "pnpm --filter @visita/embed dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:test:rls": "docker exec -i supabase_db_visita psql -U postgres -d postgres -q -t -f - < supabase/scripts/rls_smoke.sql",
+    "db:types": "supabase gen types typescript --local --schema public > packages/shared-types/src/database.types.ts",
+    "db:import-prototype": "node scripts/import-prototype.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.0",
+    "wrangler": "^4.137.0"
+  }
+}

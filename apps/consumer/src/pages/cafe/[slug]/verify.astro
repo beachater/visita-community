@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Placeholder from "../../../components/Placeholder.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Verify amenities">
+  <Placeholder route="/cafe/[slug]/verify" mode="server-rendered">
+    <h1>Verify amenities</h1>
+    <!-- TODO: confirm or dispute amenity details. No table yet. -->
+    <p>Venue: {Astro.params.slug}</p>
+  </Placeholder>
+</BaseLayout>
