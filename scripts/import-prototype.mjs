@@ -11,6 +11,8 @@
 // - Refuses non-local URLs unless --allow-remote is passed.
 // - Luma captures are not imported as walkthroughs (Visita is .sog only);
 //   those cafes come in unscanned until their scans are re-exported.
+// - SuperSplat scans map to the R2 key splats/<slug>/v1.sog. The files
+//   themselves are bundled and uploaded separately; see infra/r2/README.md.
 
 import { readFile } from "node:fs/promises";
 
@@ -73,7 +75,7 @@ function toVenue(c) {
     lat: c.lat ?? null,
     lng: c.lng ?? null,
     search_terms: Array.isArray(c.searchTerms) ? c.searchTerms : [],
-    splat_url: c.superSplatUrl ?? null,
+    splat_url: c.superSplatUrl ? `splats/${c.slug}/v1.sog` : null,
     scanned_at: c.scanDate ?? null,
     amenities: toAmenities(c),
     hours: c.hours ?? null,

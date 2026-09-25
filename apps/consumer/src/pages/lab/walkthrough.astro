@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { WalkthroughLab } from "../../components/walkthrough/WalkthroughLab";
+
+// Internal test bench for phone testing: bundled .sog vs Streamed SOG.
+export const prerender = true;
+---
+
+<BaseLayout title="Walkthrough lab">
+  <meta name="robots" content="noindex" slot="head" />
+  <WalkthroughLab client:only="react" />
+</BaseLayout>

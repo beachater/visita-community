@@ -3,6 +3,8 @@
 interface ImportMetaEnv {
   readonly PUBLIC_SUPABASE_URL?: string;
   readonly PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
+  /** R2 public base; `venues.splat_url` keys are resolved against it. */
+  readonly PUBLIC_ASSETS_BASE_URL?: string;
 }
 
 declare namespace App {

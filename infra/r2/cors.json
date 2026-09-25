@@ -1,0 +1,14 @@
+{
+  "rules": [
+    {
+      "id": "public-read-any-origin",
+      "allowed": {
+        "origins": ["*"],
+        "methods": ["GET", "HEAD"],
+        "headers": ["Range"]
+      },
+      "exposeHeaders": ["Content-Length", "Content-Range", "ETag"],
+      "maxAgeSeconds": 86400
+    }
+  ]
+}

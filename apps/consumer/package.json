@@ -7,13 +7,16 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "typecheck": "astro check"
+    "typecheck": "wrangler types && astro check",
+    "types:worker": "wrangler types",
+    "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.3",
     "@astrojs/react": "^7.0.0",
     "@visita/shared-types": "workspace:*",
     "astro": "^7.3.4",
+    "playcanvas": "^2.22.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

@@ -234,7 +234,9 @@ create table public.venues (
   -- Extra phrases search should match ("sonnys", "sonny's diner"). Keep them
   -- distinctive; generic terms like "cafe" match everything.
   search_terms    text[] not null default '{}',
-  -- R2 path of the PlayCanvas .sog walkthrough. The file itself lives in R2.
+  -- R2 object key of the PlayCanvas .sog walkthrough (splats/<slug>/v<n>.sog),
+  -- resolved against the assets base URL. New scan = new key, so files can be
+  -- cached as immutable.
   splat_url       text,
   scanned_at      timestamptz,
   amenities       jsonb not null default '{}'::jsonb,
