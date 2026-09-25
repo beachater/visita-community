@@ -1,47 +1,278 @@
 ---
 import type { GetStaticPaths } from "astro";
-import type { Tables } from "@visita/shared-types";
+import type { AmenityDefinition, MenuItem, Tables, VenueAmenities, WeeklyHours } from "@visita/shared-types";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import Placeholder from "../../../components/Placeholder.astro";
 import PersonalizedSlot from "../../../components/PersonalizedSlot.astro";
+import OpenNowPill from "../../../components/cafe/OpenNowPill.astro";
+import { CafeWalkthrough } from "../../../components/walkthrough/CafeWalkthrough";
 import { readPublic } from "../../../lib/public-data";
+import { amenityRows, summaryRows } from "../../../lib/venue/amenities";
+import { weeklyRows } from "../../../lib/venue/hours";
+import { formatPhp, scanDate } from "../../../lib/venue/scan";
 
 export const prerender = true;
 
-type CafePage = Pick<Tables<"venues">, "slug" | "name" | "splat_url">;
+type Cafe = Pick<
+  Tables<"venues">,
+  "slug" | "name" | "address" | "city" | "splat_url" | "splat_preview_url" | "scanned_at" | "amenities" | "hours" | "menu"
+>;
 
 // Built from published cafes at deploy time. Publishing or rescanning a
-// venue must trigger a Cloudflare deploy hook (TODO) so this page exists.
+// venue must trigger a Cloudflare deploy hook (TODO) so this page updates.
 export const getStaticPaths = (async () => {
-  const cafes = await readPublic<CafePage>(
-    "venues?select=slug,name,splat_url&venue_type=eq.cafe&is_published=eq.true",
-  );
-  return cafes.map((cafe) => ({ params: { slug: cafe.slug }, props: { cafe } }));
+  const [cafes, definitions] = await Promise.all([
+    readPublic<Cafe>(
+      "venues?select=slug,name,address,city,splat_url,splat_preview_url,scanned_at,amenities,hours,menu&venue_type=eq.cafe&is_published=eq.true",
+    ),
+    readPublic<AmenityDefinition>("amenity_definitions?venue_type=eq.cafe&is_active=eq.true&order=sort_order"),
+  ]);
+  return cafes.map((cafe) => ({ params: { slug: cafe.slug }, props: { cafe, definitions } }));
 }) satisfies GetStaticPaths;
 
-const { cafe } = Astro.props;
+const { cafe, definitions } = Astro.props;
+const amenities = cafe.amenities as VenueAmenities;
+const hours = cafe.hours as WeeklyHours | null;
+const menu = cafe.menu as unknown as MenuItem[];
+
 const scanned = cafe.splat_url !== null;
+const scan = scanDate(cafe.scanned_at);
+const strip = summaryRows(definitions, amenities);
+const cards = amenityRows(definitions, amenities);
+const hourRows = hours ? weeklyRows(hours) : [];
+const sections = [...new Set(menu.map((m) => m.section ?? ""))];
+
+const description = scanned
+  ? `Step inside ${cafe.name} before you go: a real, unedited 3D walkthrough.`
+  : `${cafe.name} in ${cafe.city}, on Visita.`;
 ---
 
-<BaseLayout
-  title={cafe.name}
-  description={scanned
-    ? `Step inside ${cafe.name} before you go: a real, unedited 3D walkthrough.`
-    : `${cafe.name} in Cagayan de Oro, on Visita.`}
->
-  <Placeholder route="/cafe/[slug]" mode="prerendered">
-    <h1>{cafe.name}</h1>
-    <p>{scanned ? "Scanned cafe" : "Listed cafe, not yet scanned"}</p>
+<BaseLayout title={cafe.name} description={description}>
+  <main class="cafe">
+    <header class="hero">
+      <div class="meta">
+        {scanned && <span class="scanned">Scanned</span>}
+        <OpenNowPill hours={hours} />
+        {scan && <span class:list={["scan-date", { stale: scan.stale }]}>{scan.label}</span>}
+      </div>
+      <h1>{cafe.name}</h1>
+      {cafe.address && <p class="address">{cafe.address}</p>}
+    </header>
 
-    <!-- Static for every visitor: open-now pill (computed client-side from
-         hours), scan date, amenity cards, opening hours, menu. -->
+    {scanned ? (
+      <CafeWalkthrough client:only="react" name={cafe.name} splatKey={cafe.splat_url!} previewKey={cafe.splat_preview_url} />
+    ) : (
+      <section class="not-scanned">
+        <p>This cafe isn't scanned yet, so there's no walkthrough.</p>
+      </section>
+    )}
 
-    <!-- TODO scanned: .sog viewer island, client:visible, code-split.
-         TODO unscanned: "No walkthrough yet" plus the "I want to see inside" demand button. -->
-    {scanned ? <div id="walkthrough-island"></div> : <div id="demand-island"></div>}
+    {strip.length > 0 && (
+      <ul class="strip" aria-label="At a glance">
+        {strip.map((row) => (
+          <li>
+            <span class="strip-label">{row.label}</span>
+            <span class="strip-value">{row.text}</span>
+          </li>
+        ))}
+      </ul>
+    )}
 
-    <!-- Fresh per request while the shell above stays cached. -->
+    {cards.length > 0 && (
+      <section>
+        <h2>Amenities</h2>
+        <dl class="amenities">
+          {cards.map((row) => (
+            <div class="amenity">
+              <dt>{row.label}</dt>
+              <dd>{row.text}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    )}
+
+    {hourRows.length > 0 && (
+      <section>
+        <h2>Opening hours</h2>
+        <table class="hours">
+          <tbody>
+            {hourRows.map((row) => (
+              <tr>
+                <th scope="row">{row.label}</th>
+                <td>{row.text ?? "Not known"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    )}
+
+    {menu.length > 0 && (
+      <section>
+        <h2>Menu</h2>
+        {sections.map((section) => (
+          <>
+            {section && <h3>{section}</h3>}
+            <ul class="menu">
+              {menu.filter((m) => (m.section ?? "") === section).map((item) => (
+                <li>
+                  <span>
+                    {item.name}
+                    {item.note && <small>{item.note}</small>}
+                  </span>
+                  {item.price_php !== undefined && <span class="price">{formatPhp(item.price_php)}</span>}
+                </li>
+              ))}
+            </ul>
+          </>
+        ))}
+      </section>
+    )}
+
+    <!-- Fresh per request while the page above stays cached. -->
     <PersonalizedSlot server:defer label="saved heart and check-in state" />
     <PersonalizedSlot server:defer label="reviews, including your own" />
-  </Placeholder>
+  </main>
 </BaseLayout>
+
+<style>
+  .cafe {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    display: grid;
+    gap: 1.75rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1.1;
+    margin: 0.5rem 0 0.25rem;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ocean);
+    font-size: 1.4rem;
+    margin: 0 0 0.75rem;
+  }
+  h3 {
+    font-size: 0.95rem;
+    margin: 1rem 0 0.25rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  /* The one amber element: amber means scanned and verified, with navy text (6.48:1). */
+  .scanned {
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: var(--amber);
+    color: var(--navy);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .scan-date {
+    font-size: 0.85rem;
+  }
+  .scan-date.stale {
+    opacity: 0.6;
+  }
+  .address {
+    margin: 0;
+    color: var(--ocean);
+  }
+  .not-scanned {
+    padding: 1.25rem;
+    border: 1px dashed var(--mist);
+    border-radius: 16px;
+    background: #ffffff;
+  }
+  .not-scanned p {
+    margin: 0;
+  }
+  .strip {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 0.75rem;
+  }
+  .strip li,
+  .amenity {
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--mist);
+    border-radius: 12px;
+    background: #ffffff;
+  }
+  .strip-label,
+  .amenity dt {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--ocean);
+  }
+  .strip-value {
+    display: block;
+    font-weight: 500;
+    margin-top: 0.15rem;
+  }
+  .amenities {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: 0.75rem;
+  }
+  .amenity dd {
+    margin: 0.15rem 0 0;
+  }
+  .hours {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 28rem;
+    background: #ffffff;
+    border: 1px solid var(--mist);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .hours th,
+  .hours td {
+    text-align: left;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--cloud);
+    font-weight: 400;
+  }
+  .hours th {
+    color: var(--ocean);
+  }
+  .menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    border: 1px solid var(--mist);
+    border-radius: 12px;
+  }
+  .menu li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--cloud);
+  }
+  .menu li:last-child {
+    border-bottom: none;
+  }
+  .menu small {
+    display: block;
+    color: var(--ocean);
+  }
+  .price {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+</style>

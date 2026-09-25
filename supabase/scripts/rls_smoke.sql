@@ -39,7 +39,7 @@ select pg_temp.pass('profile trigger creates profiles from Google metadata');
 -- ---------- anon ----------
 set local role anon;
 set local request.jwt.claims = '{"role":"anon"}';
-do $$ begin assert (select count(*) from public.venues) = 1, 'anon sees drafts'; end $$;
+do $$ begin assert (select count(*) from public.venues where slug in ('pub-cafe', 'draft-cafe')) = 1, 'anon sees drafts'; end $$;
 select pg_temp.pass('anon sees only published venues');
 do $$ begin assert (select count(*) from public.check_ins) = 0; assert (select count(*) from public.referrals) = 0; end $$;
 select pg_temp.expect_error($q$insert into public.venues (slug, name) values ('x', 'x')$q$, 'anon cannot insert venues');
@@ -49,7 +49,7 @@ select pg_temp.expect_error($q$insert into public.reviews (venue_id, rating) val
 reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
-do $$ begin assert (select count(*) from public.venues) = 1, 'user sees drafts'; end $$;
+do $$ begin assert (select count(*) from public.venues where slug in ('pub-cafe', 'draft-cafe')) = 1, 'user sees drafts'; end $$;
 select pg_temp.pass('user sees only published venues');
 do $$ begin assert not public.is_admin(); end $$;
 select pg_temp.pass('is_admin() false for regular user');
@@ -97,6 +97,7 @@ select pg_temp.expect_error($q$insert into public.review_awards (review_id, give
 insert into public.review_awards (review_id, giver_id, points) values ('bbbbbbbb-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 5);
 select pg_temp.expect_error($q$insert into public.referrals (referrer_id, referred_id) values ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111')$q$, 'self-referral rejected');
 select pg_temp.expect_error($q$update public.venues set scanned_at = now() where slug = 'pub-cafe'$q$, 'scan date without a scan rejected');
+select pg_temp.expect_error($q$update public.venues set splat_preview_url = 'splats/x/v1-preview.sog' where slug = 'pub-cafe'$q$, 'preview without a full scan rejected');
 select pg_temp.expect_error($q$update public.venues set amenities = '{"jacuzzi": {"value": true}}' where slug = 'pub-cafe'$q$, 'undefined amenity key rejected');
 select pg_temp.expect_error($q$update public.venues set amenities = '{"power_outlets": {"value": "lots"}}' where slug = 'pub-cafe'$q$, 'amenity value of wrong type rejected');
 select pg_temp.expect_error($q$update public.venues set amenities = '{"wifi": {}}' where slug = 'pub-cafe'$q$, 'empty amenity entry rejected');
@@ -124,7 +125,7 @@ select pg_temp.pass('user sees only own points and balance');
 reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
-do $$ begin assert public.is_admin(); assert (select count(*) from public.venues) = 2; end $$;
+do $$ begin assert public.is_admin(); assert (select count(*) from public.venues where slug in ('pub-cafe', 'draft-cafe')) = 2; end $$;
 select pg_temp.pass('admin sees drafts');
 update public.reviews set status = 'hidden' where id = 'bbbbbbbb-0000-0000-0000-000000000001';
 do $$ begin assert (select status from public.reviews where id = 'bbbbbbbb-0000-0000-0000-000000000001') = 'hidden'; end $$;

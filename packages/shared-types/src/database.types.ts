@@ -424,6 +424,7 @@ export type Database = {
           scanned_at: string | null
           search_terms: string[]
           slug: string
+          splat_preview_url: string | null
           splat_url: string | null
           updated_at: string
           venue_type: Database["public"]["Enums"]["venue_type"]
@@ -445,6 +446,7 @@ export type Database = {
           scanned_at?: string | null
           search_terms?: string[]
           slug: string
+          splat_preview_url?: string | null
           splat_url?: string | null
           updated_at?: string
           venue_type?: Database["public"]["Enums"]["venue_type"]
@@ -466,6 +468,7 @@ export type Database = {
           scanned_at?: string | null
           search_terms?: string[]
           slug?: string
+          splat_preview_url?: string | null
           splat_url?: string | null
           updated_at?: string
           venue_type?: Database["public"]["Enums"]["venue_type"]

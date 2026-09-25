@@ -1,0 +1,48 @@
+---
+import type { WeeklyHours } from "@visita/shared-types";
+
+// Open now / Closed, computed in the browser: the page is prerendered, so the
+// build can't know the current time. Hidden until computed, and stays hidden
+// when today's hours are unknown.
+interface Props {
+  hours: WeeklyHours | null;
+}
+
+const { hours } = Astro.props;
+---
+
+{hours && <span class="open-now" data-hours={JSON.stringify(hours)} hidden />}
+
+<script>
+  import type { WeeklyHours } from "@visita/shared-types";
+  import { isOpenAt } from "../../lib/venue/hours";
+
+  const update = () => {
+    for (const el of document.querySelectorAll<HTMLElement>(".open-now[data-hours]")) {
+      const open = isOpenAt(JSON.parse(el.dataset.hours!) as WeeklyHours, new Date());
+      el.hidden = open === null;
+      if (open === null) continue;
+      el.textContent = open ? "Open now" : "Closed";
+      el.dataset.state = open ? "open" : "closed";
+    }
+  };
+  update();
+  setInterval(update, 60_000);
+</script>
+
+<style>
+  .open-now {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid var(--mist);
+    color: var(--navy);
+    background: #ffffff;
+  }
+  .open-now[data-state="open"] {
+    border-color: var(--ocean);
+    color: var(--ocean);
+  }
+</style>

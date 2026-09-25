@@ -222,10 +222,18 @@ export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, on
 
         if (previewSrc) {
           phase("downloading");
-          previewAsset = await loadAsset(previewSrc, (received, total) =>
-            setProgress({ stage: "downloading", received, total, label: "Loading a preview of the room" }),
-          );
+          try {
+            previewAsset = await loadAsset(previewSrc, (received, total) =>
+              setProgress({ stage: "downloading", received, total, label: "Loading a preview of the room" }),
+            );
+          } catch {
+            // No usable preview: load the full scan on its own instead.
+            previewAsset = null;
+          }
           if (disposed) return;
+        }
+
+        if (previewAsset) {
           phase("preparing");
           setProgress({ stage: "preparing", fraction: null });
           preview = addScan(previewAsset);
