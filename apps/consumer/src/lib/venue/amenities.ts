@@ -8,14 +8,33 @@ export interface AmenityRow {
   key: string;
   label: string;
   icon: string | null;
+  /** Full display text for cards: "7 inside, 2 outside". */
   text: string;
+  /** Compact text for the three-stat strip: "9 outlets". */
+  short: string;
 }
+
+const SHORT_MAX = 12;
 
 const php = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
 
 /** The stored label wins; otherwise the value is formatted by its type and unit. */
 export function amenityText(def: AmenityDefinition, entry: AmenityEntry): string | null {
   if (entry.label?.trim()) return entry.label.trim();
+  return valueText(def, entry);
+}
+
+/**
+ * For tight spaces: a short label as-is, otherwise the formatted value
+ * ("7 inside, 2 outside" → "9 outlets"), otherwise the label.
+ */
+export function amenityShortText(def: AmenityDefinition, entry: AmenityEntry): string | null {
+  const label = entry.label?.trim();
+  if (label && label.length <= SHORT_MAX) return label;
+  return valueText(def, entry) ?? label ?? null;
+}
+
+function valueText(def: AmenityDefinition, entry: AmenityEntry): string | null {
   const value = entry.value;
   if (value === undefined || value === null) return null;
 
@@ -47,7 +66,8 @@ function rows(
     if (!entry) continue;
     const text = amenityText(def, entry);
     if (!text) continue;
-    out.push({ row: { key: def.key, label: def.label, icon: def.icon, text }, order: order(def) });
+    const short = amenityShortText(def, entry) ?? text;
+    out.push({ row: { key: def.key, label: def.label, icon: def.icon, text, short }, order: order(def) });
   }
   return out.sort((a, b) => a.order - b.order).map((o) => o.row);
 }

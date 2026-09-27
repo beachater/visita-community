@@ -1,114 +1,101 @@
-import { useEffect, useMemo, useState } from "react";
-import { getDeviceProfile } from "../../lib/splat/device";
-import { splatSrc } from "../../lib/splat/source";
-import { SplatViewer } from "./SplatViewer";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { AmenityDefinition } from "@visita/shared-types";
+import { Button } from "@/components/ui/button";
+import { getDeviceProfile } from "@/lib/splat/device";
+import type { WalkthroughCafe } from "@/lib/venue/types";
+import { WalkthroughScreen } from "./WalkthroughScreen";
 
-// The walkthrough block on /cafe/[slug]. Nothing downloads until the visitor
-// asks: a scan is tens of megabytes, which matters on mobile data.
+// The walkthrough entry on /cafe/[slug]. Nothing downloads until the visitor
+// asks: a scan is tens of megabytes, which matters on mobile data. The open
+// walkthrough is a history entry, so the phone's Back button closes it.
 
 interface Props {
-  name: string;
-  /** R2 keys from venues.splat_url / splat_preview_url. */
-  splatKey: string;
-  previewKey: string | null;
+  cafe: WalkthroughCafe;
+  definitions: AmenityDefinition[];
 }
 
-type Stage = "idle" | "confirm" | "unsupported" | "viewing";
+type Stage = "idle" | "confirm" | "unsupported" | "open";
 
-export function CafeWalkthrough({ name, splatKey, previewKey }: Props) {
+export function CafeWalkthrough({ cafe, definitions }: Props) {
   const profile = useMemo(getDeviceProfile, []);
   const [stage, setStage] = useState<Stage>("idle");
-  const [expanded, setExpanded] = useState(false);
+  const pushed = useRef(false);
+  const launcher = useRef<HTMLButtonElement>(null);
 
-  // Escape leaves the expanded view; the page doesn't scroll behind it.
-  useEffect(() => {
-    if (!expanded) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setExpanded(false);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = overflow;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [expanded]);
+  const open = () => {
+    history.pushState({ walkthrough: cafe.slug }, "");
+    pushed.current = true;
+    setStage("open");
+  };
 
   const start = () => {
     if (!profile.webgl2) return setStage("unsupported");
-    if (profile.lowEnd && stage !== "confirm") return setStage("confirm");
-    setStage("viewing");
+    if (profile.lowEnd) return setStage("confirm");
+    open();
   };
 
-  return (
-    <section
-      aria-label={`3D walkthrough of ${name}`}
-      style={
-        expanded
-          ? { position: "fixed", inset: 0, zIndex: 50, background: "var(--navy)" }
-          : { position: "relative", aspectRatio: "4 / 3", maxHeight: "70vh", width: "100%", borderRadius: "16px", overflow: "hidden", background: "var(--navy)" }
+  // Back closes the walkthrough; closing from the screen pops our entry.
+  useEffect(() => {
+    const onPop = () => {
+      if (pushed.current) {
+        pushed.current = false;
+        setStage("idle");
       }
-    >
-      {stage === "viewing" ? (
-        <>
-          <SplatViewer src={splatSrc(splatKey)} previewSrc={previewKey ? splatSrc(previewKey) : undefined} profile={profile} />
-          <button
-            type="button"
-            onClick={() => setExpanded((x) => !x)}
-            aria-label={expanded ? "Exit full screen" : "Full screen"}
-            style={{ ...pill, position: "absolute", top: "max(0.75rem, env(safe-area-inset-top))", right: "0.75rem" }}
-          >
-            {expanded ? "Close" : "Full screen"}
-          </button>
-        </>
-      ) : (
-        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", padding: "1.5rem", textAlign: "center", color: "var(--cloud)" }}>
-          <div style={{ display: "grid", gap: "0.75rem", justifyItems: "center", maxWidth: "24rem" }}>
-            {stage === "unsupported" ? (
-              <p style={{ margin: 0 }}>This browser can't show 3D walkthroughs. It needs WebGL 2.</p>
-            ) : stage === "confirm" ? (
-              <>
-                <p style={{ margin: 0 }}>This device may struggle with the walkthrough. It could be slow or close unexpectedly.</p>
-                <button type="button" onClick={() => setStage("viewing")} style={primary}>
-                  Try anyway
-                </button>
-              </>
-            ) : (
-              <>
-                <p style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: "1.5rem" }}>Walk through {name}</p>
-                <p style={{ margin: 0, color: "var(--mist)", fontSize: "0.9rem" }}>
-                  A real, unedited scan of the room. A quick preview loads first, then full detail.
-                </p>
-                <button type="button" onClick={start} style={primary}>
-                  Step inside
-                </button>
-              </>
-            )}
-          </div>
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const close = () => {
+    if (pushed.current) history.back();
+    else setStage("idle");
+  };
+
+  // Return focus to the launcher after closing.
+  useEffect(() => {
+    if (stage === "idle") launcher.current?.focus({ preventScroll: true });
+  }, [stage]);
+
+  // Keep the page from scrolling behind the full-screen view.
+  useEffect(() => {
+    if (stage !== "open") return;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [stage]);
+
+  return (
+    <>
+      <section
+        aria-label={`3D walkthrough of ${cafe.name}`}
+        className="relative grid aspect-[4/3] max-h-[70vh] w-full place-items-center overflow-hidden rounded-2xl bg-scan p-6 text-center text-glass-foreground"
+        style={{ backgroundImage: "radial-gradient(circle at 70% 30%, rgba(24,95,165,0.55) 0, transparent 60%)" }}
+      >
+        <div className="grid max-w-sm justify-items-center gap-3">
+          {stage === "unsupported" ? (
+            <p>This browser can't show 3D walkthroughs. It needs WebGL 2.</p>
+          ) : stage === "confirm" ? (
+            <>
+              <p>This device may struggle with the walkthrough. It could be slow or close unexpectedly.</p>
+              <Button size="lg" onClick={open}>
+                Try anyway
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="font-display text-2xl font-semibold">Walk through {cafe.name}</p>
+              <p className="text-sm opacity-80">A real, unedited scan of the room. A quick preview loads first, then full detail.</p>
+              <Button ref={launcher} size="lg" onClick={start}>
+                Step inside
+              </Button>
+            </>
+          )}
         </div>
-      )}
-    </section>
+      </section>
+
+      {stage === "open" && <WalkthroughScreen cafe={cafe} definitions={definitions} profile={profile} onClose={close} />}
+    </>
   );
 }
-
-// Interactive colour is ocean on navy; amber is reserved for "scanned".
-const primary = {
-  font: "inherit",
-  fontWeight: 500,
-  padding: "0.7rem 1.4rem",
-  borderRadius: "999px",
-  border: "none",
-  background: "var(--ocean)",
-  color: "#ffffff",
-  cursor: "pointer",
-};
-
-const pill = {
-  font: "inherit",
-  fontSize: "0.8rem",
-  padding: "0.35rem 0.8rem",
-  borderRadius: "999px",
-  border: "1px solid var(--mist)",
-  background: "rgba(4, 44, 83, 0.7)",
-  color: "var(--cloud)",
-  cursor: "pointer",
-};

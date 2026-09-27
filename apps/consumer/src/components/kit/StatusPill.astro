@@ -11,7 +11,8 @@ const tones = {
   neutral: "border-border text-foreground",
   open: "border-success/40 text-success",
   closed: "border-border text-muted-foreground",
-  stale: "border-warning/40 text-warning",
+  // PRD: a stale scan date is muted, not alarming.
+  stale: "border-border text-muted-foreground opacity-75",
 };
 ---
 

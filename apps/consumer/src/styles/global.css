@@ -55,6 +55,7 @@
   --glass: rgba(4, 44, 83, 0.72);             /* panels floating over the scan */
   --glass-foreground: var(--brand-cloud);
   --glass-border: rgba(181, 212, 244, 0.35);
+  --glass-positive: #a7e8c9;                  /* "Open now" on glass */
   --success: #1f7a4d;                         /* open now */
   --warning: #9a5b00;                         /* stale scan date */
 
@@ -98,6 +99,7 @@
   --color-glass: var(--glass);
   --color-glass-foreground: var(--glass-foreground);
   --color-glass-border: var(--glass-border);
+  --color-glass-positive: var(--glass-positive);
   --color-success: var(--success);
   --color-warning: var(--warning);
 

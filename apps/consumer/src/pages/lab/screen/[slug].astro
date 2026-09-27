@@ -1,0 +1,24 @@
+---
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { ScreenPreview } from "../../../components/walkthrough/ScreenPreview";
+import { loadPublishedCafes, toWalkthroughCafe } from "../../../lib/venue/load";
+
+// Internal: /lab/screen/<slug> opens straight into the walkthrough screen.
+export const prerender = true;
+
+export const getStaticPaths = (async () => {
+  const { cafes, definitions } = await loadPublishedCafes();
+  return cafes.flatMap((row) => {
+    const cafe = toWalkthroughCafe(row);
+    return cafe ? [{ params: { slug: cafe.slug }, props: { cafe, definitions } }] : [];
+  });
+}) satisfies GetStaticPaths;
+
+const { cafe, definitions } = Astro.props;
+---
+
+<BaseLayout title={`${cafe.name} walkthrough (lab)`} chrome="bare">
+  <meta name="robots" content="noindex" slot="head" />
+  <ScreenPreview client:only="react" cafe={cafe} definitions={definitions} />
+</BaseLayout>
