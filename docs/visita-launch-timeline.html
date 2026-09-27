@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Visita Launch Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Playfair+Display:wght@600;700&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #e6f1fb;          /* Visita cloud */
+    --surface: #fcfdfe;
+    --ink: #042c53;             /* Visita navy */
+    --ink-2: #33567a;
+    --ink-3: #5f7c99;
+    --rule: #b5d4f4;            /* Visita mist */
+    --grid: #dbe8f5;
+    --holiday: rgba(4, 44, 83, 0.07);
+    --today: #185fa5;           /* Visita ocean */
+    --s1: #2a78d6;              /* Tier 1 build */
+    --s2: #eb6834;              /* Tier 2 */
+    --s3: #1baf7a;              /* Testing */
+    --s4: #eda100;              /* Fixes */
+    --s5: #e87ba4;              /* Design pass */
+    --tip-bg: #042c53;
+    --tip-ink: #ffffff;
+    --display: "Playfair Display", Georgia, "Times New Roman", serif;
+    --body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #06192c;
+      --surface: #0b2238;
+      --ink: #eaf3fc;
+      --ink-2: #b9cfe4;
+      --ink-3: #8aa6c1;
+      --rule: #23456a;
+      --grid: #15314f;
+      --holiday: rgba(234, 243, 252, 0.07);
+      --today: #6da7ec;
+      --s1: #3987e5;
+      --s2: #d95926;
+      --s3: #199e70;
+      --s4: #c98500;
+      --s5: #d55181;
+      --tip-bg: #eaf3fc;
+      --tip-ink: #042c53;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #06192c;
+    --surface: #0b2238;
+    --ink: #eaf3fc;
+    --ink-2: #b9cfe4;
+    --ink-3: #8aa6c1;
+    --rule: #23456a;
+    --grid: #15314f;
+    --holiday: rgba(234, 243, 252, 0.07);
+    --today: #6da7ec;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --s4: #c98500;
+    --s5: #d55181;
+    --tip-bg: #eaf3fc;
+    --tip-ink: #042c53;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.55 var(--body);
+    padding-inline: 16px;
+    padding-block: 28px 56px;
+  }
+  .wrap { max-width: 1600px; margin: 0 auto; display: grid; gap: 36px; }
+  @media (min-width: 900px) { body { padding-inline: 24px; } }
+  h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); line-height: 1.1; }
+  h2 { font-size: 1.35rem; }
+  p { margin: 0; }
+  .lede { color: var(--ink-2); max-width: 65ch; margin-top: 8px; }
+  .eyebrow { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 16px; font-variant-numeric: tabular-nums; }
+  .facts div { display: grid; }
+  .facts strong { font-size: 1.05rem; }
+  .facts span { color: var(--ink-3); font-size: 0.8rem; }
+
+  /* ── Gantt ─────────────────────────────────── */
+  .panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 18px 14px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.82rem; color: var(--ink-2); margin-bottom: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .key { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
+  .key.diamond { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); background: var(--ink); }
+  .key.key-meet { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--today); background: var(--surface); }
+  .key.key-hol { background: var(--holiday); border: 1px solid var(--rule); }
+  .key.key-input { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); background: var(--surface); border: 2px solid var(--ink); }
+
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .gantt { min-width: 960px; display: grid; grid-template-columns: 240px 1fr; font-variant-numeric: tabular-nums; }
+  .lab, .track { min-height: 34px; border-top: 1px solid var(--grid); }
+  .lab { display: flex; flex-direction: column; justify-content: center; padding: 6px 12px 6px 0; font-size: 0.84rem; line-height: 1.25; }
+  .lab small { color: var(--ink-3); font-size: 0.74rem; }
+  .group { grid-column: 1 / -1; padding: 14px 0 4px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+  .track { position: relative; }
+  .head { position: relative; height: 38px; }
+  .head .month { position: absolute; top: 0; font-size: 0.78rem; font-weight: 700; color: var(--ink-2); }
+  .head .wk { position: absolute; bottom: 4px; font-size: 0.68rem; color: var(--ink-3); transform: translateX(-50%); }
+  .overlay { position: absolute; inset: 0; pointer-events: none; }
+  .vgrid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grid); }
+  .hol { position: absolute; top: 0; bottom: 0; background: var(--holiday); }
+  .todayline { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--today); }
+  .todaytag { position: absolute; top: -2px; transform: translateX(-50%); font-size: 0.66rem; font-weight: 700; color: var(--today); background: var(--surface); padding: 0 3px; }
+
+  .bar {
+    position: absolute; top: 8px; bottom: 8px; border-radius: 4px; border: 2px solid var(--surface);
+    cursor: default; outline-offset: 2px;
+  }
+  .bar:focus-visible { outline: 2px solid var(--ink); }
+  .bar.c1 { background: var(--s1); } .bar.c2 { background: var(--s2); }
+  .bar.c3 { background: var(--s3); } .bar.c4 { background: var(--s4); }
+  .bar.c5 { background: var(--s5); }
+  .ms.input { background: var(--surface); border: 2px solid var(--ink); }
+  .tag { display: inline-block; font-size: 0.7rem; font-weight: 500; padding: 1px 7px; border-radius: 999px; border: 1px dashed var(--ink-3); color: var(--ink-2); margin-left: 4px; white-space: nowrap; }
+  .notice { margin-top: 14px; padding: 10px 14px; border: 1px dashed var(--ink-3); border-radius: 10px; font-size: 0.86rem; color: var(--ink-2); max-width: 75ch; }
+  .notice b { color: var(--ink); }
+  .decision dl { margin: 6px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; font-size: 0.84rem; }
+  .decision dt { color: var(--ink-3); }
+  .decision dd { margin: 0; color: var(--ink-2); }
+  .decision .due { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
+  .slip { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 0.9rem; max-width: 90ch; }
+  .decisions { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  .ms { position: absolute; top: 50%; width: 13px; height: 13px; background: var(--ink); border: 2px solid var(--surface); transform: translate(-50%, -50%) rotate(45deg); border-radius: 2px; }
+  .ms.big { width: 17px; height: 17px; }
+  .ms-label { position: absolute; top: 50%; transform: translateY(-50%); font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+  .meet { position: absolute; top: 50%; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--today); background: var(--surface); transform: translate(-50%, -50%); }
+  .meet-label { position: absolute; top: calc(50% + 9px); transform: translateX(-50%); font-size: 0.64rem; color: var(--ink-3); white-space: nowrap; }
+
+  .tip {
+    position: fixed; z-index: 10; max-width: 300px; padding: 10px 12px; border-radius: 10px;
+    background: var(--tip-bg); color: var(--tip-ink); font-size: 0.8rem; line-height: 1.45;
+    pointer-events: none; box-shadow: 0 6px 24px rgba(4, 44, 83, 0.25);
+  }
+  .tip b { display: block; margin-bottom: 2px; }
+  .tip ul { margin: 4px 0 0; padding-left: 16px; }
+  .note { font-size: 0.78rem; color: var(--ink-3); margin-top: 10px; }
+
+  /* ── Tiers & decisions ──────────────────────── */
+  .tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .tier { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+  .tier h3 { margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .tier p.when { color: var(--ink-3); font-size: 0.82rem; }
+  .tier ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 0.86rem; }
+  .tier .sec { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; margin-top: 4px; }
+
+  .decisions { display: grid; gap: 10px; }
+  .decision { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
+  .decision h3 { margin: 0; font-size: 0.95rem; }
+  .decision p { font-size: 0.86rem; color: var(--ink-2); }
+  .pill { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-2); margin-left: 6px; vertical-align: 1px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; min-width: 640px; table-layout: fixed; }
+  th:nth-child(1) { width: 24%; } th:nth-child(2) { width: 22%; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+  td.num { white-space: normal; }
+  .tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 6px 8px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Delivery plan · updated 28 Sep 2026</p>
+    <h1>Visita launch timeline</h1>
+    <p class="lede">From today to a public launch in Cagayan de Oro on Tuesday 29 December: the core visitor and venue-owner flows first, then stakeholder testing, fixes, an open beta, and a final round of fixes.</p>
+    <p class="notice"><b>Still to come from the client side:</b> the final UI/UX and branding, and the business model. Until they arrive, screens use the PRD's provisional colours and type, and pricing uses placeholder founder rates. The dates each one is needed by are in the chart and under "Waiting on the client or project head".</p>
+    <div class="facts">
+      <div><strong>Tue 29 Dec 2026</strong><span>Launch</span></div>
+      <div><strong>13 weeks</strong><span>28 Sep – 28 Dec</span></div>
+      <div><strong>2 checkpoints</strong><span>23 Oct · 6 Nov</span></div>
+      <div><strong>6 check-ins</strong><span>Bi-weekly, with the project head</span></div>
+      <div><strong>4 inputs needed</strong><span>First one by Fri 9 Oct</span></div>
+    </div>
+  </header>
+
+  <section class="panel" aria-labelledby="gantt-title">
+    <h2 id="gantt-title" style="margin-bottom:10px">Schedule</h2>
+    <div class="legend" aria-hidden="true">
+      <span><i class="key" style="background:var(--s1)"></i>Tier 1 build</span>
+      <span><i class="key" style="background:var(--s2)"></i>Tier 2 build</span>
+      <span><i class="key" style="background:var(--s3)"></i>Testing</span>
+      <span><i class="key" style="background:var(--s4)"></i>Fixes</span>
+      <span><i class="key" style="background:var(--s5)"></i>Design pass</span>
+      <span><i class="key diamond"></i>Checkpoint / launch</span>
+      <span><i class="key key-input"></i>Input needed from stakeholders</span>
+      <span><i class="key key-meet"></i>Check-in with project head</span>
+      <span><i class="key key-hol"></i>PH holiday</span>
+    </div>
+    <div class="scroll">
+      <div class="gantt" id="gantt" role="img" aria-label="Gantt chart of the Visita schedule from 28 September to 31 December 2026. The same information is in the table below."></div>
+    </div>
+    <p class="note">Hover or tap a bar for what's in it. Tier 3 starts after launch.</p>
+  </section>
+
+  <section aria-labelledby="tiers-title" style="display:grid;gap:14px">
+    <h2 id="tiers-title">What gets built, in order</h2>
+    <div class="tiers">
+      <article class="tier">
+        <h3><i class="key" style="background:var(--s1)"></i>Tier 1</h3>
+        <p class="when">Before stakeholder testing · 28 Sep – 6 Nov · provisional look until the final branding arrives</p>
+        <p class="sec">Visitors</p>
+        <ul>
+          <li>Map with amber (scanned) and white pins, search across Visita's own cafes, filters, Top Picks, open now, distance <span class="tag">map approach pending</span></li>
+          <li>Saved cafes, recently viewed, "I want to see inside"</li>
+          <li>The walkthrough with its info panel, amenity cards, scan date, menu, share and deep links</li>
+          <li>Directions hand off to Google Maps (Apple Maps option on iPhone)</li>
+          <li>Google sign-in and reviews with rating and photo</li>
+        </ul>
+        <p class="sec">Venue owners</p>
+        <ul>
+          <li>Registration with manual approval</li>
+          <li>Listing editor, occupancy, events, review replies</li>
+          <li>Analytics: views, walkthrough opens, directions taps, search appearances, peak hours, filters, demand</li>
+        </ul>
+        <p class="sec">Admin and legal</p>
+        <ul>
+          <li>Venue management, scan uploads, owner approvals, amenity edit queue, review moderation</li>
+          <li>Privacy policy, terms and storage consent (RA 10173)</li>
+        </ul>
+      </article>
+      <article class="tier">
+        <h3><i class="key" style="background:var(--s2)"></i>Tier 2</h3>
+        <p class="when">After Tier 1, aimed at launch · 9 Nov – 4 Dec</p>
+        <ul>
+          <li>Amenity verification: visitors confirm or report outdated details (no points yet)</li>
+          <li>Menu photo capture using OCR and a free-tier AI; typing the menu stays available</li>
+          <li>Billing, handled manually: admin records payments, owners see their status <span class="tag">waits on business model</span></li>
+          <li>Marketing pages: home sections, For Cafes pricing, About, Contact, FAQ <span class="tag">pricing waits on business model</span></li>
+          <li>Offline support with a stale-data notice</li>
+          <li>Admin demand queue</li>
+          <li>Google Places search fallback <span class="tag">waits on approval</span></li>
+        </ul>
+      </article>
+      <article class="tier">
+        <h3><i class="key" style="background:var(--ink-3)"></i>Tier 3</h3>
+        <p class="when">After launch · waits on cafe-owner interviews</p>
+        <ul>
+          <li>Points, awards, badges, check-ins</li>
+          <li>Referral codes, vouchers and boosted listings <span class="tag">waits on business model</span></li>
+          <li>Community page: leaderboard, most-awarded reviews</li>
+          <li>Owner monthly report, visitor monthly recap</li>
+          <li>Fraud monitoring, subscription and churn view, audit log</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="decisions-title" style="display:grid;gap:14px">
+    <h2 id="decisions-title">Waiting on the client or project head</h2>
+    <div class="decisions">
+      <div class="decision">
+        <h3>Map approach <span class="pill">Tier 1</span></h3>
+        <dl>
+          <dt>Needed by</dt><dd class="due">Fri 9 Oct (check-in)</dd>
+          <dt>What we need</dt><dd>Choose Google Photorealistic 3D Tiles (paid per use, about $6 per 1,000 loads after 1,000 free a month) or a pre-rendered intro video with a free map.</dd>
+          <dt>Blocks</dt><dd>The discovery map, which starts 5 Oct.</dd>
+          <dt>Meanwhile</dt><dd>Building the free option with mapcn and open map data. Switching later only changes the map layer.</dd>
+        </dl>
+      </div>
+      <div class="decision">
+        <h3>Business model <span class="pill">Tier 2</span></h3>
+        <dl>
+          <dt>Needed by</dt><dd class="due">Fri 6 Nov (checkpoint B)</dd>
+          <dt>What we need</dt><dd>Pricing, subscription tiers, and what a boosted listing includes.</dd>
+          <dt>Blocks</dt><dd>Manual billing, the For Cafes pricing page, and later boosted listings and vouchers.</dd>
+          <dt>Meanwhile</dt><dd>Placeholder founder pricing from the prototype: ₱2,000 onboarding and ₱150 a month.</dd>
+        </dl>
+      </div>
+      <div class="decision">
+        <h3>UI/UX and branding <span class="pill">Before beta</span></h3>
+        <dl>
+          <dt>Needed by</dt><dd class="due">Fri 20 Nov (check-in)</dd>
+          <dt>What we need</dt><dd>The final visual design: screens, colours, type and components.</dd>
+          <dt>Blocks</dt><dd>The visual design pass, 23 Nov – 4 Dec, before the public beta.</dd>
+          <dt>Meanwhile</dt><dd>Screens use the PRD's provisional colours and type, built on shared tokens so they can be reskinned.</dd>
+        </dl>
+      </div>
+      <div class="decision">
+        <h3>Google Places search fallback <span class="pill">Tier 2</span></h3>
+        <dl>
+          <dt>Needed by</dt><dd class="due">Fri 20 Nov (check-in)</dd>
+          <dt>What we need</dt><dd>Approval and a Google Cloud billing account and API key.</dd>
+          <dt>Blocks</dt><dd>Search results for cafes that aren't on Visita yet.</dd>
+          <dt>Meanwhile</dt><dd>Search covers the cafes listed on Visita. Without approval, this moves to after launch.</dd>
+        </dl>
+      </div>
+      <div class="decision">
+        <h3>In-app payments <span class="pill">After launch</span></h3>
+        <dl>
+          <dt>Needed by</dt><dd class="due">Once the business is registered</dd>
+          <dt>What we need</dt><dd>A payment provider for GCash and cards.</dd>
+          <dt>Blocks</dt><dd>Nothing before launch.</dd>
+          <dt>Meanwhile</dt><dd>Billing is manual: an admin records payments and owners see their status.</dd>
+        </dl>
+      </div>
+      <div class="decision">
+        <h3>Points economy <span class="pill">Tier 3</span></h3>
+        <dl>
+          <dt>Needed by</dt><dd class="due">After launch</dd>
+          <dt>What we need</dt><dd>What cafe owners will fund and offer: points, vouchers, boosted listings.</dd>
+          <dt>Blocks</dt><dd>Points, awards, badges, check-ins, referrals, vouchers and the leaderboard.</dd>
+          <dt>Meanwhile</dt><dd>Comes from the ongoing cafe-owner interviews.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="slip-title" style="display:grid;gap:14px">
+    <h2 id="slip-title">If things slip</h2>
+    <ul class="slip">
+      <li><b>Checkpoints show slippage early.</b> The visitor flow is due 23 Oct and the owner and admin screens 6 Nov, both on check-in days.</li>
+      <li><b>Tier 2 gives way first.</b> Anything in Tier 2 not ready by 4 Dec moves to after launch, without moving the beta or launch dates.</li>
+      <li><b>Late inputs move their own work, not the launch.</b> If the branding arrives after 20 Nov, the beta runs on the provisional look and the design pass moves into fix round 2 or after launch. If the business model is late, billing stays manual and the pricing page shows "contact us".</li>
+      <li><b>Tier 1 is tight for one developer.</b> If checkpoint A slips by more than a week, we'll agree at that check-in which Tier 1 items to simplify.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="table-title" style="display:grid;gap:14px">
+    <h2 id="table-title">Every phase</h2>
+    <div class="tablewrap">
+      <table id="phase-table">
+        <thead><tr><th>Phase</th><th>Dates</th><th>What's in it</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+  // Dates are local Manila calendar days. Bars run from the start of `from`
+  // to the end of `to`.
+  const START = new Date(2026, 8, 28);          // Mon 28 Sep
+  const END = new Date(2027, 0, 1);             // exclusive: through 31 Dec
+  const DAY = 86400000;
+  const span = (END - START) / DAY;
+  const d = (s) => { const [y, m, dd] = s.split("-").map(Number); return new Date(y, m - 1, dd); };
+  const x = (date) => ((date - START) / DAY / span) * 100;
+  const xEnd = (s) => x(new Date(d(s).getTime() + DAY));
+  const fmt = (s) => d(s).toLocaleDateString("en-PH", { weekday: "short", day: "numeric", month: "short" });
+
+  const groups = [
+    { name: "Waiting on stakeholders", rows: [
+      { label: "Map approach", sub: "Needed by", input: "2026-10-09", why: "Discovery map work starts 5 Oct. Building the free option meanwhile." },
+      { label: "Business model", sub: "Needed by", input: "2026-11-06", why: "Pricing for manual billing and the For Cafes page (Tier 2)." },
+      { label: "UI/UX & branding", sub: "Needed by", input: "2026-11-20", why: "So the design pass lands before the public beta." },
+      { label: "Google Places fallback", sub: "Needed by", input: "2026-11-20", why: "Otherwise it moves to after launch." },
+    ]},
+    { name: "Tier 1 build", rows: [
+      { label: "Shell, UI kit, privacy & consent", c: 1, from: "2026-09-28", to: "2026-10-09",
+        items: ["Header, nav and footer", "Buttons, sheets and the glass panel", "Storage consent (RA 10173)", "Privacy and terms pages"] },
+      { label: "Walkthrough screen", c: 1, from: "2026-09-28", to: "2026-10-16",
+        items: ["Info panel: three-stat strip that expands to everything known", "Menu sheet, scan date", "Save and share", "Directions hand-off", "Deep links"] },
+      { label: "Discovery map", c: 1, from: "2026-10-05", to: "2026-10-23",
+        items: ["mapcn map with open map data", "Amber and white pins", "Search across Visita cafes", "Filters with match count", "Dock: 3D Layout, Filter, Top Picks, Saved, Recent", "Pin cards and the demand button", "Open now and distance"] },
+      { label: "Accounts & reviews", c: 1, from: "2026-10-12", to: "2026-10-23",
+        items: ["Google sign-in", "Reviews with rating and optional photo"] },
+      { label: "Checkpoint A: visitor flow", ms: "2026-10-23" },
+      { label: "Analytics", c: 1, from: "2026-10-19", to: "2026-11-06",
+        items: ["Event tracking from visitor pages", "Owner dashboard: views, walkthrough opens, directions taps, search appearances, peak hours, filters, demand"] },
+      { label: "Owner accounts & admin panel", c: 1, from: "2026-10-26", to: "2026-11-06",
+        items: ["Owner registration with manual approval", "Venue management and scan uploads", "Amenity edit queue", "Review moderation"] },
+      { label: "Owner workflow", c: 1, from: "2026-10-26", to: "2026-11-06",
+        items: ["Listing editor: menu, prices, hours, events", "Occupancy: quiet, moderate or full", "Review replies"] },
+      { label: "Checkpoint B: owners & admin", ms: "2026-11-06" },
+    ]},
+    { name: "Tier 2 build", rows: [
+      { label: "Tier 2 features", c: 2, from: "2026-11-09", to: "2026-12-04",
+        items: ["Amenity verification (no points)", "Menu photo capture (OCR + free AI)", "Manual billing (pricing waits on business model)", "Marketing pages: home, For Cafes pricing, About, Contact, FAQ", "Offline support", "Admin demand queue", "Google Places fallback, if approved"] },
+    ]},
+    { name: "Testing & launch", rows: [
+      { label: "Stakeholder testing", sub: "Developer, project owner, team, close friends", c: 3, from: "2026-11-09", to: "2026-11-20",
+        items: ["Developer, project owner, team members and close friends", "Tests the flows on the provisional look", "Collect issues for fix round 1"] },
+      { label: "Fix round 1", c: 4, from: "2026-11-23", to: "2026-12-04",
+        items: ["Fixes from stakeholder testing", "Tier 2 continues alongside"] },
+      { label: "Visual design pass", sub: "Final UI/UX and branding", c: 5, from: "2026-11-23", to: "2026-12-04",
+        items: ["Apply the final UI/UX and branding to every screen", "Screens are built on shared tokens and components, so this is a reskin rather than a rebuild", "Public beta ships with the final look"] },
+      { label: "Public beta", sub: "Open to anyone with the link", c: 3, from: "2026-12-07", to: "2026-12-18",
+        items: ["Open to anyone with the link", "Collect issues for fix round 2"] },
+      { label: "Fix round 2 & launch prep", c: 4, from: "2026-12-21", to: "2026-12-28",
+        items: ["Fixes from the beta", "Production domain, data and monitoring"] },
+      { label: "Launch", ms: "2026-12-29", big: true },
+    ]},
+  ];
+  const meetings = ["2026-10-09", "2026-10-23", "2026-11-06", "2026-11-20", "2026-12-04", "2026-12-18"];
+  const holidays = [
+    ["2026-11-02", "2026-11-02", "All Souls' Day"], ["2026-11-30", "2026-11-30", "Bonifacio Day"],
+    ["2026-12-08", "2026-12-08", "Immaculate Conception"], ["2026-12-24", "2026-12-25", "Christmas Eve and Day"],
+    ["2026-12-30", "2026-12-31", "Rizal Day and New Year's Eve"],
+  ];
+  const today = new Date(2026, 8, 28);
+
+  const g = document.getElementById("gantt");
+  const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+
+  // Shared background for every track: week lines, holidays, today.
+  const overlay = () => {
+    const o = el("div", "overlay");
+    for (let t = START.getTime(); t < END.getTime(); t += 7 * DAY) {
+      const v = el("div", "vgrid"); v.style.left = x(new Date(t)) + "%"; o.append(v);
+    }
+    for (const [a, b] of holidays) {
+      const h = el("div", "hol"); h.style.left = x(d(a)) + "%"; h.style.width = (xEnd(b) - x(d(a))) + "%"; o.append(h);
+    }
+    const tl = el("div", "todayline"); tl.style.left = x(today) + "%"; o.append(tl);
+    return o;
+  };
+
+  // Header: months and week-start dates.
+  g.append(el("div", "lab"));
+  const head = el("div", "track head");
+  for (const [m, label] of [[8, "September"], [9, "October"], [10, "November"], [11, "December"]]) {
+    const first = new Date(2026, m, 1);
+    const next = new Date(2026, m + 1, 1);
+    const visibleDays = (Math.min(next, END) - Math.max(first, START)) / DAY;
+    if (visibleDays < 10) continue;
+    const n = el("span", "month", label);
+    n.style.left = Math.max(0, x(first < START ? START : first)) + "%";
+    head.append(n);
+  }
+  for (let t = START.getTime(); t < END.getTime(); t += 7 * DAY) {
+    const w = new Date(t);
+    const n = el("span", "wk", String(w.getDate()));
+    n.style.left = x(w) + "%";
+    head.append(n);
+  }
+  const tag = el("span", "todaytag", "Today"); tag.style.left = x(today) + "%"; tag.style.top = "16px"; head.append(tag);
+  head.style.borderTop = "none";
+  g.append(head);
+
+  const tip = document.getElementById("tip");
+  const showTip = (target, row) => {
+    tip.innerHTML = `<b>${row.label}</b>${fmt(row.from)} – ${fmt(row.to)}<ul>${row.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+    tip.hidden = false;
+    const r = target.getBoundingClientRect();
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = Math.min(Math.max(8, r.left + r.width / 2 - tw / 2), window.innerWidth - tw - 8);
+    let top = r.top - th - 8;
+    if (top < 8) top = r.bottom + 8;
+    tip.style.left = left + "px"; tip.style.top = top + "px";
+  };
+  const hideTip = () => { tip.hidden = true; };
+
+  const tbody = document.querySelector("#phase-table tbody");
+
+  for (const group of groups) {
+    g.append(el("div", "group", group.name));
+    for (const row of group.rows) {
+      const lab = el("div", "lab", row.label + (row.sub ? `<small>${row.sub}</small>` : ""));
+      const track = el("div", "track");
+      track.append(overlay());
+      if (row.ms || row.input) {
+        const when = row.ms ?? row.input;
+        const m = el("div", "ms" + (row.big ? " big" : "") + (row.input ? " input" : ""));
+        m.style.left = x(new Date(d(when).getTime() + DAY * 0.5)) + "%";
+        const ml = el("span", "ms-label", fmt(when));
+        const pos = x(d(when));
+        if (pos > 80) { ml.style.right = (100 - pos + 1.2) + "%"; } else { ml.style.left = (pos + 1.6) + "%"; }
+        track.append(m, ml);
+        const what = row.input ? `Input needed: ${row.why}` : row.big ? "Public launch" : "Review with the project head";
+        tbody.append(el("tr", null, `<td><b>${row.label}</b></td><td class="num">${row.input ? "By " : ""}${fmt(when)}</td><td>${what}</td>`));
+      } else {
+        const b = el("div", "bar c" + row.c);
+        b.style.left = x(d(row.from)) + "%";
+        b.style.width = (xEnd(row.to) - x(d(row.from))) + "%";
+        b.tabIndex = 0;
+        b.setAttribute("aria-label", `${row.label}, ${fmt(row.from)} to ${fmt(row.to)}`);
+        b.addEventListener("mouseenter", () => showTip(b, row));
+        b.addEventListener("mouseleave", hideTip);
+        b.addEventListener("focus", () => showTip(b, row));
+        b.addEventListener("blur", hideTip);
+        b.addEventListener("click", () => (tip.hidden ? showTip(b, row) : hideTip()));
+        track.append(b);
+        tbody.append(el("tr", null, `<td><b>${row.label}</b></td><td class="num">${fmt(row.from)} – ${fmt(row.to)}</td><td>${row.items.join("; ")}</td>`));
+      }
+      g.append(lab, track);
+    }
+  }
+
+  // Bi-weekly check-ins row.
+  g.append(el("div", "group", "Tracking"));
+  const mlab = el("div", "lab", "Check-in with project head<small>Every other Friday</small>");
+  const mtrack = el("div", "track");
+  mtrack.style.minHeight = "44px";
+  mtrack.append(overlay());
+  for (const m of meetings) {
+    const dot = el("div", "meet");
+    const pos = x(new Date(d(m).getTime() + DAY * 0.5));
+    dot.style.left = pos + "%";
+    const l = el("span", "meet-label", d(m).toLocaleDateString("en-PH", { day: "numeric", month: "short" }));
+    l.style.left = pos + "%";
+    mtrack.append(dot, l);
+  }
+  g.append(mlab, mtrack);
+  tbody.append(el("tr", null, `<td><b>Check-ins with project head</b></td><td class="num">${meetings.map((m) => d(m).toLocaleDateString("en-PH", { day: "numeric", month: "short" })).join(", ")}</td><td>Bi-weekly progress review, Fridays</td>`));
+  tbody.append(el("tr", null, `<td><b>PH holidays</b></td><td class="num">${holidays.map((h) => h[0] === h[1] ? d(h[0]).toLocaleDateString("en-PH", { day: "numeric", month: "short" }) : d(h[0]).toLocaleDateString("en-PH", { day: "numeric", month: "short" }) + "–" + d(h[1]).getDate()).join(", ")}</td><td>${holidays.map((h) => h[2]).join("; ")}</td>`));
+
+  window.addEventListener("scroll", hideTip, { passive: true });
+</script>
+
+</body>
+</html>

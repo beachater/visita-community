@@ -1,0 +1,23 @@
+---
+import { BadgeCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// The one sanctioned use of amber: "this venue is scanned and verified".
+// Amber background with navy text (6.48:1). Never on a button, never as text.
+interface Props {
+  size?: "sm" | "md";
+  class?: string;
+}
+const { size = "md", class: className } = Astro.props;
+---
+
+<span
+  class={cn(
+    "inline-flex items-center gap-1 rounded-full bg-verified font-bold text-verified-foreground",
+    size === "sm" ? "px-2 py-0.5 text-[0.7rem]" : "px-2.5 py-1 text-xs",
+    className,
+  )}
+>
+  <BadgeCheck className={size === "sm" ? "size-3" : "size-3.5"} aria-hidden="true" />
+  Scanned
+</span>

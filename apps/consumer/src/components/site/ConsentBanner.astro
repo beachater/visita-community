@@ -1,0 +1,46 @@
+---
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+// Storage and usage-data notice (RA 10173). Two honest choices:
+//   "Allow usage stats" → first-party analytics may record page and
+//                         walkthrough events (what venue owners see).
+//   "Essential only"    → only what the site needs to work: sign-in session,
+//                         saved and recently viewed cafes, this choice.
+// The choice is read by the analytics code via getConsent() in lib/consent.ts.
+---
+
+<section
+  id="consent-banner"
+  hidden
+  aria-label="Privacy choices"
+  class="fixed inset-x-0 bottom-0 z-50 border-t bg-card shadow-[0_-8px_24px_rgba(4,44,83,0.12)]"
+  style="padding-bottom: env(safe-area-inset-bottom, 0px)"
+>
+  <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-6">
+    <p class="text-sm">
+      Visita keeps a little data on this device so the site works: your sign-in, saved cafes and recently viewed.
+      With your OK, we also count visits and walkthrough opens so cafes can see how their listing is doing.
+      No advertising trackers. <a href="/privacy" class="font-medium text-primary underline underline-offset-2">Privacy policy</a>
+    </p>
+    <div class="flex shrink-0 gap-2">
+      <button type="button" data-consent="essential" class={cn(buttonVariants({ variant: "outline" }), "flex-1 sm:flex-none")}>Essential only</button>
+      <button type="button" data-consent="all" class={cn(buttonVariants({ variant: "default" }), "flex-1 sm:flex-none")}>Allow usage stats</button>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { getConsent, setConsent, type ConsentChoice } from "../../lib/consent";
+
+  const banner = document.getElementById("consent-banner");
+  if (banner && getConsent() === null) {
+    banner.hidden = false;
+    for (const button of banner.querySelectorAll<HTMLButtonElement>("[data-consent]")) {
+      button.addEventListener("click", () => {
+        setConsent(button.dataset.consent as ConsentChoice);
+        banner.hidden = true;
+      });
+    }
+  }
+</script>

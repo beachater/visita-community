@@ -1,0 +1,13 @@
+---
+// Visible marker for content that isn't final (legal drafts, placeholder
+// pricing). Removed page by page once the content is signed off.
+interface Props {
+  title?: string;
+}
+const { title = "Draft" } = Astro.props;
+---
+
+<aside class="rounded-lg border border-dashed border-warning/50 bg-card px-4 py-3 text-sm" role="note">
+  <strong class="font-bold text-warning">{title}.</strong>
+  <slot />
+</aside>

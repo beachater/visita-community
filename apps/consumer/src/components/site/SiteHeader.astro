@@ -1,0 +1,93 @@
+---
+import { Menu, X } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { PRIMARY_NAV, isCurrent } from "./nav";
+
+// Zero-JS header: links are plain anchors and the mobile menu is a native
+// <dialog> opened by a few lines of script, so no framework ships to every page.
+const path = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75" style="padding-top: env(safe-area-inset-top, 0px)">
+  <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
+    <a href="/" class="font-display text-2xl font-bold tracking-tight text-foreground" aria-label="Visita home">Visita</a>
+
+    <nav aria-label="Main" class="ml-6 hidden md:block">
+      <ul class="flex items-center gap-1">
+        {PRIMARY_NAV.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              aria-current={isCurrent(link.href, path) ? "page" : undefined}
+              class={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "text-foreground aria-[current=page]:bg-accent aria-[current=page]:font-bold",
+              )}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2">
+      <a href="/auth/login" class={cn(buttonVariants({ variant: "default", size: "sm" }), "hidden sm:inline-flex")}>Sign in</a>
+      <button
+        type="button"
+        class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "md:hidden")}
+        aria-label="Open menu"
+        aria-haspopup="dialog"
+        data-menu-open
+      >
+        <Menu className="size-6" aria-hidden="true" />
+      </button>
+    </div>
+  </div>
+
+  <dialog
+    id="site-menu"
+    aria-label="Menu"
+    class="m-0 ml-auto h-dvh max-h-none w-[min(22rem,88vw)] max-w-none bg-card p-0 text-foreground shadow-xl backdrop:bg-foreground/40"
+  >
+    <div class="flex h-full flex-col" style="padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px)">
+      <div class="flex h-16 items-center justify-between border-b px-4">
+        <span class="font-display text-2xl font-bold">Visita</span>
+        <button type="button" class={buttonVariants({ variant: "ghost", size: "icon" })} aria-label="Close menu" data-menu-close>
+          <X className="size-6" aria-hidden="true" />
+        </button>
+      </div>
+      <nav aria-label="Main" class="flex-1 overflow-y-auto p-2">
+        <ul class="grid gap-1">
+          {PRIMARY_NAV.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                aria-current={isCurrent(link.href, path) ? "page" : undefined}
+                class="flex h-12 items-center rounded-md px-3 text-lg hover:bg-accent aria-[current=page]:bg-accent aria-[current=page]:font-bold"
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div class="border-t p-4">
+        <a href="/auth/login" class={cn(buttonVariants({ variant: "default" }), "w-full")}>Sign in with Google</a>
+      </div>
+    </div>
+  </dialog>
+</header>
+
+<script>
+  const menu = document.getElementById("site-menu") as HTMLDialogElement | null;
+  if (menu) {
+    document.querySelector("[data-menu-open]")?.addEventListener("click", () => menu.showModal());
+    menu.querySelector("[data-menu-close]")?.addEventListener("click", () => menu.close());
+    // Tapping the dimmed backdrop closes the menu.
+    menu.addEventListener("click", (event) => {
+      if (event.target === menu) menu.close();
+    });
+  }
+</script>

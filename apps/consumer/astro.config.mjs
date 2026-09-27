@@ -2,6 +2,7 @@
 import { defineConfig } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 import react from "@astrojs/react";
+import tailwindcss from "@tailwindcss/vite";
 
 // Server output by default; pages that are the same for every visitor opt in
 // with `export const prerender = true` (PRD 5.2). Every page declares its mode
@@ -18,4 +19,7 @@ export default defineConfig({
   session: false,
   adapter: cloudflare({ imageService: "compile" }),
   integrations: [react()],
+  vite: {
+    plugins: [tailwindcss()],
+  },
 });

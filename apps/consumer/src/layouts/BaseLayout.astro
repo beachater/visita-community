@@ -1,10 +1,21 @@
 ---
+import "../styles/global.css";
+import SiteHeader from "../components/site/SiteHeader.astro";
+import SiteFooter from "../components/site/SiteFooter.astro";
+import ConsentBanner from "../components/site/ConsentBanner.astro";
+
 interface Props {
   title: string;
   description?: string;
+  /**
+   * "site": header, footer and consent notice (default).
+   * "bare": just the page, for full-screen views like the map and walkthrough,
+   * which bring their own controls. The consent notice still shows.
+   */
+  chrome?: "site" | "bare";
 }
 
-const { title, description } = Astro.props;
+const { title, description, chrome = "site" } = Astro.props;
 const pageTitle = title === "Visita" ? title : `${title} · Visita`;
 // Prerendered pages see their output file (/cafe/sonnys.html) as the path;
 // share URLs never carry the extension.
@@ -16,12 +27,14 @@ const canonical = new URL(canonicalPath, Astro.site);
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#042c53" />
     <title>{pageTitle}</title>
     {description && <meta name="description" content={description} />}
     <slot name="head" />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Visita" />
     <meta property="og:url" content={canonical} />
     <meta property="og:title" content={pageTitle} />
     {description && <meta property="og:description" content={description} />}
@@ -29,31 +42,21 @@ const canonical = new URL(canonicalPath, Astro.site);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Playfair+Display:wght@600;700&display=swap"
     />
-    <style is:global>
-      /* Brand tokens (PRD 2). Amber means "scanned and verified" only. */
-      :root {
-        --navy: #042c53;
-        --ocean: #185fa5;
-        --sky: #378add;
-        --mist: #b5d4f4;
-        --cloud: #e6f1fb;
-        --amber: #ef9f27;
-        --gold: #fac775;
-        --amber-deep: #a85f0a;
-        --font-display: "Playfair Display", Georgia, serif;
-        --font-body: "DM Sans", system-ui, sans-serif;
-      }
-      body {
-        margin: 0;
-        font-family: var(--font-body);
-        color: var(--navy);
-        background: var(--cloud);
-      }
-    </style>
   </head>
-  <body>
-    <slot />
+  <body class="min-h-dvh flex flex-col">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:shadow"
+    >
+      Skip to content
+    </a>
+    {chrome === "site" && <SiteHeader />}
+    <div id="main" class="flex-1">
+      <slot />
+    </div>
+    {chrome === "site" && <SiteFooter />}
+    <ConsentBanner />
   </body>
 </html>

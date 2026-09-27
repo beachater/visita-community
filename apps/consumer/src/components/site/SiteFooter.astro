@@ -1,0 +1,27 @@
+---
+import { FOOTER_NAV } from "./nav";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-16 border-t bg-card" style="padding-bottom: env(safe-area-inset-bottom, 0px)">
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <div class="grid content-start gap-2">
+      <a href="/" class="font-display text-2xl font-bold">Visita</a>
+      <p class="max-w-[32ch] text-sm text-muted-foreground">Step inside with confidence. Real, unedited walkthroughs of cafes in Cagayan de Oro.</p>
+    </div>
+    {FOOTER_NAV.map((group) => (
+      <nav aria-label={group.heading} class="grid content-start gap-2">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">{group.heading}</h2>
+        <ul class="grid gap-1.5 text-sm">
+          {group.links.map((link) => (
+            <li><a href={link.href} class="hover:text-primary hover:underline">{link.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+    ))}
+  </div>
+  <div class="border-t">
+    <p class="mx-auto max-w-6xl px-4 py-4 text-xs text-muted-foreground">© {year} Visita · Cagayan de Oro, Philippines</p>
+  </div>
+</footer>

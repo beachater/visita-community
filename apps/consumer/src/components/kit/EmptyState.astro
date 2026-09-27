@@ -1,0 +1,16 @@
+---
+import { cn } from "@/lib/utils";
+
+// For "nothing here yet": says so plainly and offers the next step.
+interface Props {
+  title: string;
+  class?: string;
+}
+const { title, class: className } = Astro.props;
+---
+
+<div class={cn("grid justify-items-center gap-3 rounded-xl border border-dashed bg-card px-6 py-10 text-center", className)}>
+  <p class="font-medium">{title}</p>
+  <div class="max-w-[48ch] text-sm text-muted-foreground"><slot /></div>
+  <slot name="action" />
+</div>

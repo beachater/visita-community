@@ -1,13 +1,79 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import PageHeader from "../components/kit/PageHeader.astro";
+import DraftNotice from "../components/kit/DraftNotice.astro";
 
 export const prerender = true;
+
+/*
+ * DRAFT, NOT LEGAL ADVICE. Needs review by a Philippine lawyer before launch.
+ * Confirm before launch:
+ *   - the legal entity and its registration (not registered yet)
+ *   - partner pricing, refunds and cancellation (the business model is pending)
+ *   - VAT and invoicing obligations
+ *   - the licence a venue grants over its scan, and what happens on cancellation
+ *   - liability limits enforceable under Philippine law
+ */
 ---
 
-<BaseLayout title="Terms of use">
-  <Placeholder route="/terms" mode="prerendered">
-    <h1>Terms of use</h1>
-    <!-- TODO: terms of use. -->
-  </Placeholder>
+<BaseLayout title="Terms of use" description="The terms for using Visita, as a visitor or as a venue owner.">
+  <main class="mx-auto max-w-6xl px-4 py-10">
+    <PageHeader eyebrow="Legal" title="Terms of use" lede="The terms for using Visita, whether you're looking for a cafe or listing one." />
+    <div class="prose-visita">
+      <DraftNotice>These terms are a working draft and haven't been reviewed by a lawyer yet. They will be finalised before public launch.</DraftNotice>
+
+      <h2>1. What Visita is</h2>
+      <p>
+        Visita publishes real 3D scans and details of cafes so you can see a place before you go. Unless a listing says otherwise, we aren't affiliated with the
+        cafes we list and we don't run them.
+      </p>
+
+      <h2>2. Using Visita</h2>
+      <ul>
+        <li>Use Visita lawfully and don't interfere with how it works or how it's secured.</li>
+        <li>Don't copy, scrape, republish or resell our scans or listings without written permission.</li>
+        <li>Don't post content that's unlawful, misleading, or infringes someone else's rights.</li>
+      </ul>
+
+      <h2>3. Your account</h2>
+      <p>You sign in with Google and are responsible for activity on your account. You can close it at any time.</p>
+
+      <h2>4. Reviews and photos</h2>
+      <p>
+        You're responsible for what you post. By posting, you let us show it on Visita. We may remove content that breaks these terms, isn't a genuine account of a
+        visit, or is the subject of a valid complaint. We never write reviews ourselves and never publish invented ones. Venue owners can't review their own venue.
+      </p>
+
+      <h2>5. Accuracy</h2>
+      <p>
+        A scan shows a room as it was on the day it was captured, and rooms change. Amenity details come from the venue and from visitors. Where we don't know
+        something we show nothing, but we can't guarantee every detail is current, so check anything you're relying on.
+      </p>
+
+      <h2>6. Venue owners</h2>
+      <p>
+        If you list a venue, you confirm that you manage it, that you're allowed to have it scanned and published, and that the details you give us are accurate.
+        Owner accounts are approved manually. Changes to verified amenities are reviewed before they appear. Fees, billing and cancellation are set out in your
+        partner agreement. We may decline or withdraw a listing, including where information turns out to be inaccurate.
+      </p>
+
+      <h2>7. Scans and trademarks</h2>
+      <p>Scans we capture remain ours; your listing lets us show them on Visita and anywhere else we agree in writing. Your trademarks and branding stay yours.</p>
+
+      <h2>8. Availability</h2>
+      <p>Visita is provided as it is. We don't promise it will always be available, and features may change.</p>
+
+      <h2>9. Liability</h2>
+      <p>
+        To the extent Philippine law allows, we aren't liable for indirect or consequential loss from using Visita. Nothing here limits liability that the law says
+        can't be limited.
+      </p>
+
+      <h2>10. Governing law</h2>
+      <p>These terms are governed by the laws of the Republic of the Philippines, with venue in the courts of Cagayan de Oro City.</p>
+
+      <h2>11. Contact</h2>
+      <p>Questions about these terms: <strong>hello@visita.ph</strong>.</p>
+    </div>
+  </main>
 </BaseLayout>

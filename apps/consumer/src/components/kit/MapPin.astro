@@ -1,0 +1,25 @@
+---
+import { cn } from "@/lib/utils";
+
+// Map pin, PRD 4.1: scanned cafes are amber, unscanned stay white. The same
+// shapes are drawn by the map island; this is the static reference and legend.
+interface Props {
+  scanned: boolean;
+  label?: string;
+  class?: string;
+}
+const { scanned, label, class: className } = Astro.props;
+---
+
+<span class={cn("inline-flex flex-col items-center gap-1", className)}>
+  <svg width="28" height="36" viewBox="0 0 28 36" aria-hidden="true">
+    <path
+      d="M14 35s11-11.2 11-20.5C25 7.6 20.1 3 14 3S3 7.6 3 14.5C3 23.8 14 35 14 35z"
+      fill={scanned ? "var(--verified)" : "#ffffff"}
+      stroke="var(--brand-navy)"
+      stroke-width="2"
+    />
+    <circle cx="14" cy="14.5" r="4" fill="var(--brand-navy)" />
+  </svg>
+  {label && <span class="text-xs font-medium">{label}</span>}
+</span>

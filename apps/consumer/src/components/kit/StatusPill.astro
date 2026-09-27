@@ -1,0 +1,21 @@
+---
+import { cn } from "@/lib/utils";
+
+// Small state label. State is carried by text and a dot, never colour alone.
+interface Props {
+  tone?: "neutral" | "open" | "closed" | "stale";
+  class?: string;
+}
+const { tone = "neutral", class: className } = Astro.props;
+const tones = {
+  neutral: "border-border text-foreground",
+  open: "border-success/40 text-success",
+  closed: "border-border text-muted-foreground",
+  stale: "border-warning/40 text-warning",
+};
+---
+
+<span class={cn("inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-0.5 text-xs font-medium", tones[tone], className)}>
+  <span class="size-1.5 rounded-full bg-current" aria-hidden="true"></span>
+  <slot />
+</span>

@@ -1,0 +1,118 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/kit/PageHeader.astro";
+import ScannedBadge from "../../components/kit/ScannedBadge.astro";
+import StatusPill from "../../components/kit/StatusPill.astro";
+import GlassPanel from "../../components/kit/GlassPanel.astro";
+import Rating from "../../components/kit/Rating.astro";
+import MapPin from "../../components/kit/MapPin.astro";
+import EmptyState from "../../components/kit/EmptyState.astro";
+import { KitDemo } from "../../components/kit/KitDemo";
+import { buttonVariants } from "@/components/ui/button";
+
+// Internal review page for the UI kit. Not linked from the site.
+export const prerender = true;
+
+const swatches = [
+  ["--background", "Page background (cloud)"],
+  ["--card", "Cards, sheets, header"],
+  ["--foreground", "Text (navy)"],
+  ["--muted-foreground", "Secondary text"],
+  ["--primary", "Buttons, links (ocean)"],
+  ["--ring", "Focus ring (sky)"],
+  ["--border", "Borders (mist)"],
+  ["--verified", "Scanned & verified only (amber)"],
+  ["--rating", "Star ratings (amber deep)"],
+  ["--success", "Open now"],
+  ["--warning", "Stale scan date"],
+  ["--destructive", "Destructive actions"],
+];
+---
+
+<BaseLayout title="UI kit">
+  <meta name="robots" content="noindex" slot="head" />
+  <main class="mx-auto grid max-w-6xl gap-12 px-4 py-10">
+    <PageHeader
+      eyebrow="Internal · provisional"
+      title="Visita UI kit"
+      lede="Every shared piece of the interface in one place. Colours and type are provisional until the final branding arrives; they all come from tokens in src/styles/global.css."
+    />
+
+    <section class="grid gap-3">
+      <h2 class="font-display text-2xl font-semibold text-primary">Colour tokens</h2>
+      <ul class="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-3">
+        {swatches.map(([token, role]) => (
+          <li class="flex items-center gap-3 rounded-lg border bg-card p-3">
+            <span class="size-10 shrink-0 rounded-md border" style={`background: var(${token})`}></span>
+            <span class="grid text-sm">
+              <code class="text-xs text-muted-foreground">{token}</code>
+              <span>{role}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="grid gap-3">
+      <h2 class="font-display text-2xl font-semibold text-primary">Type</h2>
+      <div class="grid gap-2 rounded-xl border bg-card p-5">
+        <p class="font-display text-5xl font-bold">Step inside with confidence</p>
+        <p class="font-display text-3xl font-semibold">Sonny's Coffee + Diner</p>
+        <p class="text-lg">DM Sans for everything else: body text, buttons, captions and data.</p>
+        <p class="text-sm text-muted-foreground">Playfair Display is for headlines only. Small serif text strains on phones.</p>
+        <p class="tabular-nums">₱150 · 7 outlets · 100 Mbps · Scanned March 2026</p>
+      </div>
+    </section>
+
+    <section class="grid gap-3">
+      <h2 class="font-display text-2xl font-semibold text-primary">Badges, pills and ratings</h2>
+      <div class="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-5">
+        <ScannedBadge />
+        <ScannedBadge size="sm" />
+        <StatusPill tone="open">Open now</StatusPill>
+        <StatusPill tone="closed">Closed</StatusPill>
+        <StatusPill tone="stale">Scanned 14 months ago</StatusPill>
+        <StatusPill>Moderate crowd · 20 min ago</StatusPill>
+        <Rating value={4.5} count={28} />
+      </div>
+      <p class="text-sm text-muted-foreground">One amber element per screen, and it always means the venue is scanned and verified.</p>
+    </section>
+
+    <section class="grid gap-3">
+      <h2 class="font-display text-2xl font-semibold text-primary">Map pins</h2>
+      <div class="flex flex-wrap items-end gap-8 rounded-xl border bg-card p-5">
+        <MapPin scanned={true} label="Scanned" />
+        <MapPin scanned={false} label="Not scanned yet" />
+      </div>
+    </section>
+
+    <section class="grid gap-3">
+      <h2 class="font-display text-2xl font-semibold text-primary">Glass panel over the scan</h2>
+      <div class="relative grid min-h-72 place-items-start overflow-hidden rounded-xl bg-scan p-4" style="background-image: radial-gradient(circle at 70% 40%, #185fa5 0, transparent 55%), radial-gradient(circle at 20% 80%, #a85f0a 0, transparent 45%)">
+        <GlassPanel class="grid w-full max-w-sm gap-3 p-4" as="aside" label="Cafe details">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-display text-xl font-semibold">Sonny's Coffee + Diner</p>
+            <ScannedBadge size="sm" />
+          </div>
+          <dl class="grid grid-cols-3 gap-2 text-sm">
+            <div><dt class="text-xs opacity-75">Wi-Fi</dt><dd class="font-medium">100 Mbps</dd></div>
+            <div><dt class="text-xs opacity-75">Outlets</dt><dd class="font-medium">9</dd></div>
+            <div><dt class="text-xs opacity-75">Tables</dt><dd class="font-medium">12</dd></div>
+          </dl>
+          <button type="button" class={buttonVariants({ variant: "secondary", size: "sm" })}>Show all details</button>
+        </GlassPanel>
+      </div>
+      <p class="text-sm text-muted-foreground">Example layout of the walkthrough's info panel, collapsed to the three-stat strip.</p>
+    </section>
+
+    <section class="grid gap-3">
+      <h2 class="font-display text-2xl font-semibold text-primary">Empty state</h2>
+      <EmptyState title="No saved cafes yet">
+        Tap the heart on any scanned cafe to keep it here.
+        <a slot="action" href="/explore" class={buttonVariants({ variant: "default", size: "sm" })}>Explore cafes</a>
+      </EmptyState>
+    </section>
+
+    <KitDemo client:visible />
+  </main>
+</BaseLayout>

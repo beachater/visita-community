@@ -83,3 +83,24 @@ Prerendered pages that need per-visitor or fast-changing content use server
 islands (`server:defer`), so the shell stays cached. Venue pages are built from
 published venues at deploy time, so publishing or rescanning a venue must
 trigger a deploy hook (not wired yet).
+
+## UI kit (consumer)
+
+- **Tokens:** `apps/consumer/src/styles/global.css`. Every colour, font and radius
+  is a CSS variable there. The values are **provisional** until the final
+  UI/UX and branding arrive, and the rebrand is a change to that block only.
+- **Components:**
+  - shadcn/ui primitives, copied into `src/components/ui` and owned by us;
+  - Visita pieces in `src/components/kit`: the Scanned badge, status pill,
+    glass panel, rating, map pin, bottom sheet, page header, empty state and
+    draft notice.
+- **Rules:**
+  - Amber (`--verified`) means "scanned and verified" and nothing else. It's
+    never used on a button or for text.
+  - Playfair Display is for headlines only.
+  - Touch targets are at least 44px.
+- **Shell:** `SiteHeader` and `SiteFooter` are zero-JS Astro; the mobile menu is
+  a native `<dialog>`. `BaseLayout chrome="bare"` drops them for full-screen
+  views. `ConsentBanner` stores the RA 10173 choice, and analytics must check
+  `hasUsageConsent()` from `src/lib/consent.ts`.
+- **Review page:** `/lab/ui` (noindex).

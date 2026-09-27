@@ -1,13 +1,140 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import PageHeader from "../components/kit/PageHeader.astro";
+import DraftNotice from "../components/kit/DraftNotice.astro";
 
 export const prerender = true;
+
+/*
+ * DRAFT, NOT LEGAL ADVICE. Needs review by a Philippine lawyer before launch.
+ * Written against the Data Privacy Act of 2012 (RA 10173) and its IRR.
+ * Confirm before launch:
+ *   - the legal entity name and address (the business isn't registered yet)
+ *   - whether a Data Protection Officer must be registered with the NPC
+ *   - the retention periods below
+ *   - the lawful basis for each purpose
+ *   - that the processors listed match what's deployed
+ * Several statements are commitments the product must keep (consent gating
+ * of usage stats, location staying on the device, the response window).
+ */
 ---
 
-<BaseLayout title="Privacy policy">
-  <Placeholder route="/privacy" mode="prerendered">
-    <h1>Privacy policy</h1>
-    <!-- TODO: privacy policy and storage consent (RA 10173). -->
-  </Placeholder>
+<BaseLayout title="Privacy policy" description="How Visita handles personal data under the Philippine Data Privacy Act of 2012 (RA 10173).">
+  <main class="mx-auto max-w-6xl px-4 py-10">
+    <PageHeader eyebrow="Legal" title="Privacy policy" lede="How Visita handles personal data, written for the Philippine Data Privacy Act of 2012 (RA 10173)." />
+    <div class="prose-visita">
+      <DraftNotice>This policy is a working draft and hasn't been reviewed by a lawyer yet. It will be finalised before public launch.</DraftNotice>
+
+      <h2>1. Who we are</h2>
+      <p>
+        Visita is a cafe discovery service in Cagayan de Oro, Philippines. Under RA 10173 we are the personal information controller for the data described here.
+        Our registered business name and address will be published here once registration is complete. Data protection contact: <strong>privacy@visita.ph</strong>.
+      </p>
+
+      <h2>2. What we collect, and why</h2>
+
+      <h3>Your account</h3>
+      <p>
+        You sign in with Google. We receive your name, email address and profile photo from Google, and give your account an identifier. We use these to run your
+        account and to show your name beside reviews you publish. We never see your Google password.
+      </p>
+
+      <h3>Reviews and photos</h3>
+      <p>
+        When you write a review we store your rating, your text and any photo you add, and publish them on the cafe's page with your display name. Only upload photos
+        you took yourself, and leave other people's personal details out of your reviews.
+      </p>
+
+      <h3>Saved and recently viewed cafes</h3>
+      <p>Cafes you save are stored with your account so they follow you across devices. Recently viewed cafes are kept on your device only.</p>
+
+      <h3>Your location</h3>
+      <p>
+        If you allow it, your browser tells Visita your approximate location so we can show how far cafes are. This stays on your device: it isn't sent to us or
+        stored. It's optional, and everything else works without it.
+      </p>
+
+      <h3>Usage statistics, only if you allow them</h3>
+      <p>
+        If you choose "Allow usage stats" on the privacy notice, we count things like page visits, walkthrough opens, taps on "Get directions", and which searches
+        and filters led to a cafe. Cafe owners see these as totals for their own listing, never as individuals. We use our own first-party measurement: no
+        advertising trackers and no third-party analytics. If you choose "Essential only", none of this is recorded.
+      </p>
+
+      <h3>Venue owners</h3>
+      <p>
+        If you register as a venue owner, we also collect your contact details, details of the venue, and what's needed to confirm you manage it. We keep records of
+        subscription payments you make to us.
+      </p>
+
+      <h3>Directions</h3>
+      <p>
+        "Get directions" opens Google Maps or Apple Maps with the cafe as the destination. From that point the maps provider's own privacy policy applies. We don't
+        receive anything back from them.
+      </p>
+
+      <h3>On your device</h3>
+      <p>
+        We store a sign-in session, your privacy choice and your recently viewed cafes in your browser. These are needed for the site to work and aren't used to
+        track you across other sites.
+      </p>
+
+      <h2>3. Legal bases</h2>
+      <ul>
+        <li><strong>Consent:</strong> usage statistics and location. You can change your mind at any time by clearing this site's data in your browser.</li>
+        <li><strong>Contract:</strong> running your account and, for venue owners, your listing and subscription.</li>
+        <li><strong>Legitimate interests:</strong> keeping the service secure, preventing abuse, and moderating reviews.</li>
+      </ul>
+
+      <h2>4. Who we share data with</h2>
+      <p>We don't sell personal data. We use these service providers to run Visita, and they process data only on our instructions:</p>
+      <ul>
+        <li><strong>Supabase</strong>: database and sign-in.</li>
+        <li><strong>Cloudflare</strong>: hosting, and storage of scans and photos.</li>
+        <li><strong>Google</strong>: sign-in with your Google account.</li>
+      </ul>
+      <p>We may disclose data where Philippine law or a lawful order requires it.</p>
+
+      <h2>5. How long we keep it</h2>
+      <div class="overflow-x-auto">
+        <table>
+          <thead><tr><th>Data</th><th>Kept for</th></tr></thead>
+          <tbody>
+            <tr><td>Your account</td><td>While your account is open, then deleted within 30 days of closing it, unless the law requires longer</td></tr>
+            <tr><td>Published reviews and photos</td><td>Until you delete them or close your account</td></tr>
+            <tr><td>Usage statistics</td><td>24 months, then kept only as totals that identify no one</td></tr>
+            <tr><td>Venue owner and payment records</td><td>As long as the listing is active, then as required for tax and accounting</td></tr>
+            <tr><td>Data on your device</td><td>Until you clear your browser's data for this site</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>6. Your rights under RA 10173</h2>
+      <ul>
+        <li><strong>To be informed</strong> whether and why we process your data.</li>
+        <li><strong>To access</strong> a copy of the personal data we hold about you.</li>
+        <li><strong>To correct</strong> inaccurate or incomplete data.</li>
+        <li><strong>To erasure or blocking</strong> where data is no longer needed, was unlawfully obtained, or you withdraw consent.</li>
+        <li><strong>To data portability</strong>, in a commonly used electronic format.</li>
+        <li><strong>To object</strong> to processing, including processing based on legitimate interests.</li>
+        <li><strong>To damages</strong> for harm caused by inaccurate, incomplete or unlawfully obtained data.</li>
+      </ul>
+      <p>
+        Email <strong>privacy@visita.ph</strong> with enough detail for us to find the data. We aim to reply within 15 working days. If you're not satisfied, you can
+        complain to the <a href="https://privacy.gov.ph" rel="noopener">National Privacy Commission</a>.
+      </p>
+
+      <h2>7. Security</h2>
+      <p>
+        Visita is served over HTTPS, and access to stored data is limited by account and role. No system is perfectly secure. If a breach affects your personal data,
+        we'll notify you and the National Privacy Commission as RA 10173 requires.
+      </p>
+
+      <h2>8. Children</h2>
+      <p>Visita isn't meant for children under 13, and we don't knowingly collect their data. If you think a child has given us data, contact us and we'll delete it.</p>
+
+      <h2>9. Changes</h2>
+      <p>We'll update this policy as Visita changes, and show the date of the latest revision at the top.</p>
+    </div>
+  </main>
 </BaseLayout>
