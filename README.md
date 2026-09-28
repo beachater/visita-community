@@ -84,16 +84,21 @@ islands (`server:defer`), so the shell stays cached. Venue pages are built from
 published venues at deploy time, so publishing or rescanning a venue must
 trigger a deploy hook (not wired yet).
 
-## UI kit (consumer)
+## UI kit
 
-- **Tokens:** `apps/consumer/src/styles/global.css`. Every colour, font and radius
+- **Tokens:** `packages/ui/src/styles/tokens.css`. Every colour, font and radius
   is a CSS variable there. The values are **provisional** until the final
-  UI/UX and branding arrive, and the rebrand is a change to that block only.
-- **Components:**
-  - shadcn/ui primitives, copied into `src/components/ui` and owned by us;
-  - Visita pieces in `src/components/kit`: the Scanned badge, status pill,
-    glass panel, rating, map pin, bottom sheet, page header, empty state and
-    draft notice.
+  UI/UX and branding arrive, and the rebrand is a change to that file only.
+- **Shared components (`@visita/ui`):**
+  - shadcn/ui primitives: `@visita/ui/button`, `sheet`, `dialog` and so on;
+  - `@visita/ui/bottom-sheet`;
+  - `cn()` from `@visita/ui/utils`.
+  - Used by the consumer app and, from Task 6, the owner/admin app. Apps import
+    `@visita/ui/tokens.css` and `@source` the package so Tailwind sees its
+    classes.
+- **Consumer-only kit (`apps/consumer/src/components/kit`):** zero-JS Astro
+  pieces: the Scanned badge, status pill, glass panel, rating, map pin, page
+  header, empty state and draft notice.
 - **Rules:**
   - Amber (`--verified`) means "scanned and verified" and nothing else. It's
     never used on a button or for text.
@@ -103,4 +108,9 @@ trigger a deploy hook (not wired yet).
   a native `<dialog>`. `BaseLayout chrome="bare"` drops them for full-screen
   views. `ConsentBanner` stores the RA 10173 choice, and analytics must check
   `hasUsageConsent()` from `src/lib/consent.ts`.
-- **Review page:** `/lab/ui` (noindex).
+- **Review pages:** `/lab/ui` and `/lab/screen/<slug>` (noindex).
+
+## Tests
+
+`pnpm test` runs Vitest across the workspace. Tests live beside their code as
+`*.test.ts`. Database rules are covered separately by `pnpm db:test:rls`.

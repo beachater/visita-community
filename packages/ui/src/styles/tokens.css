@@ -1,0 +1,139 @@
+/*
+ * Visita design tokens — PROVISIONAL.
+ *
+ * Final UI/UX and branding are still to come from the client side. Every
+ * colour, font and radius on the site comes from these variables, so the
+ * final branding is a change to this block, not to components.
+ *
+ * Current values: PRD section 2, "Clarity & Light".
+ *   - Amber means one thing, "this venue is scanned and verified". It is
+ *     never a button colour and never a text colour. Use --verified only.
+ *   - Amber backgrounds take navy text (6.48:1), never white.
+ *   - Playfair Display for display type only; DM Sans for everything else.
+ */
+:root {
+  /* Brand palette (raw). Components use the semantic tokens below. */
+  --brand-navy: #042c53;
+  --brand-ocean: #185fa5;
+  --brand-sky: #378add;
+  --brand-mist: #b5d4f4;
+  --brand-cloud: #e6f1fb;
+  --brand-amber: #ef9f27;
+  --brand-gold: #fac775;
+  --brand-amber-deep: #a85f0a;
+
+  /* Semantic tokens (shadcn/ui names). */
+  --background: var(--brand-cloud);
+  --foreground: var(--brand-navy);
+  --card: #ffffff;
+  --card-foreground: var(--brand-navy);
+  --popover: #ffffff;
+  --popover-foreground: var(--brand-navy);
+  --primary: var(--brand-ocean);
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: var(--brand-ocean);
+  --muted: #f3f8fd;
+  --muted-foreground: #46627f;
+  --accent: #dcebf9;
+  --accent-foreground: var(--brand-navy);
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --border: var(--brand-mist);
+  --input: var(--brand-mist);
+  --ring: var(--brand-sky);
+  --radius: 0.75rem;
+
+  /* Visita meanings. */
+  --verified: var(--brand-amber);             /* scanned & verified: badges, map pins */
+  --verified-foreground: var(--brand-navy);
+  --rating: var(--brand-amber-deep);          /* stars on light surfaces */
+  --scan-surface: var(--brand-navy);          /* behind the 3D walkthrough */
+  --glass: rgba(4, 44, 83, 0.72);             /* panels floating over the scan */
+  --glass-foreground: var(--brand-cloud);
+  --glass-border: rgba(181, 212, 244, 0.35);
+  --glass-positive: #a7e8c9;                  /* "Open now" on glass */
+  --success: #1f7a4d;                         /* open now */
+  --warning: #9a5b00;                         /* stale scan date */
+
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Aliases kept for components written before the kit. */
+  --navy: var(--brand-navy);
+  --ocean: var(--brand-ocean);
+  --sky: var(--brand-sky);
+  --mist: var(--brand-mist);
+  --cloud: var(--brand-cloud);
+  --amber: var(--brand-amber);
+  --amber-deep: var(--brand-amber-deep);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-verified: var(--verified);
+  --color-verified-foreground: var(--verified-foreground);
+  --color-rating: var(--rating);
+  --color-scan: var(--scan-surface);
+  --color-glass: var(--glass);
+  --color-glass-foreground: var(--glass-foreground);
+  --color-glass-border: var(--glass-border);
+  --color-glass-positive: var(--glass-positive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    line-height: 1.55;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

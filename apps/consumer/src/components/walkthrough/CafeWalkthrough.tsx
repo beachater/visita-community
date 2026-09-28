@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AmenityDefinition } from "@visita/shared-types";
-import { Button } from "@/components/ui/button";
+import { Button } from "@visita/ui/button";
 import { getDeviceProfile } from "@/lib/splat/device";
 import type { WalkthroughCafe } from "@/lib/venue/types";
 import { WalkthroughScreen } from "./WalkthroughScreen";

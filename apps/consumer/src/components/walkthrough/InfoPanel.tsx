@@ -1,8 +1,8 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { BadgeCheck, ChevronDown, LocateFixed, Navigation } from "lucide-react";
 import type { AmenityDefinition } from "@visita/shared-types";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@visita/ui/button";
+import { cn } from "@visita/ui/utils";
 import { amenityRows, summaryRows } from "@/lib/venue/amenities";
 import { isOpenAt, venueClock, weeklyRows } from "@/lib/venue/hours";
 import { formatPhp, scanDate } from "@/lib/venue/scan";

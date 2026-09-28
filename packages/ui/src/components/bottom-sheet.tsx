@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./sheet";
+import { cn } from "../utils";
 
 // The phone-first panel used across Visita: the menu sheet, reviews, filters,
 // pin cards. Rises from the bottom, caps at 85% of the screen, and scrolls its

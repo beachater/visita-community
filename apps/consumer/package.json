@@ -17,6 +17,7 @@
     "@nanostores/react": "^2.0.1",
     "@tailwindcss/vite": "^4.3.3",
     "@visita/shared-types": "workspace:*",
+    "@visita/ui": "workspace:*",
     "astro": "^7.3.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

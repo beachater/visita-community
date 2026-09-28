@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Heart, Share2, SlidersHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Toaster } from "@/components/ui/sonner";
-import { BottomSheet } from "./BottomSheet";
+import { Button } from "@visita/ui/button";
+import { Input } from "@visita/ui/input";
+import { Label } from "@visita/ui/label";
+import { Textarea } from "@visita/ui/textarea";
+import { Switch } from "@visita/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@visita/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@visita/ui/dialog";
+import { Toaster } from "@visita/ui/sonner";
+import { BottomSheet } from "@visita/ui/bottom-sheet";
 
 // Interactive half of the UI kit page (/lab/ui). Example content only.
 
