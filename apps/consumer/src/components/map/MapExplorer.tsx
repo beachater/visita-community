@@ -1,15 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStore } from "@nanostores/react";
+import { toast } from "sonner";
 import { Map, MapControls, MapMarker, MarkerContent, type MapRef } from "@visita/ui/map";
 import { Toaster } from "@visita/ui/sonner";
 import { cn } from "@visita/ui/utils";
 import { fetchVenues, type VenuesPayload } from "@/lib/discovery/api";
+import { requestScan } from "@/lib/discovery/demand-client";
+import { activeFilterCount, applyFilters, EMPTY_FILTERS, type Filters } from "@/lib/discovery/filters";
+import { sortVenues, withDistance } from "@/lib/discovery/sort";
+import type { Coords } from "@/lib/venue/distance";
+import { $demanded, $saved } from "@/lib/visitor/stores";
 import { CDO_BOUNDS, CDO_CENTER, mapStyle } from "@/lib/discovery/map-style";
 import { pinnable, toWalkthrough, type MapVenue } from "@/lib/discovery/venues";
 import { getDeviceProfile } from "@/lib/splat/device";
 import { splatSrc } from "@/lib/splat/source";
 import { useDirections } from "../directions/useDirections";
 import { WalkthroughScreen } from "../walkthrough/WalkthroughScreen";
+import { Dock } from "./Dock";
+import { FilterSheet } from "./FilterSheet";
 import { PinCard } from "./PinCard";
+import { SearchBar } from "./SearchBar";
 import { VenuePin } from "./VenuePin";
 import { BASEMAP_KEY, setupMapLibre } from "./setup";
 
@@ -34,6 +44,13 @@ export function MapExplorer({ mode }: Props) {
   const pushed = useRef(false);
   const profile = useMemo(getDeviceProfile, []);
   const directions = useDirections();
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [showUnknown, setShowUnknown] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [here, setHere] = useState<Coords | null>(null);
+  const [demandPending, setDemandPending] = useState(false);
+  const savedSlugs = useStore($saved);
+  const demandedSlugs = useStore($demanded);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -48,7 +65,26 @@ export function MapExplorer({ mode }: Props) {
   // PMTiles needs an absolute URL; the basemap is served from our own domain.
   const style = useMemo(() => mapStyle(new URL(splatSrc(BASEMAP_KEY), location.href).href), []);
   const venues = data?.venues ?? [];
+  const filterResult = useMemo(() => applyFilters(venues, filters, showUnknown), [venues, filters, showUnknown]);
+  const pins = filterResult.shown.filter(pinnable);
+  const lists = useMemo(() => {
+    const ranked = withDistance(sortVenues(venues, here), here);
+    return {
+      scanned: ranked.filter((v) => v.scanned),
+      topPicks: ranked.filter((v) => v.isTopPick),
+      saved: savedSlugs.map((slug) => ranked.find((v) => v.slug === slug)).filter((v): v is (typeof ranked)[number] => Boolean(v)),
+    };
+  }, [venues, here, savedSlugs]);
   const selectedVenue = venues.find((v) => v.slug === selected) ?? null;
+  const selectedDistance = selectedVenue ? (withDistance([selectedVenue], here)[0]?.distance ?? null) : null;
+
+  const onDemand = async (slug: string) => {
+    setDemandPending(true);
+    const outcome = await requestScan(slug);
+    setDemandPending(false);
+    if (outcome.ok) toast.success("Thanks. We'll ask this cafe about a scan.");
+    else toast(outcome.message);
+  };
   const walkthroughCafe = useMemo(() => {
     const v = venues.find((x) => x.slug === walkthrough);
     return v ? toWalkthrough(v) : null;
@@ -120,8 +156,14 @@ export function MapExplorer({ mode }: Props) {
         maxBounds={CDO_BOUNDS}
         loading={!data && !error}
       >
-        <MapControls position="bottom-right" showZoom showLocate className="mb-[var(--consent-h,0px)]" />
-        {venues.filter(pinnable).map((v) => (
+        <MapControls
+          position="top-right"
+          showZoom
+          showLocate
+          className="mt-16"
+          onLocate={({ latitude, longitude }) => setHere({ lat: latitude, lng: longitude })}
+        />
+        {pins.map((v) => (
           <MapMarker key={v.slug} longitude={v.lng} latitude={v.lat} anchor="bottom">
             <MarkerContent>
               <VenuePin name={v.name} scanned={v.scanned} selected={v.slug === selected} onSelect={() => select(v)} />
@@ -136,23 +178,60 @@ export function MapExplorer({ mode }: Props) {
         </p>
       )}
 
-      {selectedVenue && data && (
-        <div
-          className="pointer-events-none absolute inset-x-3 flex justify-center sm:justify-start"
-          style={{ bottom: "calc(0.75rem + var(--consent-h, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-        >
-          <div className="w-full max-w-md">
-            <PinCard
-              venue={selectedVenue}
-              definitions={data.definitions}
-              distance={null}
-              onClose={() => setSelected(null)}
-              onWalkthrough={() => openWalkthrough(selectedVenue)}
-              onDirections={() => directions.open(selectedVenue)}
-            />
+      {/* Search sits at the top; in full-screen mode it leaves room for the Visita chip. */}
+      <div
+        className={cn("pointer-events-none absolute right-3 z-10", mode === "full" ? "left-[6.75rem] sm:left-auto sm:w-[26rem]" : "left-3 sm:left-auto sm:w-[26rem]")}
+        style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
+      >
+        {data && <SearchBar venues={venues} onPick={select} />}
+      </div>
+
+      {/* Bottom: the pin card above the dock, both clear of the consent notice. */}
+      <div
+        className="pointer-events-none absolute inset-x-3 grid gap-2"
+        style={{ bottom: "calc(0.75rem + var(--consent-h, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        {selectedVenue && data && (
+          <div className="flex justify-center sm:justify-start">
+            <div className="w-full max-w-md">
+              <PinCard
+                venue={selectedVenue}
+                definitions={data.definitions}
+                distance={selectedDistance}
+                onClose={() => setSelected(null)}
+                onWalkthrough={() => openWalkthrough(selectedVenue)}
+                onDirections={() => directions.open(selectedVenue)}
+                onDemand={() => void onDemand(selectedVenue.slug)}
+                demanded={demandedSlugs.includes(selectedVenue.slug)}
+                demandPending={demandPending}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+        {data && (
+          <Dock
+            scanned={lists.scanned}
+            topPicks={lists.topPicks}
+            saved={lists.saved}
+            activeFilters={activeFilterCount(filters)}
+            onOpenFilters={() => setFiltersOpen(true)}
+            onPick={select}
+          />
+        )}
+      </div>
+
+      <FilterSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        filters={filters}
+        onChange={(f) => {
+          setFilters(f);
+          if (activeFilterCount(f) === 0) setShowUnknown(false);
+        }}
+        result={filterResult}
+        showUnknown={showUnknown}
+        onShowUnknown={setShowUnknown}
+      />
 
       {directions.sheet}
 

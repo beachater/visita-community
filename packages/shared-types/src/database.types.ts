@@ -138,6 +138,57 @@ export type Database = {
           },
         ]
       }
+      demand_requests: {
+        Row: {
+          created_at: string
+          device_id: string
+          google_place_id: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          name: string | null
+          profile_id: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          google_place_id?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string | null
+          profile_id?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          google_place_id?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string | null
+          profile_id?: string | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_requests_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       point_events: {
         Row: {
           amount: number

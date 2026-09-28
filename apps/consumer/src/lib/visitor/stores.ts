@@ -48,3 +48,10 @@ export const $recent = persistentList("visita:recent", 5);
 export function recordRecent(slug: string): void {
   $recent.set([slug, ...$recent.get().filter((s) => s !== slug)].slice(0, 5));
 }
+
+/** Unscanned cafes this device has asked Visita to scan. */
+export const $demanded = persistentList("visita:demanded");
+
+export function markDemanded(slug: string): void {
+  if (!$demanded.get().includes(slug)) $demanded.set([slug, ...$demanded.get()]);
+}

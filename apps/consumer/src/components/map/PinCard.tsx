@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { BadgeCheck, Navigation, X } from "lucide-react";
+import { BadgeCheck, Check, Eye, Navigation, X } from "lucide-react";
 import type { AmenityDefinition } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
 import { cn } from "@visita/ui/utils";
@@ -17,9 +17,13 @@ interface Props {
   onClose: () => void;
   onWalkthrough: () => void;
   onDirections: () => void;
+  onDemand: () => void;
+  /** This device already asked for this cafe to be scanned. */
+  demanded: boolean;
+  demandPending: boolean;
 }
 
-export function PinCard({ venue, definitions, distance, onClose, onWalkthrough, onDirections }: Props) {
+export function PinCard({ venue, definitions, distance, onClose, onWalkthrough, onDirections, onDemand, demanded, demandPending }: Props) {
   const actions = cardActions(venue);
   const strip = useMemo(() => summaryRows(definitions, venue.amenities), [definitions, venue.amenities]);
   const open = isOpenAt(venue.hours, new Date());
@@ -72,8 +76,18 @@ export function PinCard({ venue, definitions, distance, onClose, onWalkthrough, 
             Enter 3D walkthrough
           </Button>
         )}
+        {actions.includes("demand") &&
+          (demanded ? (
+            <Button variant="secondary" className="flex-1" disabled>
+              <Check /> Request sent
+            </Button>
+          ) : (
+            <Button className="flex-1" onClick={onDemand} disabled={demandPending}>
+              <Eye /> {demandPending ? "Sending…" : "I want to see inside"}
+            </Button>
+          ))}
         {actions.includes("directions") && (
-          <Button variant="outline" className={actions.includes("walkthrough") ? "" : "flex-1"} onClick={onDirections}>
+          <Button variant="outline" onClick={onDirections}>
             <Navigation /> Directions
           </Button>
         )}

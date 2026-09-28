@@ -110,6 +110,14 @@ select pg_temp.expect_error($q$update public.venues set menu = '[{"name": "Latte
 update public.venues set menu = '[{"name": "Latte", "price_php": 120}, {"name": "Turon"}]' where slug = 'pub-cafe';
 select pg_temp.pass('valid menu accepted');
 
+-- ---------- demand requests ("I want to see inside") ----------
+insert into public.demand_requests (venue_id, device_id)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'device-aaaaaaaaaaaaaaaa');
+select pg_temp.pass('service role records a demand request');
+select pg_temp.expect_error($q$insert into public.demand_requests (venue_id, device_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'device-aaaaaaaaaaaaaaaa')$q$, 'one request per device per venue');
+select pg_temp.expect_error($q$insert into public.demand_requests (device_id) values ('device-bbbbbbbbbbbbbbbb')$q$, 'a request needs a venue or place');
+select pg_temp.expect_error($q$insert into public.demand_requests (venue_id, device_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'x')$q$, 'device id must look like one');
+
 -- ---------- Alice again: ledger visibility ----------
 reset role;
 set local role authenticated;
@@ -120,6 +128,9 @@ do $$ begin
   assert (select count(*) from public.point_balances) = 1;
 end $$;
 select pg_temp.pass('user sees only own points and balance');
+do $$ begin assert (select count(*) from public.demand_requests) = 0, 'user reads demand queue'; end $$;
+select pg_temp.pass('visitors cannot read the demand queue');
+select pg_temp.expect_error($q$insert into public.demand_requests (venue_id, device_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'device-cccccccccccccccc')$q$, 'visitors cannot write demand directly');
 
 -- ---------- admin ----------
 reset role;
@@ -132,6 +143,8 @@ do $$ begin assert (select status from public.reviews where id = 'bbbbbbbb-0000-
 select pg_temp.pass('admin can hide a review');
 do $$ begin assert (select count(*) from public.point_balances) = 2; end $$;
 select pg_temp.pass('admin sees all balances');
+do $$ begin assert (select count(*) from public.demand_requests) = 1; end $$;
+select pg_temp.pass('admin reads the demand queue');
 
 reset role;
 set local role anon;
