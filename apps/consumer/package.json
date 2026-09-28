@@ -16,6 +16,8 @@
     "@astrojs/react": "^7.0.0",
     "@nanostores/react": "^2.0.1",
     "@protomaps/basemaps": "^5.7.2",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "@tailwindcss/vite": "^4.3.3",
     "@visita/shared-types": "workspace:*",
     "@visita/ui": "workspace:*",

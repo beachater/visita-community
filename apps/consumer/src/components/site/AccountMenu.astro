@@ -1,0 +1,39 @@
+---
+import { buttonVariants } from "@visita/ui/button";
+import { cn } from "@visita/ui/utils";
+import { loginHref } from "./nav";
+
+// The header's account area, rendered as a server island (`server:defer`) so
+// prerendered pages stay cached and ship no auth script. The fallback in
+// SiteHeader is the signed-out "Sign in" link.
+interface Props {
+  /** The page this header is on, to come back to after sign-in. */
+  next: string;
+}
+const { next } = Astro.props;
+const user = Astro.locals.user;
+let name: string | null = null;
+let avatar: string | null = null;
+if (user && Astro.locals.supabase) {
+  const { data } = await Astro.locals.supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle();
+  name = data?.display_name ?? null;
+  avatar = data?.avatar_url ?? null;
+}
+const label = name ?? user?.email ?? "Your account";
+const initial = label.trim().charAt(0).toUpperCase() || "?";
+---
+
+{
+  user ? (
+    <a href="/me" class="inline-flex items-center gap-2 rounded-full p-0.5 pr-3 text-sm font-medium hover:bg-accent" aria-label={`Your account (${label})`}>
+      {avatar ? (
+        <img src={avatar} alt="" width="32" height="32" class="size-8 rounded-full object-cover" referrerpolicy="no-referrer" />
+      ) : (
+        <span class="grid size-8 place-items-center rounded-full bg-primary text-primary-foreground" aria-hidden="true">{initial}</span>
+      )}
+      <span class="hidden max-w-[10rem] truncate sm:inline">{name ?? "Account"}</span>
+    </a>
+  ) : (
+    <a href={loginHref(next)} class={cn(buttonVariants({ variant: "default", size: "sm" }))}>Sign in</a>
+  )
+}

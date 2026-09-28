@@ -1,13 +1,40 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import Placeholder from "../../components/Placeholder.astro";
+import PageHeader from "../../components/kit/PageHeader.astro";
+import { buttonVariants } from "@visita/ui/button";
+import { cn } from "@visita/ui/utils";
+import { safeNext } from "../../lib/auth/next";
 
+// PRD 4.2: Google is the only way in. Browsing, the map and walkthroughs
+// never need an account; saving across devices and reviews do.
 export const prerender = false;
+
+const next = safeNext(Astro.url.searchParams.get("next"));
+if (Astro.locals.user) return Astro.redirect(next, 303);
+
+const ERRORS: Record<string, string> = {
+  google: "Google sign-in didn't start. Try again.",
+  callback: "We couldn't finish signing you in. Try again.",
+  unavailable: "Sign-in isn't available on this preview yet.",
+};
+const error = ERRORS[Astro.url.searchParams.get("error") ?? ""];
 ---
 
 <BaseLayout title="Sign in">
-  <Placeholder route="/auth/login" mode="server-rendered">
-    <h1>Sign in</h1>
-    <!-- TODO: Google sign-in via Supabase Auth (the only provider). -->
-  </Placeholder>
+  <main class="mx-auto grid max-w-md gap-6 px-4 py-12">
+    <PageHeader title="Sign in" lede="Keep your saved cafes on every device and write reviews." class="pb-0" />
+    {error && <p role="alert" class="rounded-lg border border-destructive/40 bg-card px-4 py-3 text-sm text-destructive">{error}</p>}
+    <form method="post" action="/auth/google">
+      <input type="hidden" name="next" value={next} />
+      <button type="submit" class={cn(buttonVariants({ size: "lg" }), "w-full")}>
+        <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
+          <path fill="#fff" d="M21.35 11.1H12v2.98h5.35c-.23 1.4-1.66 4.1-5.35 4.1a5.94 5.94 0 0 1 0-11.87c1.84 0 3.07.78 3.78 1.46l2.58-2.49C16.72 3.74 14.56 2.8 12 2.8a9.2 9.2 0 1 0 0 18.4c5.3 0 8.83-3.73 8.83-8.98 0-.6-.07-1.06-.15-1.52z" />
+        </svg>
+        Continue with Google
+      </button>
+    </form>
+    <p class="text-sm text-muted-foreground">
+      We get your name, email and profile photo from Google. See the <a class="underline" href="/privacy">privacy policy</a>.
+    </p>
+  </main>
 </BaseLayout>

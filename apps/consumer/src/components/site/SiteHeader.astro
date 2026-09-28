@@ -2,11 +2,14 @@
 import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@visita/ui/button";
 import { cn } from "@visita/ui/utils";
-import { PRIMARY_NAV, isCurrent } from "./nav";
+import AccountMenu from "./AccountMenu.astro";
+import { PRIMARY_NAV, isCurrent, loginHref, pagePath } from "./nav";
 
 // Zero-JS header: links are plain anchors and the mobile menu is a native
 // <dialog> opened by a few lines of script, so no framework ships to every page.
+// The account area is a server island, so the shell stays prerendered.
 const path = Astro.url.pathname;
+const here = pagePath(path);
 ---
 
 <header class="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75" style="padding-top: env(safe-area-inset-top, 0px)">
@@ -33,7 +36,9 @@ const path = Astro.url.pathname;
     </nav>
 
     <div class="ml-auto flex items-center gap-2">
-      <a href="/auth/login" class={cn(buttonVariants({ variant: "default", size: "sm" }), "hidden sm:inline-flex")}>Sign in</a>
+      <AccountMenu server:defer next={here}>
+        <a slot="fallback" href={loginHref(here)} class={buttonVariants({ variant: "default", size: "sm" })}>Sign in</a>
+      </AccountMenu>
       <button
         type="button"
         class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "md:hidden")}
@@ -73,9 +78,6 @@ const path = Astro.url.pathname;
           ))}
         </ul>
       </nav>
-      <div class="border-t p-4">
-        <a href="/auth/login" class={cn(buttonVariants({ variant: "default" }), "w-full")}>Sign in with Google</a>
-      </div>
     </div>
   </dialog>
 </header>

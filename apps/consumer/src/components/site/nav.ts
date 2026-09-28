@@ -40,8 +40,18 @@ export const FOOTER_NAV: { heading: string; links: NavLink[] }[] = [
   },
 ];
 
+/** The share URL path for a request path (prerendered pages see `/cafe/x.html`). */
+export function pagePath(pathname: string): string {
+  return pathname.replace(/(\/index)?\.html$/, "").replace(/\/+$/, "") || "/";
+}
+
+/** Sign-in link that returns to `path` afterwards. */
+export function loginHref(path: string): string {
+  return path === "/" ? "/auth/login" : `/auth/login?next=${encodeURIComponent(path)}`;
+}
+
 /** True when `href` is the current page or a section containing it. */
 export function isCurrent(href: string, pathname: string): boolean {
-  const path = pathname.replace(/(\/index)?\.html$/, "").replace(/\/+$/, "") || "/";
+  const path = pagePath(pathname);
   return href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`);
 }

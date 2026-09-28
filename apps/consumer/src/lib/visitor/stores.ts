@@ -1,9 +1,10 @@
 import { atom, type WritableAtom } from "nanostores";
+import { hasAuthCookie, mergeSaved, savedToUpload } from "./merge";
 
 // Visitor state shared across islands (PRD 5.2: a header count and a heart on
-// the map must update together). Kept on this device for now; saved cafes
-// move to the visitor's account when sign-in lands, with a one-time merge of
-// what's stored here.
+// the map must update together). Everything is kept on this device; for
+// signed-in visitors saved cafes also live on their account (PRD 4.2), merged
+// with what this device holds on each page load.
 
 function persistentList(key: string, max?: number): WritableAtom<string[]> {
   const read = (): string[] => {
@@ -32,14 +33,57 @@ function persistentList(key: string, max?: number): WritableAtom<string[]> {
   return store;
 }
 
+/** localStorage key of the saved list, cleared on sign-out. */
+export const SAVED_KEY = "visita:saved";
+
 /** Slugs of saved cafes, most recently saved first. */
-export const $saved = persistentList("visita:saved");
+export const $saved = persistentList(SAVED_KEY);
+
+/** True once this page load has confirmed a signed-in account. */
+let accountSync = false;
 
 export function toggleSaved(slug: string): boolean {
   const list = $saved.get();
   const saved = !list.includes(slug);
   $saved.set(saved ? [slug, ...list] : list.filter((s) => s !== slug));
+  if (accountSync) {
+    void fetch("/api/saved", {
+      method: saved ? "POST" : "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+      })
+      // Keep the heart honest: undo if the account didn't take it.
+      .catch(() => $saved.set(list));
+  }
   return saved;
+}
+
+/** Merge this device's saves with the signed-in account, once per page load. */
+async function syncSavedWithAccount(): Promise<void> {
+  const res = await fetch("/api/saved", { headers: { accept: "application/json" } });
+  if (!res.ok) return; // 401: signed out, device only.
+  const { slugs: account } = (await res.json()) as { slugs: string[] };
+  const upload = savedToUpload($saved.get(), account);
+  if (upload.length > 0) {
+    const up = await fetch("/api/saved", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slugs: upload }),
+    });
+    // 404: none of them are listed any more. Anything else: retry next load.
+    if (!up.ok && up.status !== 404) return;
+  }
+  $saved.set(mergeSaved($saved.get(), account));
+  accountSync = true;
+}
+
+if (typeof window !== "undefined" && hasAuthCookie(document.cookie)) {
+  syncSavedWithAccount().catch(() => {
+    // Offline or unavailable: device list only for this visit.
+  });
 }
 
 /** The last five cafes viewed (PRD 4.1 "Recently viewed"). */

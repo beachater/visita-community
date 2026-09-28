@@ -1,13 +1,17 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import PageHeader from "../components/kit/PageHeader.astro";
+import { SavedList } from "../components/account/SavedList";
+import { loginHref } from "../components/site/nav";
 
-export const prerender = false;
+// Same for every visitor: the list comes from this device and, when signed
+// in, the account (via /api/saved), so the shell is prerendered.
+export const prerender = true;
 ---
 
 <BaseLayout title="Saved cafes">
-  <Placeholder route="/saved" mode="server-rendered">
-    <h1>Saved cafes</h1>
-    <!-- TODO: redirect to /auth/login when signed out; list saved venues. -->
-  </Placeholder>
+  <main class="mx-auto max-w-2xl px-4 py-10">
+    <PageHeader title="Saved cafes" />
+    <SavedList client:load loginHref={loginHref("/saved")} />
+  </main>
 </BaseLayout>

@@ -11,5 +11,7 @@ declare namespace App {
   interface Locals {
     /** Signed-in user, populated by middleware. Null when signed out. */
     user: { id: string; email: string | null } | null;
+    /** Supabase acting as the visitor (RLS applies). Null when prerendering or unconfigured. */
+    supabase: import("./lib/auth/supabase-server").ServerSupabase | null;
   }
 }

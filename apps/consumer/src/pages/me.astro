@@ -1,13 +1,64 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import PageHeader from "../components/kit/PageHeader.astro";
+import { buttonVariants } from "@visita/ui/button";
+import { cn } from "@visita/ui/utils";
+import { loginHref } from "../components/site/nav";
 
+// The visitor's account (PRD 4.2). Points and badges join this page in
+// Tier 3; for now it's who you're signed in as and a way out.
 export const prerender = false;
+
+const { user, supabase } = Astro.locals;
+if (!user || !supabase) return Astro.redirect(loginHref("/me"), 303);
+
+const { data: profile } = await supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle();
+const { count } = await supabase.from("saved_venues").select("venue_id", { count: "exact", head: true });
+const name = profile?.display_name ?? user.email ?? "Visita member";
+Astro.response.headers.set("cache-control", "private, no-store");
 ---
 
-<BaseLayout title="Your points">
-  <Placeholder route="/me" mode="server-rendered">
-    <h1>Your points</h1>
-    <!-- TODO: points balance (point_balances view) and earned badges. -->
-  </Placeholder>
+<BaseLayout title="Your account">
+  <main class="mx-auto grid max-w-2xl gap-8 px-4 py-10">
+    <PageHeader title="Your account" class="pb-0" />
+    <section class="flex items-center gap-4 rounded-xl border bg-card p-4">
+      {
+        profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" width="56" height="56" class="size-14 rounded-full object-cover" referrerpolicy="no-referrer" />
+        ) : (
+          <span class="grid size-14 place-items-center rounded-full bg-primary text-xl text-primary-foreground" aria-hidden="true">
+            {name.charAt(0).toUpperCase()}
+          </span>
+        )
+      }
+      <div class="min-w-0">
+        <p class="truncate font-display text-xl font-semibold">{name}</p>
+        {user.email && <p class="truncate text-sm text-muted-foreground">{user.email}</p>}
+      </div>
+    </section>
+
+    <nav aria-label="Your things" class="grid gap-2">
+      <a href="/saved" class="flex h-14 items-center justify-between rounded-xl border bg-card px-4 hover:bg-accent">
+        <span class="font-medium">Saved cafes</span>
+        <span class="text-muted-foreground">{count ?? 0}</span>
+      </a>
+    </nav>
+
+    <form method="post" action="/auth/logout" data-sign-out>
+      <button type="submit" class={cn(buttonVariants({ variant: "outline" }), "w-full")}>Sign out</button>
+    </form>
+  </main>
 </BaseLayout>
+
+<script>
+  import { SAVED_KEY } from "../lib/visitor/stores";
+
+  // Saved cafes live on the account; don't leave a copy on a shared device.
+  document.querySelector("[data-sign-out]")?.addEventListener("submit", () => {
+    try {
+      localStorage.removeItem(SAVED_KEY);
+    } catch {
+      // Storage blocked: nothing was kept.
+    }
+  });
+</script>

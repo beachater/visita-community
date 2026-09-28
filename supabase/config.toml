@@ -160,10 +160,10 @@ enabled = true
 site_url = "http://127.0.0.1:4321"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
-# A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
+# URLs auth providers may redirect to after sign-in. `**` lets /auth/callback carry ?next=.
 additional_redirect_urls = [
-  "http://127.0.0.1:4321/auth/callback",
-  "http://localhost:4321/auth/callback",
+  "http://127.0.0.1:4321/auth/callback**",
+  "http://localhost:4321/auth/callback**",
   "http://127.0.0.1:4322",
   "http://localhost:4322",
 ]

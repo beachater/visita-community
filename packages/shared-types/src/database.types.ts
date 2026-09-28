@@ -406,6 +406,39 @@ export type Database = {
           },
         ]
       }
+      saved_venues: {
+        Row: {
+          created_at: string
+          profile_id: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id?: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_venues_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_venues_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           awarded_at: string

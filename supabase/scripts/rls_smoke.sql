@@ -85,6 +85,11 @@ select pg_temp.pass('user cannot edit another profile (0 rows updated)');
 update public.profiles set display_name = 'Alice P.' where id = '11111111-1111-1111-1111-111111111111';
 do $$ begin assert (select display_name from public.profiles where id = '11111111-1111-1111-1111-111111111111') = 'Alice P.'; end $$;
 select pg_temp.pass('user can edit own profile');
+insert into public.saved_venues (venue_id) values ('aaaaaaaa-0000-0000-0000-000000000001');
+do $$ begin assert (select profile_id from public.saved_venues limit 1) = '11111111-1111-1111-1111-111111111111'; end $$;
+select pg_temp.pass('visitor saves a cafe; profile_id defaults to them');
+select pg_temp.expect_error($q$insert into public.saved_venues (profile_id, venue_id) values ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-0000-0000-0000-000000000001')$q$, 'visitor cannot save for someone else');
+select pg_temp.expect_error($q$insert into public.saved_venues (venue_id) values ('aaaaaaaa-0000-0000-0000-000000000001')$q$, 'saving twice is refused');
 
 -- ---------- service role (Workers) ----------
 reset role;
@@ -131,6 +136,20 @@ select pg_temp.pass('user sees only own points and balance');
 do $$ begin assert (select count(*) from public.demand_requests) = 0, 'user reads demand queue'; end $$;
 select pg_temp.pass('visitors cannot read the demand queue');
 select pg_temp.expect_error($q$insert into public.demand_requests (venue_id, device_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'device-cccccccccccccccc')$q$, 'visitors cannot write demand directly');
+
+-- ---------- Bob: saved cafes are private ----------
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+do $$ begin assert (select count(*) from public.saved_venues) = 0, 'bob sees alice saves'; end $$;
+select pg_temp.pass('visitors cannot see other people''s saved cafes');
+delete from public.saved_venues;
+reset role;
+do $$ begin assert (select count(*) from public.saved_venues) = 1, 'bob deleted alice saves'; end $$;
+select pg_temp.pass('visitors cannot remove other people''s saved cafes');
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+select pg_temp.expect_error($q$insert into public.saved_venues (profile_id, venue_id) values ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-0000-0000-0000-000000000001')$q$, 'signed-out visitors cannot save to an account');
 
 -- ---------- admin ----------
 reset role;
