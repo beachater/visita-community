@@ -38,3 +38,29 @@ npx wrangler r2 object put visita-assets-dev/splats/<slug>/v1.sog \
 
 Session 2 moved Sonny's and Lito's (about 3.0M gaussians and 43 MB each) off the
 prototype's CloudFront this way.
+
+## Basemap (discovery map)
+
+The map uses a Protomaps vector-tile extract of Cagayan de Oro, a single
+PMTiles file served from this bucket. It costs $0, has no API key, and has no
+commercial-licence issue.
+
+```
+basemaps/cdo-<build date>.pmtiles    about 10 MB; zoom 0–15; bbox 124.38,8.22 → 124.88,8.65
+```
+
+To make a new one with the official `pmtiles` CLI (github.com/protomaps/go-pmtiles;
+verify the download against the release asset's SHA-256):
+
+```sh
+# The newest build name is listed at https://build-metadata.protomaps.dev/builds.json
+pmtiles extract https://build.protomaps.com/<build>.pmtiles cdo.pmtiles \
+  --bbox=124.38,8.22,124.88,8.65 --maxzoom=15
+npx wrangler r2 object put visita-assets-dev/basemaps/cdo-<build>.pmtiles \
+  --file cdo.pmtiles --remote --content-type application/vnd.pmtiles \
+  --cache-control "public, max-age=31536000, immutable"
+```
+
+Then point `PUBLIC_BASEMAP_KEY` at the new key. MapLibre reads the file with
+HTTP range requests, which the bucket's CORS rules allow (`Range` in, and
+`Content-Range` exposed).

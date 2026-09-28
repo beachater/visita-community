@@ -1,5 +1,6 @@
-import type { AmenityDefinition, MenuItem, Tables, VenueAmenities, WeeklyHours } from "@visita/shared-types";
+import type { AmenityDefinition, Tables } from "@visita/shared-types";
 import { readPublic } from "../public-data";
+import { toMapVenue, toWalkthrough } from "../discovery/venues";
 import type { WalkthroughCafe } from "./types";
 
 // Build-time loading of published cafes, shared by every page that renders
@@ -20,9 +21,12 @@ export type CafeRow = Pick<
   | "amenities"
   | "hours"
   | "menu"
+  | "is_top_pick"
+  | "search_terms"
 >;
 
-const CAFE_COLUMNS = "slug,name,address,city,lat,lng,google_place_id,splat_url,splat_preview_url,scanned_at,amenities,hours,menu";
+const CAFE_COLUMNS =
+  "slug,name,address,city,lat,lng,google_place_id,splat_url,splat_preview_url,scanned_at,amenities,hours,menu,is_top_pick,search_terms";
 
 export async function loadPublishedCafes(): Promise<{ cafes: CafeRow[]; definitions: AmenityDefinition[] }> {
   const [cafes, definitions] = await Promise.all([
@@ -33,21 +37,4 @@ export async function loadPublishedCafes(): Promise<{ cafes: CafeRow[]; definiti
 }
 
 /** The walkthrough's view of a cafe, or null when it isn't scanned. */
-export function toWalkthroughCafe(cafe: CafeRow): WalkthroughCafe | null {
-  if (!cafe.splat_url) return null;
-  return {
-    slug: cafe.slug,
-    name: cafe.name,
-    address: cafe.address,
-    city: cafe.city,
-    lat: cafe.lat,
-    lng: cafe.lng,
-    googlePlaceId: cafe.google_place_id,
-    splatKey: cafe.splat_url,
-    previewKey: cafe.splat_preview_url,
-    scannedAt: cafe.scanned_at,
-    amenities: cafe.amenities as VenueAmenities,
-    hours: cafe.hours as WeeklyHours | null,
-    menu: cafe.menu as unknown as MenuItem[],
-  };
-}
+export const toWalkthroughCafe = (cafe: CafeRow): WalkthroughCafe | null => toWalkthrough(toMapVenue(cafe));
