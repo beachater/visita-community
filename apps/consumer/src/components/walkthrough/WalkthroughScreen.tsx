@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { toast } from "sonner";
 import { Heart, Share2, X } from "lucide-react";
@@ -9,11 +9,11 @@ import { BottomSheet } from "@visita/ui/bottom-sheet";
 import { cn } from "@visita/ui/utils";
 import type { DeviceProfile } from "@/lib/splat/device";
 import { splatSrc } from "@/lib/splat/source";
-import { appleMapsUrl, googleMapsUrl, prefersAppleMapsChoice } from "@/lib/venue/directions";
 import { currentPosition, formatDistance, haversineMeters, locationAlreadyAllowed } from "@/lib/venue/distance";
 import { formatPhp } from "@/lib/venue/scan";
 import type { WalkthroughCafe } from "@/lib/venue/types";
 import { $saved, recordRecent, toggleSaved } from "@/lib/visitor/stores";
+import { useDirections } from "../directions/useDirections";
 import { InfoPanel } from "./InfoPanel";
 import { SplatViewer } from "./SplatViewer";
 
@@ -35,7 +35,6 @@ const glassButton =
 export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props) {
   const saved = useStore($saved).includes(cafe.slug);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [chooserOpen, setChooserOpen] = useState(false);
   const [distance, setDistance] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -86,14 +85,8 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
     }
   };
 
-  const destination = useMemo(
-    () => ({ name: cafe.name, address: cafe.address, city: cafe.city, lat: cafe.lat, lng: cafe.lng, googlePlaceId: cafe.googlePlaceId }),
-    [cafe],
-  );
-  const onDirections = () => {
-    if (prefersAppleMapsChoice()) setChooserOpen(true);
-    else window.open(googleMapsUrl(destination), "_blank", "noopener");
-  };
+  const directions = useDirections();
+  const onDirections = () => directions.open(cafe);
 
   const sections = [...new Set(cafe.menu.map((m) => m.section ?? ""))];
 
@@ -104,7 +97,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
       aria-label={`Walkthrough of ${cafe.name}`}
       className="fixed inset-0 z-50 bg-scan"
       onKeyDown={(e) => {
-        if (e.key === "Escape" && !menuOpen && !chooserOpen) onClose();
+        if (e.key === "Escape" && !menuOpen && !directions.isOpen) onClose();
       }}
     >
       <Toaster position="top-center" />
@@ -162,16 +155,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
         ))}
       </BottomSheet>
 
-      <BottomSheet open={chooserOpen} onOpenChange={setChooserOpen} title="Get directions" description={`Open ${cafe.name} in a maps app.`}>
-        <div className="grid gap-2">
-          <Button asChild size="lg" onClick={() => setChooserOpen(false)}>
-            <a href={googleMapsUrl(destination)} target="_blank" rel="noopener">Google Maps</a>
-          </Button>
-          <Button asChild size="lg" variant="outline" onClick={() => setChooserOpen(false)}>
-            <a href={appleMapsUrl(destination)} target="_blank" rel="noopener">Apple Maps</a>
-          </Button>
-        </div>
-      </BottomSheet>
+      {directions.sheet}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { namedFlavor } from "@protomaps/basemaps";
 import { CDO_BOUNDS, CDO_CENTER, mapStyle } from "./map-style";
 
 const url = "https://assets.example/basemaps/cdo-20260927.pmtiles";
@@ -14,6 +15,10 @@ describe("mapStyle", () => {
   it("never uses CARTO tiles (commercial licence required)", () => expect(JSON.stringify(style)).not.toMatch(/cartocdn/i));
   it("has basemap layers", () => expect(style.layers.length).toBeGreaterThan(20));
   it("labels in English", () => expect(JSON.stringify(style.layers)).toMatch(/name:en/));
+  it("fills beyond the extract with land colour, not a grey slab", () => {
+    const bg = style.layers.find((l) => l.type === "background") as { paint?: { "background-color"?: string } } | undefined;
+    expect(bg?.paint?.["background-color"]).toBe(namedFlavor("light").earth);
+  });
   it("has fonts and icons for labels", () => {
     expect(style.glyphs).toMatch(/\{fontstack\}.*\{range\}/);
     expect(style.sprite).toBeTruthy();

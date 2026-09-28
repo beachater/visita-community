@@ -2,5 +2,14 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "visita-consumer",
   "compatibility_date": "2026-09-24",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "r2_buckets": [
+    {
+      // Public scans and the basemap, served same-origin at /assets/<key>.
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "visita-assets-dev",
+      // Local dev reads the real bucket instead of an empty simulated one.
+      "remote": true
+    }
+  ]
 }

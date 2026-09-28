@@ -1,7 +1,8 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import MapExplorer from "../components/MapExplorer.astro";
 import Placeholder from "../components/Placeholder.astro";
+import { MapExplorer } from "../components/map/MapExplorer";
+import { buttonVariants } from "@visita/ui/button";
 
 export const prerender = true;
 ---
@@ -10,13 +11,13 @@ export const prerender = true;
   title="Visita"
   description="Step inside a cafe before you go. Real, unedited 3D walkthroughs of cafes in Cagayan de Oro."
 >
-  <!-- The map is the hero. It should pause rendering once scrolled out of view. -->
-  <MapExplorer />
+  <h1 class="sr-only">Visita: step inside with confidence</h1>
+  <!-- The map is the hero. -->
+  <MapExplorer client:only="react" mode="hero" />
 
   <Placeholder route="/" mode="prerendered">
-    <!-- TODO: marketing sections, in order: the problem, how it works (find it,
-         step inside, go), featured cafes (link to /cafe/<slug>), for cafe
-         owners (pricing teaser → /for-cafes), about (→ /about). -->
-    <p><a href="/explore">Explore the map</a></p>
+    <!-- TODO (Tier 2, marketing pages): the problem, how it works (find it,
+         step inside, go), featured cafes, for cafe owners, about. -->
+    <p><a href="/explore" class={buttonVariants({ variant: "outline" })}>Open the full map</a></p>
   </Placeholder>
 </BaseLayout>

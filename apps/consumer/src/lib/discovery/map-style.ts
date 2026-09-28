@@ -19,6 +19,10 @@ export const CDO_BOUNDS: [[number, number], [number, number]] = [
 const ASSETS = "https://protomaps.github.io/basemaps-assets";
 
 export function mapStyle(basemapUrl: string): StyleSpecification {
+  const flavor = { ...namedFlavor("light") }; // a copy: namedFlavor may return a shared constant
+  // Beyond the CDO extract there's no data; painting the background in the
+  // land colour stops the tilted view showing a grey slab at the edges.
+  flavor.background = flavor.earth;
   return {
     version: 8,
     glyphs: `${ASSETS}/fonts/{fontstack}/{range}.pbf`,
@@ -30,6 +34,6 @@ export function mapStyle(basemapUrl: string): StyleSpecification {
         attribution: '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
       },
     },
-    layers: layers("protomaps", namedFlavor("light"), { lang: "en" }),
+    layers: layers("protomaps", flavor, { lang: "en" }),
   };
 }

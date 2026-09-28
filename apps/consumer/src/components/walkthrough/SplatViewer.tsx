@@ -408,7 +408,7 @@ function DetailPill({ detail, onRetry }: { detail: NonNullable<DetailState>; onR
       style={{
         position: "absolute",
         left: "50%",
-        bottom: "max(1rem, env(safe-area-inset-bottom))",
+        bottom: "calc(max(1rem, env(safe-area-inset-bottom)) + var(--consent-h, 0px))",
         transform: "translateX(-50%)",
         display: "flex",
         alignItems: "center",

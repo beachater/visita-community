@@ -1,11 +1,20 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import MapExplorer from "../components/MapExplorer.astro";
+import { MapExplorer } from "../components/map/MapExplorer";
 
+// The app on its own: the discovery map, full screen.
 export const prerender = true;
 ---
 
-<!-- The app on its own: the same map explorer as /, without the marketing. -->
-<BaseLayout title="Explore" description="Find a cafe in Cagayan de Oro and step inside before you go.">
-  <MapExplorer />
+<BaseLayout title="Explore" description="Find a cafe in Cagayan de Oro and step inside before you go." chrome="bare">
+  <h1 class="sr-only">Explore cafes in Cagayan de Oro</h1>
+  <a
+    href="/"
+    class="fixed left-3 z-30 rounded-full border border-glass-border bg-glass px-4 py-2 font-display text-lg font-bold text-glass-foreground shadow backdrop-blur-md"
+    style="top: max(0.75rem, env(safe-area-inset-top))"
+    aria-label="Visita home"
+  >
+    Visita
+  </a>
+  <MapExplorer client:only="react" mode="full" />
 </BaseLayout>

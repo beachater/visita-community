@@ -33,13 +33,22 @@ import { cn } from "@visita/ui/utils";
 <script>
   import { getConsent, setConsent, type ConsentChoice } from "../../lib/consent";
 
+  // While the notice shows, floating UI at the bottom of the screen (map pin
+  // cards, controls) lifts by its height via --consent-h, so nothing hides behind it.
+  const root = document.documentElement;
   const banner = document.getElementById("consent-banner");
   if (banner && getConsent() === null) {
     banner.hidden = false;
+    const sync = () => root.style.setProperty("--consent-h", `${banner.offsetHeight}px`);
+    const observer = new ResizeObserver(sync);
+    observer.observe(banner);
+    sync();
     for (const button of banner.querySelectorAll<HTMLButtonElement>("[data-consent]")) {
       button.addEventListener("click", () => {
         setConsent(button.dataset.consent as ConsentChoice);
         banner.hidden = true;
+        observer.disconnect();
+        root.style.removeProperty("--consent-h");
       });
     }
   }
