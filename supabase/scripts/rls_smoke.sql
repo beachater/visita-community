@@ -374,5 +374,81 @@ select pg_temp.pass('approving an amenity request updates the listing');
 select pg_temp.expect_error($q$select public.review_amenity_change((select id from public.amenity_change_requests where amenity_key = 'wifi'), 'rejected', null)$q$, 'a reviewed amenity request is final');
 reset role;
 
+-- ---------- analytics (PRD 4.4): raw events private, owners get totals ----------
+reset role;
+set local role service_role;
+insert into public.analytics_events (venue_id, type, session_id, props, occurred_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'profile_view',     'sess-aaaaaaaaaaaaaaaa', '{}', '2026-09-28 11:05+08'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'profile_view',     'sess-bbbbbbbbbbbbbbbb', '{"filters": ["wifi", "open247"]}', '2026-09-28 11:40+08'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'profile_view',     'sess-cccccccccccccccc', '{"filters": ["wifi"]}', '2026-09-29 19:10+08'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'profile_view',     'sess-dddddddddddddddd', '{}', '2026-09-29 19:20+08'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'walkthrough_open', 'sess-aaaaaaaaaaaaaaaa', '{}', '2026-09-28 11:06+08'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'directions_tap',   'sess-aaaaaaaaaaaaaaaa', '{}', '2026-09-28 11:08+08'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'search_appearance','sess-eeeeeeeeeeeeeeee', '{}', '2026-09-29 09:00+08'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'profile_view',     'sess-ffffffffffffffff', '{}', '2024-01-10 10:00+08'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'profile_view',     'sess-aaaaaaaaaaaaaaaa', '{}', '2026-09-28 12:00+08');
+select pg_temp.pass('the Worker (service role) records events');
+select pg_temp.expect_error($q$insert into public.analytics_events (venue_id, type, session_id) values ('aaaaaaaa-0000-0000-0000-000000000003', 'page_scroll', 'sess-aaaaaaaaaaaaaaaa')$q$, 'unknown event types are refused');
+select pg_temp.expect_error($q$insert into public.analytics_events (venue_id, type, session_id) values ('aaaaaaaa-0000-0000-0000-000000000003', 'profile_view', 'x')$q$, 'session ids must look like one');
+
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+select pg_temp.expect_error($q$insert into public.analytics_events (venue_id, type, session_id) values ('aaaaaaaa-0000-0000-0000-000000000003', 'profile_view', 'sess-aaaaaaaaaaaaaaaa')$q$, 'visitors cannot write events directly');
+select pg_temp.expect_error($q$select public.venue_stats('aaaaaaaa-0000-0000-0000-000000000003', '2026-09-01', '2026-10-01')$q$, 'signed-out visitors get no stats');
+
+-- Bob owns "Owned" (aaaa…0003).
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+select pg_temp.expect_error($q$select count(*) from public.analytics_events$q$, 'owners cannot read raw events');
+do $$
+declare s jsonb := public.venue_stats('aaaaaaaa-0000-0000-0000-000000000003', '2026-09-01 00:00+08', '2026-10-01 00:00+08');
+begin
+  assert (s -> 'totals' ->> 'profile_view')::int = 4, 'profile views: ' || s::text;
+  assert (s -> 'totals' ->> 'walkthrough_open')::int = 1;
+  assert (s -> 'totals' ->> 'directions_tap')::int = 1;
+  assert (s -> 'totals' ->> 'search_appearance')::int = 1;
+  assert (s ->> 'conversion')::numeric = 0.25, 'conversion: ' || (s ->> 'conversion');
+  -- Monday 28 Sep 2026, 11:00 Manila: two views. ISO weekday 1 = Monday.
+  assert exists (select 1 from jsonb_array_elements(s -> 'peak') p where (p ->> 'dow')::int = 1 and (p ->> 'hour')::int = 11 and (p ->> 'count')::int = 2), 'peak: ' || (s -> 'peak')::text;
+  assert (s -> 'filters' -> 0 ->> 'filter') = 'wifi' and (s -> 'filters' -> 0 ->> 'count')::int = 2, 'filters: ' || (s -> 'filters')::text;
+  assert jsonb_array_length(s -> 'daily') = 2;
+end $$;
+select pg_temp.pass('an owner gets totals, conversion, peak hours (Manila time), top filters and a daily series');
+select pg_temp.expect_error($q$select public.venue_stats('aaaaaaaa-0000-0000-0000-000000000001', '2026-09-01', '2026-10-01')$q$, 'the owner of venue A cannot read venue B''s stats');
+select pg_temp.expect_error($q$select public.venue_stats('aaaaaaaa-0000-0000-0000-000000000003', '2025-01-01', '2026-10-01')$q$, 'stats cover at most a year per request');
+
+-- Demand before sign-up: requests made before the venue's first owner was approved.
+reset role;
+insert into public.demand_requests (venue_id, device_id, created_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'device-dddddddddddddddd', now() - interval '30 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'device-eeeeeeeeeeeeeeee', now() + interval '1 day');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+do $$ begin assert (public.venue_stats('aaaaaaaa-0000-0000-0000-000000000003', now() - interval '7 days', now()) ->> 'demand_before_signup')::int = 1; end $$;
+select pg_temp.pass('owners see how many visitors asked for a scan before they joined');
+
+-- Admins can read any venue's stats.
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+do $$ begin assert (public.venue_stats('aaaaaaaa-0000-0000-0000-000000000001', '2026-09-01 00:00+08', '2026-10-01 00:00+08') -> 'totals' ->> 'profile_view')::int = 1; end $$;
+select pg_temp.pass('admins read any venue''s stats');
+
+-- Retention: raw events older than 24 months become daily totals.
+reset role;
+select public.purge_old_analytics();
+do $$ begin
+  assert (select count(*) from public.analytics_events where occurred_at < now() - interval '24 months') = 0;
+  assert (select count from public.analytics_daily where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003' and day = '2024-01-10' and type = 'profile_view') = 1;
+  assert (select count(*) from public.analytics_events) = 9 - 1;
+end $$;
+select pg_temp.pass('events older than 24 months are kept only as daily totals');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+select pg_temp.expect_error($q$select count(*) from public.analytics_daily$q$, 'owners cannot read the rollup table directly');
+reset role;
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED

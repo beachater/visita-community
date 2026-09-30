@@ -118,6 +118,70 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_daily: {
+        Row: {
+          count: number
+          day: string
+          type: Database["public"]["Enums"]["analytics_event_type"]
+          venue_id: string
+        }
+        Insert: {
+          count: number
+          day: string
+          type: Database["public"]["Enums"]["analytics_event_type"]
+          venue_id: string
+        }
+        Update: {
+          count?: number
+          day?: string
+          type?: Database["public"]["Enums"]["analytics_event_type"]
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_daily_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_events: {
+        Row: {
+          id: number
+          occurred_at: string
+          props: Json
+          session_id: string
+          type: Database["public"]["Enums"]["analytics_event_type"]
+          venue_id: string
+        }
+        Insert: {
+          id?: never
+          occurred_at?: string
+          props?: Json
+          session_id: string
+          type: Database["public"]["Enums"]["analytics_event_type"]
+          venue_id: string
+        }
+        Update: {
+          id?: never
+          occurred_at?: string
+          props?: Json
+          session_id?: string
+          type?: Database["public"]["Enums"]["analytics_event_type"]
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badges: {
         Row: {
           category: string
@@ -844,6 +908,7 @@ export type Database = {
         Args: { p_patch: Json; p_venue_id: string }
         Returns: undefined
       }
+      purge_old_analytics: { Args: never; Returns: undefined }
       review_amenity_change: {
         Args: {
           p_decision: Database["public"]["Enums"]["change_request_status"]
@@ -926,9 +991,20 @@ export type Database = {
       }
       validate_venue_hours: { Args: { p_hours: Json }; Returns: undefined }
       validate_venue_menu: { Args: { p_menu: Json }; Returns: undefined }
+      venue_stats: {
+        Args: { p_from: string; p_to: string; p_venue_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       amenity_value_type: "boolean" | "number" | "text" | "list"
+      analytics_event_type:
+        | "profile_view"
+        | "walkthrough_open"
+        | "directions_tap"
+        | "search_appearance"
+        | "filter_click"
+        | "demand_tap"
       app_role: "admin"
       change_request_status: "pending" | "approved" | "rejected"
       check_in_status: "pending" | "verified" | "rejected"
@@ -1078,6 +1154,14 @@ export const Constants = {
   public: {
     Enums: {
       amenity_value_type: ["boolean", "number", "text", "list"],
+      analytics_event_type: [
+        "profile_view",
+        "walkthrough_open",
+        "directions_tap",
+        "search_appearance",
+        "filter_click",
+        "demand_tap",
+      ],
       app_role: ["admin"],
       change_request_status: ["pending", "approved", "rejected"],
       check_in_status: ["pending", "verified", "rejected"],
