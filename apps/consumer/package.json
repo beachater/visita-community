@@ -21,6 +21,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@visita/shared-types": "workspace:*",
     "@visita/ui": "workspace:*",
+    "@visita/uploads": "workspace:*",
     "astro": "^7.3.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

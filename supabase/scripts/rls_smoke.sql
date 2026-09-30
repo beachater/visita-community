@@ -194,6 +194,8 @@ select pg_temp.expect_error($q$update public.venue_owners set status = 'approved
 select pg_temp.expect_error($q$insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000003', 'Manager', '+63 917 123 4567')$q$, 'one open claim per person per venue');
 select pg_temp.expect_error($q$insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000002', 'Owner', '+63 917 123 4567')$q$, 'cannot claim an unpublished listing');
 select pg_temp.expect_error($q$insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Owner', 'call me')$q$, 'contact number must look like one');
+insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Manager', '(088) 856-1234');
+select pg_temp.pass('a landline with an area code in brackets is accepted');
 insert into public.venue_owners (proposed_venue, role_title, contact_phone)
   values ('{"name": "Bagong Kape", "address": "Divisoria, CDO"}', 'Owner', '09171234567');
 select pg_temp.pass('a claim can request a new listing');
@@ -220,7 +222,7 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
 insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Owner', '+63 917 000 0000');
 select pg_temp.expect_error($q$select public.review_owner_claim((select id from public.venue_owners where profile_id = '33333333-3333-3333-3333-333333333333'), 'approved', null)$q$, 'an admin cannot approve their own claim');
-do $$ begin assert (select count(*) from public.venue_owners) = 3; end $$;
+do $$ begin assert (select count(*) from public.venue_owners) = 4; end $$;
 select pg_temp.pass('admins see every claim');
 select public.review_owner_claim((select id from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'), 'approved', 'Permit checked');
 select public.review_owner_claim((select id from public.venue_owners where proposed_venue is not null), 'approved', null);

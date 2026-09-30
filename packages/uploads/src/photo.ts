@@ -31,3 +31,8 @@ const EXT: Record<PhotoType, string> = { "image/jpeg": "jpg", "image/png": "png"
 export function reviewPhotoKey(reviewId: string, id: string, type: PhotoType): string {
   return `reviews/${reviewId}/${id}.${EXT[type]}`;
 }
+
+/** Owner proof (permit photo, storefront selfie). Private: owner-proofs/ is never served publicly. */
+export function ownerProofKey(claimId: string, id: string, type: PhotoType): string {
+  return `owner-proofs/${claimId}/${id}.${EXT[type]}`;
+}

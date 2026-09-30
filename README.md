@@ -7,9 +7,11 @@ Step inside with confidence. See `visita-prd-full.md` for the product and techni
 | Path | What | Stack |
 |---|---|---|
 | `apps/consumer` | Public app: map, venue pages, walkthrough, community | Astro + React islands, Cloudflare |
-| `apps/admin` | Owner and admin app | Vite + React SPA |
+| `apps/admin` | Owner and admin app | Vite + React SPA on a Cloudflare Worker (static assets + `/api`) |
 | `apps/embed` | Iframe walkthrough widget for venue websites | Static HTML/JS |
 | `packages/shared-types` | Generated Supabase types plus amenity/hours shapes | TypeScript |
+| `packages/ui` | Shared UI kit (tokens, shadcn components, map) | React + Tailwind |
+| `packages/uploads` | Photo checks (type from bytes, size) and browser resizing | TypeScript |
 | `supabase` | Migrations (schema + RLS), local config | Supabase CLI |
 
 ## Setup
@@ -88,6 +90,26 @@ Prerendered pages that need per-visitor or fast-changing content use server
 islands (`server:defer`), so the shell stays cached. Venue pages are built from
 published venues at deploy time, so publishing or rescanning a venue must
 trigger a deploy hook (not wired yet).
+
+## Owner and admin app
+
+`apps/admin` is a React SPA served by the `visita-admin` Worker. It talks to
+Supabase directly as the signed-in person (Google only), so RLS decides what
+they can see and do. Routes only send people to the right place:
+
+| Who | Lands on |
+|---|---|
+| Admin | `/admin/approvals`: pending owner claims with proof, approve or reject with a note |
+| Approved owner | `/venue/<id>` (or `/venues` when they own several) |
+| Claimant | `/status`: pending or rejected claims and the reviewer's note |
+| Anyone else | `/claim`: find the listing (or request a new one), role, contact number, proof |
+
+Claims live in `venue_owners`; only `review_owner_claim()` changes their status,
+only admins may call it, and nobody reviews their own claim. Proof photos are
+stored in R2 under `owner-proofs/<claim id>/`, which the public site never
+serves; the Worker's `/api/claims/<id>/proof` streams them to the claimant and
+admins only. Local setup: copy `apps/admin/.env.example` to `.env` and
+`.dev.vars.example` to `.dev.vars`, then `pnpm dev:admin` (port 4322).
 
 ## UI kit
 

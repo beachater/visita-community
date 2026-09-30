@@ -1,0 +1,16 @@
+{
+  "name": "@visita/uploads",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./photo": "./src/photo.ts",
+    "./resize": "./src/resize.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

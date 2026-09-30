@@ -7,7 +7,7 @@ describe("isServableKey", () => {
   it.each(["splats/sonnys/v1.sog", "splats/sonnys/v1/lod-meta.json", "basemaps/cdo-20260927.pmtiles", "reviews/bbbbbbbb-0000/11112222.jpg"])("serves %s", (k) =>
     expect(isServableKey(k)).toBe(true),
   );
-  it.each(["", "secrets/owner-proof.jpg", "../splats/x", "splats/../proofs/a.jpg", "basemaps//x"])("refuses %s", (k) =>
+  it.each(["", "secrets/owner-proof.jpg", "../splats/x", "splats/../proofs/a.jpg", "basemaps//x", "owner-proofs/3fbce4bf/permit.jpg"])("refuses %s", (k) =>
     expect(isServableKey(k)).toBe(false),
   );
 });

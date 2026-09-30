@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
-import { checkPhoto, MAX_PHOTO_BYTES, reviewPhotoKey } from "../../../lib/uploads/photo";
+import { checkPhoto, MAX_PHOTO_BYTES, reviewPhotoKey } from "@visita/uploads/photo";
 import { json, requireSession } from "../../../lib/server/session";
 
 // POST /api/uploads/review-photo?review=<id>: the photo for your own review

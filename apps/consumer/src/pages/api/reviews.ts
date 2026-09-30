@@ -34,6 +34,8 @@ export const POST: APIRoute = async (context) => {
     .select("id")
     .single();
   if (error?.code === "23505") return json(409, { error: "You've already reviewed this cafe. Edit your review instead." });
+  // RLS refuses owners reviewing the venue they manage (the only other insert rule, a published venue, was checked above).
+  if (error?.code === "42501") return json(403, { error: "You can't review a cafe you manage." });
   if (error || !data) return json(502, { error: "Couldn't post your review. Try again." });
   return json(201, { id: data.id });
 };

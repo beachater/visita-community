@@ -7,7 +7,7 @@ import { Textarea } from "@visita/ui/textarea";
 import { cn } from "@visita/ui/utils";
 import { MAX_REVIEW_CHARS } from "@/lib/reviews/input";
 import { WRITE_REVIEW_EVENT } from "@/lib/reviews/open";
-import { resizeToJpeg } from "@/lib/uploads/resize";
+import { resizeToJpeg } from "@visita/uploads/resize";
 
 // PRD 4.3: write or edit your review of a cafe: 1–5 stars, text and an
 // optional photo. Signed-out visitors can start writing; the draft is kept
