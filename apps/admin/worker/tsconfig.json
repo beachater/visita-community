@@ -5,5 +5,5 @@
     "types": ["./worker-configuration.d.ts"],
     "noEmit": true
   },
-  "include": [".", "../src/lib/proof-route.ts"]
+  "include": [".", "../src/lib/proof-route.ts", "../src/lib/scan-keys.ts"]
 }

@@ -110,7 +110,15 @@ stored in R2 under `owner-proofs/<claim id>/`, which the public site never
 serves; the Worker's `/api/claims/<id>/proof` streams them to the claimant and
 admins only.
 
-An approved owner's venue area has four tabs:
+Admins get four more areas: owner approvals, venues (create, edit every
+field including amenities directly, publish, top pick, upload scans), the
+amenity change queue, and review moderation (hide, unhide, remove a photo).
+Scans upload through the Worker as R2 multipart uploads in 25 MB parts (no R2
+API keys, no size ceiling); the Worker always issues a new version
+(`splats/<slug>/v<n>.sog`, `v<n>-preview.sog`) and refuses a key that exists.
+Making the preview is still the CLI step in `infra/r2/README.md`.
+
+An approved owner's venue area has these tabs (admins can open them too):
 
 | Tab | What changes | How |
 |---|---|---|
@@ -118,6 +126,7 @@ An approved owner's venue area has four tabs:
 | Listing | Menu and hours, directly; verified amenities, by request | `owner_update_listing()` (menu and hours only); `amenity_change_requests`, approved with `review_amenity_change()` |
 | Events | Events and promotions, with an optional photo | `venue_events`; photos under the public `events/<id>/` prefix via the Worker |
 | Reviews | One public reply per review | `review_replies` |
+| Analytics | Totals, peak hours, filters, demand before joining | `venue_stats()` |
 
 Cafe pages are still built at deploy time, so menu and hours edits reach the
 deployed site on the next deploy until cafe pages render on request (plan Task

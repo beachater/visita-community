@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bearerToken, eventPhotoId, eventPhotoPath, proofClaimId, proofPath } from "./proof-route";
+import { bearerToken, eventPhotoId, eventPhotoPath, proofClaimId, proofPath, reviewPhotoId, reviewPhotoPath } from "./proof-route";
 
 const ID = "cccccccc-0000-4000-8000-000000000001";
 
@@ -22,4 +22,9 @@ describe("eventPhotoPath / eventPhotoId", () => {
     expect(eventPhotoId(proofPath(ID))).toBeNull();
     expect(proofClaimId(eventPhotoPath(ID))).toBeNull();
   });
+});
+
+describe("reviewPhotoPath / reviewPhotoId", () => {
+  it("round-trips a review id", () => expect(reviewPhotoId(reviewPhotoPath(ID))).toBe(ID));
+  it("doesn't match the other photo routes", () => expect(reviewPhotoId(eventPhotoPath(ID))).toBeNull());
 });

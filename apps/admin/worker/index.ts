@@ -1,5 +1,6 @@
 import { checkPhoto, eventPhotoKey, MAX_PHOTO_BYTES, ownerProofKey, type PhotoType } from "@visita/uploads/photo";
-import { bearerToken, eventPhotoId, proofClaimId } from "../src/lib/proof-route";
+import { bearerToken, eventPhotoId, proofClaimId, reviewPhotoId, SCAN_ROUTES } from "../src/lib/proof-route";
+import { removeReviewPhoto, scanRoute } from "./admin";
 
 // The owner and admin app's Worker. It serves the SPA's static files, plus
 // photo uploads that need the server to check who's uploading and what:
@@ -7,6 +8,8 @@ import { bearerToken, eventPhotoId, proofClaimId } from "../src/lib/proof-route"
 //   GET    /api/claims/<id>/proof  the claimant or an admin views it
 //   POST   /api/events/<id>/photo  a venue owner adds or replaces an event photo (public)
 //   DELETE /api/events/<id>/photo  and removes it
+//   /api/scans/*                   admins upload scans (see admin.ts)
+//   DELETE /api/reviews/<id>/photo moderators remove a review photo
 // Every Supabase call runs as the caller (their access token), so RLS decides
 // what they can read and write. No service key lives here.
 
@@ -147,11 +150,18 @@ export default {
 
     const claimId = proofClaimId(url.pathname);
     const eventId = eventPhotoId(url.pathname);
-    if (!claimId && !eventId) return json(404, { error: "Not found." });
+    const reviewId = reviewPhotoId(url.pathname);
+    const scan = (SCAN_ROUTES as readonly string[]).includes(url.pathname);
+    if (!claimId && !eventId && !reviewId && !scan) return json(404, { error: "Not found." });
     if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return json(503, { error: "Not configured." });
     const token = bearerToken(request.headers.get("authorization"));
     if (!token) return json(401, { error: "Sign in to continue." });
 
+    if (scan) return scanRoute(request, env, supabase(env, token), json, url.pathname);
+    if (reviewId) {
+      if (request.method === "DELETE") return removeReviewPhoto(env, supabase(env, token), json, reviewId);
+      return json(405, { error: "Method not allowed." });
+    }
     if (eventId) {
       if (request.method === "POST" || request.method === "DELETE") return eventPhoto(request, env, token, eventId);
       return json(405, { error: "Method not allowed." });

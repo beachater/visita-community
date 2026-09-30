@@ -450,5 +450,39 @@ set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","r
 select pg_temp.expect_error($q$select count(*) from public.analytics_daily$q$, 'owners cannot read the rollup table directly');
 reset role;
 
+-- ---------- admin panel (PRD 4.5): venue management and moderation ----------
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+insert into public.venues (slug, name, lat, lng, is_published) values ('new-cafe', 'New Cafe', 8.48, 124.64, false);
+update public.venues set is_published = true, is_top_pick = true, amenities = '{"wifi": {"value": true, "label": "Fibre"}}' where slug = 'new-cafe';
+do $$ begin assert (select is_published and is_top_pick from public.venues where slug = 'new-cafe'); end $$;
+select pg_temp.pass('admins create, publish and feature a venue');
+select pg_temp.expect_error($q$update public.venues set amenities = '{"wifi": {"value": "yes"}}' where slug = 'new-cafe'$q$, 'admin amenity edits are validated too');
+update public.venues set splat_url = 'splats/new-cafe/v1.sog', splat_preview_url = 'splats/new-cafe/v1-preview.sog', scanned_at = now() where slug = 'new-cafe';
+select pg_temp.pass('admins attach a scan and its preview');
+update public.venues set is_published = false where slug = 'new-cafe';
+update public.reviews set status = 'visible' where id = 'bbbbbbbb-0000-0000-0000-000000000001';
+do $$ begin assert (select status from public.reviews where id = 'bbbbbbbb-0000-0000-0000-000000000001') = 'visible'; end $$;
+select pg_temp.pass('admins unhide a review');
+update public.reviews set status = 'hidden' where id = 'bbbbbbbb-0000-0000-0000-000000000001';
+
+-- Owners and visitors can't do admin work.
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+update public.venues set is_published = true where slug = 'new-cafe';
+update public.venues set is_top_pick = true where id = 'aaaaaaaa-0000-0000-0000-000000000003';
+select pg_temp.expect_error($q$insert into public.venues (slug, name) values ('sneaky', 'Sneaky')$q$, 'non-admins cannot create venues');
+update public.reviews set status = 'hidden' where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003';
+reset role;
+do $$ begin
+  assert (select is_published from public.venues where slug = 'new-cafe') = false, 'owner published a venue';
+  assert (select is_top_pick from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000003') = false, 'owner featured their venue';
+end $$;
+select pg_temp.pass('owners cannot publish or feature venues');
+do $$ begin assert (select status from public.reviews where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'visible', 'owner hid a review'; end $$;
+select pg_temp.pass('owners cannot hide reviews of their venue');
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED

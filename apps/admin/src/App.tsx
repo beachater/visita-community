@@ -1,14 +1,19 @@
 import type { ReactNode } from "react";
-import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation } from "react-router";
+import { BrowserRouter, Link, Navigate, NavLink, Outlet, Route, Routes, useLocation } from "react-router";
 import { LogOut } from "lucide-react";
 import { Button } from "@visita/ui/button";
 import { Toaster } from "@visita/ui/sonner";
+import { cn } from "@visita/ui/utils";
 import { AuthProvider, useAuth } from "@/auth/AuthProvider";
 import { SignIn } from "@/auth/SignIn";
 import { homeFor } from "@/routes/home";
 import { ClaimPage } from "@/pages/claim/ClaimPage";
 import { StatusPage } from "@/pages/pending/StatusPage";
 import { ApprovalsPage } from "@/pages/admin/approvals/ApprovalsPage";
+import { AmenityQueue } from "@/pages/admin/AmenityQueue";
+import { Moderation } from "@/pages/admin/Moderation";
+import { VenueForm } from "@/pages/admin/VenueForm";
+import { Venues } from "@/pages/admin/Venues";
 import { Analytics } from "@/pages/venue/Analytics";
 import { EventsEditor } from "@/pages/venue/EventsEditor";
 import { ListingEditor } from "@/pages/venue/ListingEditor";
@@ -19,6 +24,13 @@ import { VenuesPage } from "@/pages/venue/VenuesPage";
 
 // Owner and admin app (PRD 4.4, 4.5). Access is enforced by Supabase RLS, not
 // by these routes (PRD 5.3); the guards only send people to the right place.
+
+const ADMIN_NAV = [
+  { to: "/admin/approvals", label: "Owner approvals" },
+  { to: "/admin/venues", label: "Venues" },
+  { to: "/admin/amenities", label: "Amenity changes" },
+  { to: "/admin/reviews", label: "Reviews" },
+];
 
 function Centered({ children }: { children: ReactNode }) {
   return <div className="grid min-h-dvh place-items-center p-6 text-center">{children}</div>;
@@ -35,11 +47,12 @@ function Shell() {
             Visita <span className="text-sm font-normal text-muted-foreground">for cafes</span>
           </Link>
           <nav className="flex items-center gap-1 text-sm">
-            {access?.isAdmin && (
-              <Link to="/admin/approvals" className="rounded-md px-2 py-1 hover:bg-accent">
-                Approvals
-              </Link>
-            )}
+            {access?.isAdmin &&
+              ADMIN_NAV.map((l) => (
+                <NavLink key={l.to} to={l.to} className={({ isActive }) => cn("rounded-md px-2 py-1 hover:bg-accent", isActive && "bg-accent font-semibold")}>
+                  {l.label}
+                </NavLink>
+              ))}
           </nav>
           <div className="ml-auto flex items-center gap-2 text-sm">
             <span className="hidden max-w-48 truncate text-muted-foreground sm:inline">{name}</span>
@@ -106,6 +119,11 @@ export function App() {
               <Route path="analytics" element={<Analytics />} />
             </Route>
             <Route path="admin/approvals" element={<RequireAdmin><ApprovalsPage /></RequireAdmin>} />
+            <Route path="admin/venues" element={<RequireAdmin><Venues /></RequireAdmin>} />
+            <Route path="admin/venues/new" element={<RequireAdmin><VenueForm /></RequireAdmin>} />
+            <Route path="admin/venues/:venueId" element={<RequireAdmin><VenueForm /></RequireAdmin>} />
+            <Route path="admin/amenities" element={<RequireAdmin><AmenityQueue /></RequireAdmin>} />
+            <Route path="admin/reviews" element={<RequireAdmin><Moderation /></RequireAdmin>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

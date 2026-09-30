@@ -21,3 +21,15 @@ export const eventPhotoPath = (eventId: string) => `/api/events/${eventId}/photo
 export function eventPhotoId(pathname: string): string | null {
   return EVENT_ROUTE.exec(pathname)?.[1] ?? null;
 }
+
+const REVIEW_ROUTE = /^\/api\/reviews\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/photo$/i;
+
+/** Moderators remove a review's photo (the file too, since review photos are public). */
+export const reviewPhotoPath = (reviewId: string) => `/api/reviews/${reviewId}/photo`;
+
+export function reviewPhotoId(pathname: string): string | null {
+  return REVIEW_ROUTE.exec(pathname)?.[1] ?? null;
+}
+
+/** Scan uploads (admins): start, part, complete, abort. */
+export const SCAN_ROUTES = ["/api/scans/start", "/api/scans/part", "/api/scans/complete", "/api/scans/abort"] as const;
