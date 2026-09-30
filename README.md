@@ -126,6 +126,25 @@ deployed site on the next deploy until cafe pages render on request (plan Task
 Local setup: copy `apps/admin/.env.example` to `.env` and
 `.dev.vars.example` to `.dev.vars`, then `pnpm dev:admin` (port 4322).
 
+## Analytics
+
+Owner analytics (PRD 4.4) are collected **only when the visitor chose "Allow
+usage stats"** on the privacy notice (RA 10173):
+
+- `apps/consumer/src/lib/analytics/track.ts` queues events (profile views,
+  walkthrough opens, directions taps, search appearances, demand taps; active
+  filters ride along on views and opens), batches them, and sends with
+  `sendBeacon` when the page is hidden. Nothing is queued without consent,
+  and a batch is dropped if consent is withdrawn before it's sent.
+- `POST /api/track` refuses batches without the `consent: "usage"` marker,
+  unknown event types and bad ids, rate-limits per IP (`TRACK_LIMITER`,
+  60/min), keeps only published venues and known filter names, and stamps
+  the server time. The session id is random per tab and never tied to an account.
+- Raw events (`analytics_events`) have no client access. Owners and admins
+  read totals through `venue_stats(venue, from, to)`; the owner app's
+  Analytics tab charts them. A daily pg_cron job turns events older than 24
+  months into daily totals (`analytics_daily`), as the privacy policy says.
+
 ## UI kit
 
 - **Tokens:** `packages/ui/src/styles/tokens.css`. Every colour, font and radius

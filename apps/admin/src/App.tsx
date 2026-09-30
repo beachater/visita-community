@@ -9,6 +9,7 @@ import { homeFor } from "@/routes/home";
 import { ClaimPage } from "@/pages/claim/ClaimPage";
 import { StatusPage } from "@/pages/pending/StatusPage";
 import { ApprovalsPage } from "@/pages/admin/approvals/ApprovalsPage";
+import { Analytics } from "@/pages/venue/Analytics";
 import { EventsEditor } from "@/pages/venue/EventsEditor";
 import { ListingEditor } from "@/pages/venue/ListingEditor";
 import { Reviews } from "@/pages/venue/Reviews";
@@ -81,7 +82,9 @@ function RequireAdmin({ children }: { children: ReactNode }) {
 
 function Home() {
   const { access } = useAuth();
-  return <Navigate to={homeFor(access ?? { isAdmin: false, claims: [] })} replace />;
+  // Never guess: without access loaded, an owner would be sent to the claim form.
+  if (!access) return <Centered><p className="text-muted-foreground">Loading…</p></Centered>;
+  return <Navigate to={homeFor(access)} replace />;
 }
 
 export function App() {
@@ -100,6 +103,7 @@ export function App() {
               <Route path="listing" element={<ListingEditor />} />
               <Route path="events" element={<EventsEditor />} />
               <Route path="reviews" element={<Reviews />} />
+              <Route path="analytics" element={<Analytics />} />
             </Route>
             <Route path="admin/approvals" element={<RequireAdmin><ApprovalsPage /></RequireAdmin>} />
             <Route path="*" element={<Navigate to="/" replace />} />

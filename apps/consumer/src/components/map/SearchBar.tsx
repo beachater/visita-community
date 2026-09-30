@@ -1,13 +1,17 @@
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useStore } from "@nanostores/react";
-import { searchVenues } from "@/lib/discovery/search";
+import { track } from "@/lib/analytics/track";
+import { normalize, searchVenues } from "@/lib/discovery/search";
 import type { MapVenue } from "@/lib/discovery/venues";
 import { $recent } from "@/lib/visitor/stores";
 import { VenueList } from "./VenueList";
 
 // PRD 4.1 search over Visita's own cafes, with the last five viewed shown
 // while the box is empty.
+
+/** Venues already counted as appearing for a search term in this tab (PRD 4.4 "search appearances"). */
+const counted = new Set<string>();
 
 interface Props {
   venues: MapVenue[];
@@ -27,6 +31,21 @@ export function SearchBar({ venues, onPick }: Props) {
     [recentSlugs, venues],
   );
   const showingRecent = query.trim() === "";
+
+  // Count an appearance once the results settle, not on every keystroke.
+  useEffect(() => {
+    const term = normalize(query);
+    if (!term || results.length === 0) return;
+    const timer = window.setTimeout(() => {
+      for (const v of results) {
+        const key = `${term}|${v.id}`;
+        if (counted.has(key)) continue;
+        counted.add(key);
+        track("search_appearance", v.id);
+      }
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [query, results]);
   const list = showingRecent ? recent : results;
 
   const pick = (v: MapVenue) => {

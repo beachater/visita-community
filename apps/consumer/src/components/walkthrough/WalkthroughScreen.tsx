@@ -1,3 +1,4 @@
+import { track } from "@/lib/analytics/track";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { toast } from "sonner";
@@ -86,7 +87,10 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
   };
 
   const directions = useDirections();
-  const onDirections = () => directions.open(cafe);
+  const onDirections = () => {
+    track("directions_tap", cafe.id);
+    directions.open(cafe);
+  };
 
   const sections = [...new Set(cafe.menu.map((m) => m.section ?? ""))];
 

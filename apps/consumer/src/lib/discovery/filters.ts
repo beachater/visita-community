@@ -105,3 +105,19 @@ export function activeFilterCount(f: Filters): number {
     Number(f.parking)
   );
 }
+
+/** Names of the active filters, for analytics ("which filters brought people in"). */
+export const FILTER_NAMES = ["price", "outlets", "wifi", "open247", "outdoor", "parking"] as const;
+export type FilterName = (typeof FILTER_NAMES)[number];
+
+export function activeFilterNames(f: Filters): FilterName[] {
+  const on: Record<FilterName, boolean> = {
+    price: f.priceMin !== null || f.priceMax !== null,
+    outlets: f.minOutlets !== null,
+    wifi: f.wifi,
+    open247: f.open247,
+    outdoor: f.outdoor,
+    parking: f.parking,
+  };
+  return FILTER_NAMES.filter((n) => on[n]);
+}

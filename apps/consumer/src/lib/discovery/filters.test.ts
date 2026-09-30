@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { venue } from "./fixtures";
-import { applyFilters, EMPTY_FILTERS, activeFilterCount, priceRange, type Filters } from "./filters";
+import { applyFilters, EMPTY_FILTERS, activeFilterCount, activeFilterNames, priceRange, type Filters } from "./filters";
 
 const allDay = ["00:00", "00:00"] as [string, string];
 const always = { mon: allDay, tue: allDay, wed: allDay, thu: allDay, fri: allDay, sat: allDay, sun: allDay };
@@ -71,4 +71,10 @@ describe("applyFilters", () => {
 describe("activeFilterCount", () => {
   it("counts active filters", () => expect(activeFilterCount(f({ wifi: true, minOutlets: 2, priceMax: 200 }))).toBe(3));
   it("is zero by default", () => expect(activeFilterCount(EMPTY_FILTERS)).toBe(0));
+});
+
+describe("activeFilterNames", () => {
+  it("names the filters that are on, for analytics", () =>
+    expect(activeFilterNames({ ...EMPTY_FILTERS, priceMax: 200, wifi: true, parking: true })).toEqual(["price", "wifi", "parking"]));
+  it("is empty with no filters", () => expect(activeFilterNames(EMPTY_FILTERS)).toEqual([]));
 });

@@ -3,6 +3,7 @@ import type { GetStaticPaths } from "astro";
 import type { MenuItem, VenueAmenities, WeeklyHours } from "@visita/shared-types";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import ReviewList from "../../../components/reviews/ReviewList.astro";
+import { TrackView } from "../../../components/analytics/TrackView";
 import { EventList } from "../../../components/venue/EventList";
 import { OccupancyPill } from "../../../components/venue/OccupancyPill";
 import OpenNowPill from "../../../components/cafe/OpenNowPill.astro";
@@ -62,6 +63,7 @@ const description = scanned
 
     <!-- Fetched fresh, so today's events show on the cached page. -->
     <EventList client:idle venueId={cafe.id} />
+    <TrackView client:idle venueId={cafe.id} />
 
     {strip.length > 0 && (
       <ul class="strip" aria-label="At a glance">

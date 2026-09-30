@@ -6,7 +6,8 @@ import { Toaster } from "@visita/ui/sonner";
 import { cn } from "@visita/ui/utils";
 import { fetchVenues, type VenuesPayload } from "@/lib/discovery/api";
 import { requestScan } from "@/lib/discovery/demand-client";
-import { activeFilterCount, applyFilters, EMPTY_FILTERS, type Filters } from "@/lib/discovery/filters";
+import { activeFilterCount, activeFilterNames, applyFilters, EMPTY_FILTERS, type Filters } from "@/lib/discovery/filters";
+import { track } from "@/lib/analytics/track";
 import { sortVenues, withDistance } from "@/lib/discovery/sort";
 import type { Coords } from "@/lib/venue/distance";
 import { $demanded, $saved } from "@/lib/visitor/stores";
@@ -90,8 +91,17 @@ export function MapExplorer({ mode }: Props) {
     return v ? toWalkthrough(v) : null;
   }, [venues, walkthrough]);
 
+  // Which filters were on when a venue was opened (PRD 4.4 "which filters brought people in").
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+  const withFilters = () => {
+    const names = activeFilterNames(filtersRef.current);
+    return names.length ? { filters: names } : {};
+  };
+
   const select = useCallback((v: MapVenue) => {
     setSelected(v.slug);
+    track("profile_view", v.id, withFilters());
     if (pinnable(v)) mapRef.current?.easeTo({ center: [v.lng, v.lat], duration: 400 });
   }, []);
 
@@ -113,6 +123,7 @@ export function MapExplorer({ mode }: Props) {
       location.href = `/cafe/${v.slug}`; // The cafe page explains what's missing.
       return;
     }
+    track("walkthrough_open", v.id, withFilters());
     history.pushState({ walkthrough: v.slug }, "", `/cafe/${v.slug}`);
     pushed.current = true;
     setWalkthrough(v.slug);
@@ -200,8 +211,14 @@ export function MapExplorer({ mode }: Props) {
                 distance={selectedDistance}
                 onClose={() => setSelected(null)}
                 onWalkthrough={() => openWalkthrough(selectedVenue)}
-                onDirections={() => directions.open(selectedVenue)}
-                onDemand={() => void onDemand(selectedVenue.slug)}
+                onDirections={() => {
+                  track("directions_tap", selectedVenue.id);
+                  directions.open(selectedVenue);
+                }}
+                onDemand={() => {
+                  track("demand_tap", selectedVenue.id);
+                  void onDemand(selectedVenue.slug);
+                }}
                 demanded={demandedSlugs.includes(selectedVenue.slug)}
                 demandPending={demandPending}
               />

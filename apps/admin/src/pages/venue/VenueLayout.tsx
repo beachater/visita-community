@@ -41,6 +41,7 @@ const TABS = [
   { to: "listing", label: "Listing", end: false },
   { to: "events", label: "Events", end: false },
   { to: "reviews", label: "Reviews", end: false },
+  { to: "analytics", label: "Analytics", end: false },
 ];
 
 export function VenueLayout() {
@@ -103,7 +104,7 @@ export function VenueLayout() {
             </Button>
           )}
         </header>
-        <nav aria-label="Manage this cafe" className="flex gap-1 overflow-x-auto border-b">
+        <nav aria-label="Manage this cafe" className="flex gap-1 overflow-x-auto overflow-y-hidden border-b">
           {TABS.map((t) => (
             <NavLink
               key={t.label}

@@ -1,3 +1,4 @@
+import { track } from "@/lib/analytics/track";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AmenityDefinition } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
@@ -23,6 +24,7 @@ export function CafeWalkthrough({ cafe, definitions }: Props) {
   const launcher = useRef<HTMLButtonElement>(null);
 
   const open = () => {
+    track("walkthrough_open", cafe.id);
     history.pushState({ walkthrough: cafe.slug }, "");
     pushed.current = true;
     setStage("open");
