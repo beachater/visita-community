@@ -3,6 +3,7 @@ import type { CafeRow } from "../venue/load";
 import { cardActions, pinnable, toMapVenue, toWalkthrough } from "./venues";
 
 const row = (over: Partial<CafeRow> = {}): CafeRow => ({
+  id: "aaaaaaaa-0000-0000-0000-000000000001",
   slug: "sonnys",
   name: "Sonny's Coffee + Diner",
   address: "Sonny's, Cagayan de Oro",

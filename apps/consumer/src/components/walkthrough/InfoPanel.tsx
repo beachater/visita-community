@@ -1,10 +1,11 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { BadgeCheck, ChevronDown, LocateFixed, Navigation } from "lucide-react";
+import { BadgeCheck, ChevronDown, LocateFixed, MessageSquare, Navigation } from "lucide-react";
 import type { AmenityDefinition } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
 import { cn } from "@visita/ui/utils";
 import { amenityRows, summaryRows } from "@/lib/venue/amenities";
 import { isOpenAt, venueClock, weeklyRows } from "@/lib/venue/hours";
+import { openReviewSheet } from "@/lib/reviews/open";
 import { formatPhp, scanDate } from "@/lib/venue/scan";
 import type { WalkthroughCafe } from "@/lib/venue/types";
 
@@ -112,6 +113,9 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
             )}
             <Button onClick={onDirections} className="mt-1 w-full">
               <Navigation /> Get directions
+            </Button>
+            <Button variant="secondary" onClick={() => openReviewSheet(cafe.slug)} className="w-full">
+              <MessageSquare /> Reviews
             </Button>
           </section>
 

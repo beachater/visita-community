@@ -3,8 +3,11 @@
 // development, and resolve as "no such domain" on some networks, so a visitor
 // who can open the site must be able to load its assets from the same place.
 
-/** Public prefixes. Everything else in the bucket (owner proofs, drafts) stays private. */
-const PUBLIC_PREFIXES = ["splats/", "basemaps/"];
+/**
+ * Public prefixes. Review photos are public like the review itself; their keys
+ * carry random ids. Everything else in the bucket (owner proofs, drafts) stays private.
+ */
+const PUBLIC_PREFIXES = ["splats/", "basemaps/", "reviews/"];
 
 export function isServableKey(key: string): boolean {
   if (!key || key.includes("..") || key.includes("//") || key.startsWith("/")) return false;

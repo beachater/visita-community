@@ -68,11 +68,11 @@ Run `pnpm db:types` after every migration and commit the result.
 | Route | Mode |
 |---|---|
 | `/` (map hero + marketing), `/explore` (map only) | prerendered shell, map is a `client:only` island |
-| `/cafe/[slug]` | prerendered per published cafe; personal bits are server islands |
+| `/cafe/[slug]` | prerendered per published cafe; reviews (incl. your own) are a server island |
 | `/community`, `/community/badges`, `/for-cafes`, `/about`, `/contact`, `/faq`, `/privacy`, `/terms` | prerendered |
 | `/saved` | prerendered shell; list from this device, merged with the account via `/api/saved` when signed in |
 | `/me`, `/auth/login`, `/referrals`, `/vouchers`, `/check-in/[slug]`, `/cafe/[slug]/verify`, `/r/[code]` | server-rendered |
-| `/auth/google` (POST), `/auth/callback`, `/auth/logout` (POST), `/api/saved` | endpoints |
+| `/auth/google` (POST), `/auth/callback`, `/auth/logout` (POST), `/api/saved`, `/api/reviews`, `/api/uploads/review-photo` (POST) | endpoints |
 
 Sign-in is Google only (Supabase Auth, PKCE, cookies via `@supabase/ssr`). The
 header account area is a server island, so page shells stay prerendered.

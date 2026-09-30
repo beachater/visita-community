@@ -8,6 +8,7 @@ import type { WalkthroughCafe } from "./types";
 
 export type CafeRow = Pick<
   Tables<"venues">,
+  | "id"
   | "slug"
   | "name"
   | "address"
@@ -26,7 +27,7 @@ export type CafeRow = Pick<
 >;
 
 const CAFE_COLUMNS =
-  "slug,name,address,city,lat,lng,google_place_id,splat_url,splat_preview_url,scanned_at,amenities,hours,menu,is_top_pick,search_terms";
+  "id,slug,name,address,city,lat,lng,google_place_id,splat_url,splat_preview_url,scanned_at,amenities,hours,menu,is_top_pick,search_terms";
 
 export async function loadPublishedCafes(): Promise<{ cafes: CafeRow[]; definitions: AmenityDefinition[] }> {
   const [cafes, definitions] = await Promise.all([

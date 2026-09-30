@@ -1,4 +1,5 @@
-import type { APIContext, APIRoute } from "astro";
+import type { APIRoute } from "astro";
+import { json, requireSession } from "../../lib/server/session";
 import { isJsonRequest, parseSavedBody } from "../../lib/server/saved";
 
 // /api/saved: the signed-in visitor's saved cafes (PRD 4.1 dock, 4.2).
@@ -9,18 +10,7 @@ import { isJsonRequest, parseSavedBody } from "../../lib/server/saved";
 //   DELETE {slug}  → remove one
 export const prerender = false;
 
-const json = (status: number, body: unknown) =>
-  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "private, no-store" } });
-
-type Session =
-  | { ok: false; response: Response }
-  | { ok: true; supabase: NonNullable<App.Locals["supabase"]>; user: NonNullable<App.Locals["user"]> };
-
-function session({ locals }: APIContext): Session {
-  if (!locals.supabase) return { ok: false, response: json(503, { error: "Accounts aren't available yet." }) };
-  if (!locals.user) return { ok: false, response: json(401, { error: "Sign in to save cafes to your account." }) };
-  return { ok: true, supabase: locals.supabase, user: locals.user };
-}
+const SIGN_IN = "Sign in to save cafes to your account.";
 
 async function venueIds(supabase: NonNullable<App.Locals["supabase"]>, slugs: string[]) {
   const { data, error } = await supabase.from("venues").select("id, slug").in("slug", slugs);
@@ -30,7 +20,7 @@ async function venueIds(supabase: NonNullable<App.Locals["supabase"]>, slugs: st
 }
 
 export const GET: APIRoute = async (context) => {
-  const s = session(context);
+  const s = requireSession(context, SIGN_IN);
   if (!s.ok) return s.response;
   const { data, error } = await s.supabase
     .from("saved_venues")
@@ -42,7 +32,7 @@ export const GET: APIRoute = async (context) => {
 };
 
 export const POST: APIRoute = async (context) => {
-  const s = session(context);
+  const s = requireSession(context, SIGN_IN);
   if (!s.ok) return s.response;
   if (!isJsonRequest(context.request)) return json(415, { error: "Expected JSON." });
   const parsed = parseSavedBody(await context.request.json().catch(() => null));
@@ -59,7 +49,7 @@ export const POST: APIRoute = async (context) => {
 };
 
 export const DELETE: APIRoute = async (context) => {
-  const s = session(context);
+  const s = requireSession(context, SIGN_IN);
   if (!s.ok) return s.response;
   if (!isJsonRequest(context.request)) return json(415, { error: "Expected JSON." });
   const body = (await context.request.json().catch(() => null)) as { slug?: unknown } | null;

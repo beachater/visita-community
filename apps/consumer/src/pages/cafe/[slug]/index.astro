@@ -2,7 +2,7 @@
 import type { GetStaticPaths } from "astro";
 import type { MenuItem, VenueAmenities, WeeklyHours } from "@visita/shared-types";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import PersonalizedSlot from "../../../components/PersonalizedSlot.astro";
+import ReviewList from "../../../components/reviews/ReviewList.astro";
 import OpenNowPill from "../../../components/cafe/OpenNowPill.astro";
 import { CafeWalkthrough } from "../../../components/walkthrough/CafeWalkthrough";
 import { amenityRows, summaryRows } from "../../../lib/venue/amenities";
@@ -121,8 +121,12 @@ const description = scanned
     )}
 
     <!-- Fresh per request while the page above stays cached. -->
-    <PersonalizedSlot server:defer label="saved heart and check-in state" />
-    <PersonalizedSlot server:defer label="reviews, including your own" />
+    <ReviewList server:defer venueId={cafe.id} slug={cafe.slug} cafeName={cafe.name}>
+      <section slot="fallback" id="reviews" aria-busy="true">
+        <h2>Reviews</h2>
+        <p class="reviews-loading">Loading reviews…</p>
+      </section>
+    </ReviewList>
   </main>
 </BaseLayout>
 
