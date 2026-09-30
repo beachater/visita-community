@@ -484,5 +484,54 @@ select pg_temp.pass('owners cannot publish or feature venues');
 do $$ begin assert (select status from public.reviews where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'visible', 'owner hid a review'; end $$;
 select pg_temp.pass('owners cannot hide reviews of their venue');
 
+-- ---------- final review fixes ----------
+-- 1. A review photo can only live under its own review, so nothing that
+--    deletes "the review's photo" can be pointed at a scan or someone's proof.
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+select pg_temp.expect_error($q$update public.reviews set photo_url = 'splats/sonnys/v1.sog' where id = 'bbbbbbbb-0000-0000-0000-000000000001'$q$, 'a review photo cannot point at a scan');
+select pg_temp.expect_error($q$update public.reviews set photo_url = 'reviews/cccccccc-0000-0000-0000-000000000009/x.jpg' where id = 'bbbbbbbb-0000-0000-0000-000000000001'$q$, 'a review photo cannot point at another review''s folder');
+select pg_temp.expect_error($q$update public.reviews set photo_url = 'reviews/bbbbbbbb-0000-0000-0000-000000000001/../../splats/x.sog' where id = 'bbbbbbbb-0000-0000-0000-000000000001'$q$, 'a review photo cannot climb out of its folder');
+update public.reviews set photo_url = 'reviews/bbbbbbbb-0000-0000-0000-000000000001/a.jpg' where id = 'bbbbbbbb-0000-0000-0000-000000000001';
+select pg_temp.pass('a review photo under its own review is fine');
+
+-- 2. Co-owners see each other's names and roles, never other claimants or phone numbers.
+insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000003', 'Manager', '0918 999 0000');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+do $$ begin
+  assert (select count(*) from public.venue_owners where profile_id = '11111111-1111-1111-1111-111111111111') = 0, 'owner sees a pending claimant';
+  assert (select count(*) from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 1, 'owner sees more than their own claim';
+end $$;
+select pg_temp.pass('owners cannot read other people''s claims on their venue');
+do $$
+declare names jsonb := (select jsonb_agg(to_jsonb(o)) from public.venue_owner_names('aaaaaaaa-0000-0000-0000-000000000003') o);
+begin
+  assert jsonb_array_length(names) = 1, names::text;
+  assert names -> 0 ->> 'role_title' = 'Owner';
+  assert not (names -> 0 ? 'contact_phone');
+end $$;
+select pg_temp.pass('owners see their approved co-owners by name and role only');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+select pg_temp.expect_error($q$select * from public.venue_owner_names('aaaaaaaa-0000-0000-0000-000000000003')$q$, 'non-owners cannot list a venue''s owners');
+
+-- 6. Stats and demand resist scripted repeats.
+reset role;
+set local role service_role;
+insert into public.analytics_events (venue_id, type, session_id, occurred_at) values ('aaaaaaaa-0000-0000-0000-000000000003', 'directions_tap', 'sess-dup0000000000000', '2026-09-29 10:05+08');
+select pg_temp.expect_error($q$insert into public.analytics_events (venue_id, type, session_id, occurred_at) values ('aaaaaaaa-0000-0000-0000-000000000003', 'directions_tap', 'sess-dup0000000000000', '2026-09-29 10:50+08')$q$, 'one event per session, venue and type per hour');
+insert into public.analytics_events (venue_id, type, session_id, occurred_at) values ('aaaaaaaa-0000-0000-0000-000000000003', 'directions_tap', 'sess-dup0000000000000', '2026-09-29 11:05+08');
+select pg_temp.pass('the same session counts again in a later hour');
+reset role;
+insert into public.demand_requests (venue_id, device_id, ip_hash, created_at) values ('aaaaaaaa-0000-0000-0000-000000000001', 'device-ffffffffffffffff', 'hash-old', now() - interval '3 days');
+select public.purge_old_analytics();
+do $$ begin assert (select ip_hash from public.demand_requests where device_id = 'device-ffffffffffffffff') is null; end $$;
+select pg_temp.pass('demand network hashes are erased after two days');
+reset role;
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED

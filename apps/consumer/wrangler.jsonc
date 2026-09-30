@@ -12,7 +12,9 @@
   "ratelimits": [
     { "name": "DEMAND_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
     // Usage stats arrive in batches of up to 50 events, a few per page.
-    { "name": "TRACK_LIMITER", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+    { "name": "TRACK_LIMITER", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    // Per network and venue, so one source can't pile events onto one cafe.
+    { "name": "TRACK_VENUE_LIMITER", "namespace_id": "1003", "simple": { "limit": 20, "period": 60 } }
   ],
   "r2_buckets": [
     {

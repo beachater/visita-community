@@ -51,12 +51,13 @@ Astro.response.headers.set("cache-control", "private, no-store");
 </BaseLayout>
 
 <script>
-  import { SAVED_KEY } from "../lib/visitor/stores";
+  import { SAVED_KEY, SYNCED_KEY } from "../lib/visitor/stores";
 
   // Saved cafes live on the account; don't leave a copy on a shared device.
   document.querySelector("[data-sign-out]")?.addEventListener("submit", () => {
     try {
       localStorage.removeItem(SAVED_KEY);
+      localStorage.removeItem(SYNCED_KEY);
     } catch {
       // Storage blocked: nothing was kept.
     }

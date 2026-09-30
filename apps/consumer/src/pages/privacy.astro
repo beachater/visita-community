@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/kit/PageHeader.astro";
 import DraftNotice from "../components/kit/DraftNotice.astro";
+import PrivacyChoice from "../components/site/PrivacyChoice.astro";
 
 export const prerender = true;
 
@@ -58,7 +59,16 @@ export const prerender = true;
       <p>
         If you choose "Allow usage stats" on the privacy notice, we count things like page visits, walkthrough opens, taps on "Get directions", and which searches
         and filters led to a cafe. Cafe owners see these as totals for their own listing, never as individuals. We use our own first-party measurement: no
-        advertising trackers and no third-party analytics. If you choose "Essential only", none of this is recorded.
+        advertising trackers and no third-party analytics. If you choose "Essential only", none of this is recorded. You can change your choice here at any
+        time:
+      </p>
+      <PrivacyChoice />
+
+      <h3>Scan requests</h3>
+      <p>
+        When you tap "I want to see inside" on a cafe that isn't scanned yet, we record which cafe, a random code for this browser, and a one-way code worked out
+        from your network address for that day. The network code is used only to stop automated requests, can't be turned back into your address, and is erased
+        after two days.
       </p>
 
       <h3>Venue owners</h3>
@@ -75,13 +85,13 @@ export const prerender = true;
 
       <h3>On your device</h3>
       <p>
-        We store a sign-in session, your privacy choice and your recently viewed cafes in your browser. These are needed for the site to work and aren't used to
+        We store a sign-in session, your privacy choice, your saved and recently viewed cafes, and any review you're still writing in your browser. These are needed for the site to work and aren't used to
         track you across other sites.
       </p>
 
       <h2>3. Legal bases</h2>
       <ul>
-        <li><strong>Consent:</strong> usage statistics and location. You can change your mind at any time by clearing this site's data in your browser.</li>
+        <li><strong>Consent:</strong> usage statistics and location. You can change your mind at any time with the choice under "Usage statistics" above, or in your browser's location settings.</li>
         <li><strong>Contract:</strong> running your account and, for venue owners, your listing and subscription.</li>
         <li><strong>Legitimate interests:</strong> keeping the service secure, preventing abuse, and moderating reviews.</li>
       </ul>
@@ -103,6 +113,7 @@ export const prerender = true;
             <tr><td>Your account</td><td>While your account is open, then deleted within 30 days of closing it, unless the law requires longer</td></tr>
             <tr><td>Published reviews and photos</td><td>Until you delete them or close your account</td></tr>
             <tr><td>Usage statistics</td><td>24 months, then kept only as totals that identify no one</td></tr>
+            <tr><td>Network code on scan requests</td><td>2 days</td></tr>
             <tr><td>Venue owner and payment records</td><td>As long as the listing is active, then as required for tax and accounting</td></tr>
             <tr><td>Data on your device</td><td>Until you clear your browser's data for this site</td></tr>
           </tbody>

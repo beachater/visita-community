@@ -47,3 +47,17 @@ export function parseTrackBody(body: unknown): TrackBody {
   }
   return { ok: true, sessionId, events: out };
 }
+
+/** One event per venue and type per batch, and at most `maxPerVenue` per venue, so one request can't flood a venue's stats. */
+export function dedupeEvents(events: TrackEvent[], maxPerVenue: number): TrackEvent[] {
+  const seen = new Set<string>();
+  const perVenue = new Map<string, number>();
+  return events.filter((e) => {
+    const key = `${e.venueId}|${e.type}`;
+    const n = perVenue.get(e.venueId) ?? 0;
+    if (seen.has(key) || n >= maxPerVenue) return false;
+    seen.add(key);
+    perVenue.set(e.venueId, n + 1);
+    return true;
+  });
+}

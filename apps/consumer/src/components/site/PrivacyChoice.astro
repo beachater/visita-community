@@ -1,0 +1,35 @@
+---
+// Change or withdraw the usage-statistics choice at any time (RA 10173:
+// withdrawing consent must be as easy as giving it). Works without the
+// banner, and takes effect at once: the tracker checks consent on every event.
+---
+
+<div class="privacy-choice grid gap-3 rounded-xl border bg-card p-4 not-prose" data-privacy-choice>
+  <p class="text-sm">
+    Usage statistics are <strong data-privacy-state>not set</strong> on this device.
+  </p>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" class="rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent" data-choice="essential">Essential only</button>
+    <button type="button" class="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground" data-choice="all">Allow usage stats</button>
+  </div>
+</div>
+
+<script>
+  import { getConsent, setConsent, type ConsentChoice } from "../../lib/consent";
+
+  const root = document.querySelector<HTMLElement>("[data-privacy-choice]");
+  const state = root?.querySelector("[data-privacy-state]");
+  const render = () => {
+    const c = getConsent();
+    if (state) state.textContent = c === "all" ? "allowed" : c === "essential" ? "off (essential only)" : "not set";
+    root?.querySelectorAll<HTMLButtonElement>("[data-choice]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.choice === c)));
+  };
+  root?.querySelectorAll<HTMLButtonElement>("[data-choice]").forEach((b) =>
+    b.addEventListener("click", () => {
+      setConsent(b.dataset.choice as ConsentChoice);
+      render();
+    }),
+  );
+  window.addEventListener("visita:consent", render);
+  render();
+</script>

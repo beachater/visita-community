@@ -16,6 +16,9 @@ describe("safeNext", () => {
     ["javascript:alert(1)", "script URL"],
     ["saved", "relative path"],
     ["/%2F%2Fevil.example", "encoded slashes still resolve on this site"],
+    ["/.//evil.example", "dot segment before a double slash"],
+    ["/a/..//evil.example", "parent segment before a double slash"],
+    ["/%2e//evil.example", "encoded dot before a double slash"],
   ])("falls back to home for %j (%s)", (input) => {
     const out = safeNext(input);
     expect(new URL(out, "https://visita.ph").origin).toBe("https://visita.ph");

@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
-import { checkPhoto, MAX_PHOTO_BYTES, reviewPhotoKey } from "@visita/uploads/photo";
+import { checkPhoto, isReviewPhotoOf, MAX_PHOTO_BYTES, reviewPhotoKey } from "@visita/uploads/photo";
 import { json, requireSession } from "../../../lib/server/session";
 
 // POST /api/uploads/review-photo?review=<id>: the photo for your own review
@@ -47,6 +47,6 @@ export const POST: APIRoute = async (context) => {
     await env.ASSETS_BUCKET.delete(key);
     return json(502, { error: "Couldn't attach the photo. Try again." });
   }
-  if (review.photo_url) await env.ASSETS_BUCKET.delete(review.photo_url);
+  if (review.photo_url && isReviewPhotoOf(review.photo_url, review.id)) await env.ASSETS_BUCKET.delete(review.photo_url);
   return json(201, { photoUrl: key });
 };

@@ -1,3 +1,4 @@
+import { isReviewPhotoOf } from "@visita/uploads/photo";
 import { isScanKey, nextVersion, scanKey, type ScanKind } from "../src/lib/scan-keys";
 
 // Admin-only Worker routes (PRD 4.5): scan uploads and moderators removing a
@@ -99,7 +100,7 @@ export async function removeReviewPhoto(env: AdminEnv, sb: Rest, json: Json, rev
     body: JSON.stringify({ photo_url: null }),
   });
   if (!patch.ok) return json(502, { error: "Couldn't update the review." });
-  await env.ASSETS_BUCKET.delete(review.photo_url);
+  if (isReviewPhotoOf(review.photo_url, review.id)) await env.ASSETS_BUCKET.delete(review.photo_url);
   return json(200, { removed: true });
 }
 

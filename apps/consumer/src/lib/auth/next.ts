@@ -11,6 +11,8 @@ export function safeNext(value: string | null | undefined): string {
   } catch {
     return "/";
   }
-  if (url.origin !== BASE || url.pathname.startsWith("/auth/")) return "/";
+  // Check the resolved path too: dot segments ("/.//evil.example") collapse
+  // into a protocol-relative "//evil.example" that browsers send off-site.
+  if (url.origin !== BASE || url.pathname.startsWith("//") || url.pathname.includes("\\") || url.pathname.startsWith("/auth/")) return "/";
   return url.pathname + url.search + url.hash;
 }

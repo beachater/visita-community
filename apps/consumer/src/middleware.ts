@@ -24,5 +24,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const response = await next();
   extra.forEach((value, name) => response.headers.set(name, value));
+  // Server islands carry per-visitor content (account menu, your review); never cache them.
+  if (path.startsWith("/_server-islands/")) response.headers.set("cache-control", "private, no-store");
   return response;
 });

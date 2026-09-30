@@ -19,14 +19,10 @@ export function VenueDashboard() {
 
   useEffect(() => {
     let live = true;
-    supabase
-      .from("venue_owners")
-      .select("id, role_title, profiles!venue_owners_profile_id_fkey(display_name)")
-      .eq("venue_id", venue.id)
-      .eq("status", "approved")
-      .then(({ data }) => {
-        if (live) setOwners((data ?? []).map((r) => ({ id: r.id, role_title: r.role_title, name: r.profiles?.display_name ?? "Visita member" })));
-      });
+    // Names and roles only: claims (with phone numbers) are private to the claimant and admins.
+    supabase.rpc("venue_owner_names", { p_venue_id: venue.id }).then(({ data }) => {
+      if (live) setOwners((data ?? []).map((r) => ({ id: r.claim_id, role_title: r.role_title, name: r.display_name ?? "Visita member" })));
+    });
     return () => {
       live = false;
     };

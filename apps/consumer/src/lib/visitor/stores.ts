@@ -1,10 +1,10 @@
 import { atom, type WritableAtom } from "nanostores";
-import { hasAuthCookie, mergeSaved, savedToUpload } from "./merge";
+import { hasAuthCookie, planSync } from "./merge";
 
 // Visitor state shared across islands (PRD 5.2: a header count and a heart on
 // the map must update together). Everything is kept on this device; for
-// signed-in visitors saved cafes also live on their account (PRD 4.2), merged
-// with what this device holds on each page load.
+// signed-in visitors saved cafes also live on their account (PRD 4.2), which
+// becomes the source of truth after this device first syncs with it.
 
 function persistentList(key: string, max?: number): WritableAtom<string[]> {
   const read = (): string[] => {
@@ -35,6 +35,8 @@ function persistentList(key: string, max?: number): WritableAtom<string[]> {
 
 /** localStorage key of the saved list, cleared on sign-out. */
 export const SAVED_KEY = "visita:saved";
+/** Which account this device's list last synced with; cleared on sign-out. */
+export const SYNCED_KEY = "visita:saved-synced";
 
 /** Slugs of saved cafes, most recently saved first. */
 export const $saved = persistentList(SAVED_KEY);
@@ -61,12 +63,22 @@ export function toggleSaved(slug: string): boolean {
   return saved;
 }
 
-/** Merge this device's saves with the signed-in account, once per page load. */
+/**
+ * Sync this device's saves with the signed-in account, once per page load.
+ * The first sync for an account merges the device into it; after that the
+ * account wins, so removals made on other devices stick.
+ */
 async function syncSavedWithAccount(): Promise<void> {
   const res = await fetch("/api/saved", { headers: { accept: "application/json" } });
   if (!res.ok) return; // 401: signed out, device only.
-  const { slugs: account } = (await res.json()) as { slugs: string[] };
-  const upload = savedToUpload($saved.get(), account);
+  const { slugs: account, account: userId } = (await res.json()) as { slugs: string[]; account: string };
+  let syncedFor: string | null = null;
+  try {
+    syncedFor = localStorage.getItem(SYNCED_KEY);
+  } catch {
+    // Storage blocked: treat as a first sync.
+  }
+  const { next, upload } = planSync({ device: $saved.get(), account, syncedFor, userId });
   if (upload.length > 0) {
     const up = await fetch("/api/saved", {
       method: "POST",
@@ -76,7 +88,12 @@ async function syncSavedWithAccount(): Promise<void> {
     // 404: none of them are listed any more. Anything else: retry next load.
     if (!up.ok && up.status !== 404) return;
   }
-  $saved.set(mergeSaved($saved.get(), account));
+  $saved.set(next);
+  try {
+    localStorage.setItem(SYNCED_KEY, userId);
+  } catch {
+    // Not persisted: the next load merges again, which is harmless.
+  }
   accountSync = true;
 }
 

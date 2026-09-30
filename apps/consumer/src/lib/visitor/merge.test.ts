@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasAuthCookie, mergeSaved, savedToUpload } from "./merge";
+import { hasAuthCookie, mergeSaved, planSync, savedToUpload } from "./merge";
 
 describe("mergeSaved", () => {
   it("keeps the device list first, then account-only cafes", () =>
@@ -22,4 +22,13 @@ describe("hasAuthCookie", () => {
     ["visita_consent=1", false],
     ["sb-127-auth-token-code-verifier=xyz", false],
   ])("%j → %s", (cookie, expected) => expect(hasAuthCookie(cookie)).toBe(expected));
+});
+
+describe("planSync", () => {
+  it("merges this device into the account the first time it syncs", () =>
+    expect(planSync({ device: ["b", "a"], account: ["a", "c"], syncedFor: null, userId: "u1" })).toEqual({ next: ["b", "a", "c"], upload: ["b"] }));
+  it("follows the account once this device has synced, so a cafe removed elsewhere stays removed", () =>
+    expect(planSync({ device: ["x", "a"], account: ["a"], syncedFor: "u1", userId: "u1" })).toEqual({ next: ["a"], upload: [] }));
+  it("merges again when someone else signs in on this device", () =>
+    expect(planSync({ device: ["x"], account: ["a"], syncedFor: "u1", userId: "u2" })).toEqual({ next: ["x", "a"], upload: ["x"] }));
 });

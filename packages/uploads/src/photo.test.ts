@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkPhoto, eventPhotoKey, MAX_PHOTO_BYTES, ownerProofKey, reviewPhotoKey } from "./photo";
+import { checkPhoto, eventPhotoKey, isReviewPhotoOf, MAX_PHOTO_BYTES, ownerProofKey, reviewPhotoKey } from "./photo";
 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0x10]);
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -34,4 +34,13 @@ describe("ownerProofKey", () => {
 describe("eventPhotoKey", () => {
   it("files the photo under its event, in the public events/ prefix", () =>
     expect(eventPhotoKey("eeee", "u", "image/jpeg")).toBe("events/eeee/u.jpg"));
+});
+
+describe("isReviewPhotoOf", () => {
+  const R = "bbbbbbbb-0000-0000-0000-000000000001";
+  it("accepts the review's own photo", () => expect(isReviewPhotoOf(`reviews/${R}/x.jpg`, R)).toBe(true));
+  it.each(["splats/sonnys/v1.sog", `reviews/cccc/x.jpg`, `reviews/${R}/../../splats/v1.sog`, `owner-proofs/${R}/x.jpg`, `reviews/${R}/`, ""])(
+    "refuses %j, so a delete can never reach another file",
+    (k) => expect(isReviewPhotoOf(k, R)).toBe(false),
+  );
 });

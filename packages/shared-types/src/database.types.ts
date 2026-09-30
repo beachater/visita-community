@@ -151,6 +151,7 @@ export type Database = {
         Row: {
           id: number
           occurred_at: string
+          occurred_hour: string
           props: Json
           session_id: string
           type: Database["public"]["Enums"]["analytics_event_type"]
@@ -159,6 +160,7 @@ export type Database = {
         Insert: {
           id?: never
           occurred_at?: string
+          occurred_hour: string
           props?: Json
           session_id: string
           type: Database["public"]["Enums"]["analytics_event_type"]
@@ -167,6 +169,7 @@ export type Database = {
         Update: {
           id?: never
           occurred_at?: string
+          occurred_hour?: string
           props?: Json
           session_id?: string
           type?: Database["public"]["Enums"]["analytics_event_type"]
@@ -269,6 +272,7 @@ export type Database = {
           device_id: string
           google_place_id: string | null
           id: string
+          ip_hash: string | null
           lat: number | null
           lng: number | null
           name: string | null
@@ -280,6 +284,7 @@ export type Database = {
           device_id: string
           google_place_id?: string | null
           id?: string
+          ip_hash?: string | null
           lat?: number | null
           lng?: number | null
           name?: string | null
@@ -291,6 +296,7 @@ export type Database = {
           device_id?: string
           google_place_id?: string | null
           id?: string
+          ip_hash?: string | null
           lat?: number | null
           lng?: number | null
           name?: string | null
@@ -991,6 +997,14 @@ export type Database = {
       }
       validate_venue_hours: { Args: { p_hours: Json }; Returns: undefined }
       validate_venue_menu: { Args: { p_menu: Json }; Returns: undefined }
+      venue_owner_names: {
+        Args: { p_venue_id: string }
+        Returns: {
+          claim_id: string
+          display_name: string
+          role_title: string
+        }[]
+      }
       venue_stats: {
         Args: { p_from: string; p_to: string; p_venue_id: string }
         Returns: Json

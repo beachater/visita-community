@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_EVENTS, parseTrackBody } from "./track";
+import { dedupeEvents, MAX_EVENTS, parseTrackBody } from "./track";
 
 const V = "aaaaaaaa-0000-4000-8000-000000000001";
 const body = (over: Record<string, unknown> = {}) => ({
@@ -37,4 +37,12 @@ describe("parseTrackBody", () => {
       ),
     ).toMatchObject({ ok: true, events: [{ props: { filters: ["wifi"] } }, { props: {} }] }));
   it("refuses a body that isn't an object", () => expect(parseTrackBody("nope")).toMatchObject({ ok: false, status: 400 }));
+});
+
+describe("dedupeEvents", () => {
+  const W = "aaaaaaaa-0000-4000-8000-000000000002";
+  const e = (type: "profile_view" | "directions_tap", venueId = V) => ({ type, venueId, props: {} });
+  it("keeps one event per venue and type in a batch", () =>
+    expect(dedupeEvents([e("profile_view"), e("profile_view"), e("directions_tap"), e("profile_view", W)], 10)).toHaveLength(3));
+  it("caps events per venue", () => expect(dedupeEvents([e("profile_view"), e("directions_tap")], 1)).toHaveLength(1));
 });

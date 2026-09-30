@@ -77,7 +77,8 @@ async function uploadProof(request: Request, env: Env, token: string, claimId: s
     await env.ASSETS_BUCKET.delete(key);
     return json(502, { error: "Couldn't attach the proof. Try again." });
   }
-  if (who.claim.proof_key) await env.ASSETS_BUCKET.delete(who.claim.proof_key);
+  // Keys are pinned to their folder in the database too; checked again before deleting.
+  if (who.claim.proof_key?.startsWith(`owner-proofs/${claimId}/`)) await env.ASSETS_BUCKET.delete(who.claim.proof_key);
   return json(201, { uploaded: true });
 }
 
@@ -139,7 +140,7 @@ async function eventPhoto(request: Request, env: Env, token: string, eventId: st
     if (key) await env.ASSETS_BUCKET.delete(key);
     return json(502, { error: "Couldn't save the photo. Try again." });
   }
-  if (event.photo_url) await env.ASSETS_BUCKET.delete(event.photo_url);
+  if (event.photo_url?.startsWith(`events/${event.id}/`)) await env.ASSETS_BUCKET.delete(event.photo_url);
   return json(request.method === "POST" ? 201 : 200, { photoUrl: key });
 }
 

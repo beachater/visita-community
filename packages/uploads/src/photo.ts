@@ -41,3 +41,13 @@ export function ownerProofKey(claimId: string, id: string, type: PhotoType): str
 export function eventPhotoKey(eventId: string, id: string, type: PhotoType): string {
   return `events/${eventId}/${id}.${EXT[type]}`;
 }
+
+/**
+ * Whether `key` is a photo belonging to review `reviewId`. Every route that
+ * deletes a review's photo checks this first, so a tampered photo_url can
+ * never make the server delete some other file.
+ */
+export function isReviewPhotoOf(key: string, reviewId: string): boolean {
+  const prefix = `reviews/${reviewId}/`;
+  return key.startsWith(prefix) && key.length > prefix.length && !key.includes("..") && !key.slice(prefix.length).includes("/");
+}

@@ -5,7 +5,7 @@ import { isJsonRequest, parseSavedBody } from "../../lib/server/saved";
 // /api/saved: the signed-in visitor's saved cafes (PRD 4.1 dock, 4.2).
 // Runs as the visitor, so RLS keeps each list private. Signed-out visitors
 // get 401 and keep saves on the device.
-//   GET            → { slugs } most recently saved first
+//   GET            → { slugs, account } most recently saved first; account is the user id
 //   POST {slug}    → save one; POST {slugs} → merge a device list (first = newest)
 //   DELETE {slug}  → remove one
 export const prerender = false;
@@ -28,7 +28,7 @@ export const GET: APIRoute = async (context) => {
     .order("created_at", { ascending: false });
   if (error) return json(502, { error: "Couldn't load your saved cafes." });
   const slugs = (data ?? []).flatMap((row) => (row.venues?.slug ? [row.venues.slug] : []));
-  return json(200, { slugs });
+  return json(200, { slugs, account: s.user.id });
 };
 
 export const POST: APIRoute = async (context) => {

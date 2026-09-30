@@ -7,6 +7,7 @@ import { Textarea } from "@visita/ui/textarea";
 import { cn } from "@visita/ui/utils";
 import { MAX_REVIEW_CHARS } from "@/lib/reviews/input";
 import { WRITE_REVIEW_EVENT } from "@/lib/reviews/open";
+import { PHOTO_UPLOAD_TIMEOUT_MS, photoFailureMessage } from "@/lib/reviews/photo-errors";
 import { resizeToJpeg } from "@visita/uploads/resize";
 
 // PRD 4.3: write or edit your review of a cafe: 1–5 stars, text and an
@@ -102,18 +103,30 @@ export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: P
 
   const uploadPhoto = async (reviewId: string): Promise<boolean> => {
     if (!photo) return true;
+    let jpeg: Blob;
     try {
-      const jpeg = await resizeToJpeg(photo);
+      jpeg = await resizeToJpeg(photo);
+    } catch {
+      // e.g. HEIC on a browser that can't decode it.
+      setError(photoFailureMessage({ kind: "decode" }));
+      return false;
+    }
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), PHOTO_UPLOAD_TIMEOUT_MS);
+    try {
       const res = await fetch(`/api/uploads/review-photo?review=${encodeURIComponent(reviewId)}`, {
         method: "POST",
         headers: { "content-type": "image/jpeg" },
         body: jpeg,
+        signal: ctrl.signal,
       });
       if (res.ok) return true;
       const data = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(`Your review is saved, but the photo didn't upload: ${data.error ?? "try again"}.`);
+      setError(photoFailureMessage({ kind: "server", message: data.error }));
     } catch {
-      setError("Your review is saved, but the photo didn't upload. Check your connection and try again.");
+      setError(photoFailureMessage({ kind: ctrl.signal.aborted ? "timeout" : "network" }));
+    } finally {
+      window.clearTimeout(timer);
     }
     return false;
   };
@@ -136,17 +149,16 @@ export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: P
     }
     setStatus("saving");
     try {
-      let id = savedId;
-      if (!id) {
-        const { ok, data } = await send(existing ? "PATCH" : "POST", { slug, rating, body, removePhoto: removePhoto && !photo });
-        if (!ok || !data.id) {
-          setError(data.error ?? "Couldn't save your review. Try again.");
-          return;
-        }
-        id = data.id;
-        setSavedId(id);
+      // A retry after a failed photo re-sends the text too (PATCH), so edits
+      // made meanwhile are kept.
+      const method = existing || savedId ? "PATCH" : "POST";
+      const { ok, data } = await send(method, { slug, rating, body, removePhoto: removePhoto && !photo });
+      if (!ok || !data.id) {
+        setError(data.error ?? "Couldn't save your review. Try again.");
+        return;
       }
-      if (await uploadPhoto(id)) finish();
+      setSavedId(data.id);
+      if (await uploadPhoto(data.id)) finish();
     } catch {
       setError("You're offline. Your review is kept here; try again when you're connected.");
     } finally {

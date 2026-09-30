@@ -13,3 +13,18 @@ export function parseDemandBody(body: unknown): DemandBody {
   if (typeof deviceId !== "string" || !DEVICE.test(deviceId)) return { ok: false, error: "Missing device id." };
   return { ok: true, slug, deviceId };
 }
+
+/** At most this many "I want to see inside" requests per network per cafe per day. */
+export const DEMAND_PER_NETWORK_PER_DAY = 5;
+
+/**
+ * A one-way code for the requester's network, for one Manila day, keyed with a
+ * server secret. It caps scripted requests from one network without storing
+ * the address, and it can't link days together. Stored for two days.
+ */
+export async function networkKey(secret: string, ip: string, now: Date): Promise<string> {
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(now);
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${day}|${ip}`));
+  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
