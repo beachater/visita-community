@@ -11,7 +11,8 @@ insert into auth.users (id, email, raw_user_meta_data, aud, role) values
 insert into public.user_roles values ('33333333-3333-3333-3333-333333333333', 'admin');
 insert into public.venues (id, slug, name, is_published) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'pub-cafe', 'Pub', true),
-  ('aaaaaaaa-0000-0000-0000-000000000002', 'draft-cafe', 'Draft', false);
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'draft-cafe', 'Draft', false),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'owned-cafe', 'Owned', true);
 insert into public.badges (id, name, category) values ('test_badge', 'Test', 'test');
 
 create function pg_temp.expect_error(stmt text, label text) returns void
@@ -176,6 +177,93 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 do $$ begin assert (select count(*) from public.reviews) = 1; end $$;
 select pg_temp.pass('author still sees own hidden review');
+
+-- ---------- venue owners: claims and approvals (PRD 4.4, 4.5) ----------
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+insert into public.venue_owners (venue_id, role_title, contact_phone)
+  values ('aaaaaaaa-0000-0000-0000-000000000003', 'Owner', '+63 917 123 4567');
+do $$ begin
+  assert (select status from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'pending';
+  assert (select profile_id from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = '22222222-2222-2222-2222-222222222222';
+end $$;
+select pg_temp.pass('a claim starts pending and belongs to the claimant');
+select pg_temp.expect_error($q$insert into public.venue_owners (venue_id, role_title, contact_phone, status) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Owner', '+63 917 123 4567', 'approved')$q$, 'claimant cannot file an approved claim');
+select pg_temp.expect_error($q$update public.venue_owners set status = 'approved'$q$, 'claimant cannot approve their own claim');
+select pg_temp.expect_error($q$insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000003', 'Manager', '+63 917 123 4567')$q$, 'one open claim per person per venue');
+select pg_temp.expect_error($q$insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000002', 'Owner', '+63 917 123 4567')$q$, 'cannot claim an unpublished listing');
+select pg_temp.expect_error($q$insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Owner', 'call me')$q$, 'contact number must look like one');
+insert into public.venue_owners (proposed_venue, role_title, contact_phone)
+  values ('{"name": "Bagong Kape", "address": "Divisoria, CDO"}', 'Owner', '09171234567');
+select pg_temp.pass('a claim can request a new listing');
+update public.venue_owners set proof_key = 'owner-proofs/' || id || '/permit.jpg' where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003';
+do $$ begin assert (select proof_key from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') like 'owner-proofs/%/permit.jpg'; end $$;
+select pg_temp.pass('claimant attaches proof to a pending claim');
+select pg_temp.expect_error($q$update public.venue_owners set proof_key = 'splats/sonnys/v1.sog' where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'$q$, 'proof must be filed under its own claim');
+do $$ begin assert not public.is_venue_owner('aaaaaaaa-0000-0000-0000-000000000003'); end $$;
+update public.venues set name = 'Hijacked' where id = 'aaaaaaaa-0000-0000-0000-000000000003';
+select pg_temp.expect_error($q$select public.review_owner_claim((select id from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'), 'approved', null)$q$, 'only admins review claims');
+
+reset role;
+do $$ begin assert (select name from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'Owned', 'pending owner edited venue'; end $$;
+select pg_temp.pass('a pending owner cannot touch the venue');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+do $$ begin assert (select count(*) from public.venue_owners) = 0, 'alice sees bob claims'; end $$;
+select pg_temp.pass('people cannot see other people''s claims');
+
+-- Admin, who also claims a cafe of their own.
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Owner', '+63 917 000 0000');
+select pg_temp.expect_error($q$select public.review_owner_claim((select id from public.venue_owners where profile_id = '33333333-3333-3333-3333-333333333333'), 'approved', null)$q$, 'an admin cannot approve their own claim');
+do $$ begin assert (select count(*) from public.venue_owners) = 3; end $$;
+select pg_temp.pass('admins see every claim');
+select public.review_owner_claim((select id from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'), 'approved', 'Permit checked');
+select public.review_owner_claim((select id from public.venue_owners where proposed_venue is not null), 'approved', null);
+do $$ begin
+  assert (select status from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'approved';
+  assert (select reviewed_by from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = '33333333-3333-3333-3333-333333333333';
+  assert (select is_published from public.venues where slug = 'bagong-kape') = false;
+  assert (select v.slug from public.venue_owners o join public.venues v on v.id = o.venue_id where o.proposed_venue is not null) = 'bagong-kape';
+end $$;
+select pg_temp.pass('approving a new-listing claim creates an unpublished listing for it');
+select pg_temp.expect_error($q$select public.review_owner_claim((select id from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'), 'rejected', null)$q$, 'a reviewed claim is final');
+select pg_temp.expect_error($q$select public.review_owner_claim((select id from public.venue_owners where profile_id = '33333333-3333-3333-3333-333333333333'), 'pending', null)$q$, 'a review approves or rejects');
+
+-- Bob, now an approved owner of "Owned" and of the new listing.
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+do $$ begin
+  assert public.is_venue_owner('aaaaaaaa-0000-0000-0000-000000000003');
+  assert not public.is_venue_owner('aaaaaaaa-0000-0000-0000-000000000001');
+end $$;
+select pg_temp.pass('the owner of venue A is not an owner of venue B');
+do $$ begin assert (select review_note from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'Permit checked'; end $$;
+select pg_temp.pass('claimants read the reviewer''s note');
+do $$ begin assert (select count(*) from public.venues where slug = 'bagong-kape') = 1; end $$;
+select pg_temp.pass('owners read their own unpublished listing');
+select pg_temp.expect_error($q$insert into public.reviews (venue_id, rating) values ('aaaaaaaa-0000-0000-0000-000000000003', 5)$q$, 'owners cannot review their own venue');
+select pg_temp.expect_error($q$update public.venue_owners set proof_key = 'owner-proofs/' || id || '/other.jpg' where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'$q$, 'proof is fixed once a claim is reviewed');
+
+-- Alice owns nothing, so she can't read the owner list of Bob's venue.
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+do $$ begin assert (select count(*) from public.venue_owners where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 0; end $$;
+select pg_temp.pass('non-owners cannot read a venue''s owner list');
+
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+select pg_temp.expect_error($q$insert into public.venue_owners (venue_id, role_title, contact_phone) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Owner', '+63 917 123 4567')$q$, 'signed-out visitors cannot file claims');
+do $$ begin assert not public.is_venue_owner('aaaaaaaa-0000-0000-0000-000000000003'); end $$;
+select pg_temp.pass('signed-out visitors own nothing');
+reset role;
 
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED

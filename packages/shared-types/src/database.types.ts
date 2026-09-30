@@ -490,6 +490,73 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_owners: {
+        Row: {
+          contact_phone: string
+          created_at: string
+          id: string
+          profile_id: string
+          proof_key: string | null
+          proposed_venue: Json | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          role_title: string
+          status: Database["public"]["Enums"]["owner_claim_status"]
+          venue_id: string | null
+        }
+        Insert: {
+          contact_phone: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          proof_key?: string | null
+          proposed_venue?: Json | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          role_title: string
+          status?: Database["public"]["Enums"]["owner_claim_status"]
+          venue_id?: string | null
+        }
+        Update: {
+          contact_phone?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          proof_key?: string | null
+          proposed_venue?: Json | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          role_title?: string
+          status?: Database["public"]["Enums"]["owner_claim_status"]
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_owners_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_owners_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_owners_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           address: string | null
@@ -579,6 +646,35 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      is_venue_owner: { Args: { p_venue_id: string }; Returns: boolean }
+      review_owner_claim: {
+        Args: {
+          p_claim_id: string
+          p_decision: Database["public"]["Enums"]["owner_claim_status"]
+          p_note: string
+        }
+        Returns: {
+          contact_phone: string
+          created_at: string
+          id: string
+          profile_id: string
+          proof_key: string | null
+          proposed_venue: Json | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          role_title: string
+          status: Database["public"]["Enums"]["owner_claim_status"]
+          venue_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "venue_owners"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      unique_venue_slug: { Args: { p_name: string }; Returns: string }
       validate_venue_amenities: {
         Args: {
           p_amenities: Json
@@ -593,6 +689,7 @@ export type Database = {
       amenity_value_type: "boolean" | "number" | "text" | "list"
       app_role: "admin"
       check_in_status: "pending" | "verified" | "rejected"
+      owner_claim_status: "pending" | "approved" | "rejected"
       point_reason:
         | "review"
         | "review_photo"
@@ -739,6 +836,7 @@ export const Constants = {
       amenity_value_type: ["boolean", "number", "text", "list"],
       app_role: ["admin"],
       check_in_status: ["pending", "verified", "rejected"],
+      owner_claim_status: ["pending", "approved", "rejected"],
       point_reason: [
         "review",
         "review_photo",
