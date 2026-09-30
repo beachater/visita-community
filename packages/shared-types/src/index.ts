@@ -21,3 +21,5 @@ export type Tables<T extends keyof PublicSchema["Tables"]> =
 
 /** Enum values, e.g. `Enums<"review_status">`. */
 export type Enums<T extends keyof PublicSchema["Enums"]> = PublicSchema["Enums"][T];
+
+export { OCCUPANCY_LABEL, currentOccupancy, setAgo, type OccupancyLevel, type OccupancyRow } from "./occupancy";

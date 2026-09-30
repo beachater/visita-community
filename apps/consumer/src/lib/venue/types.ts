@@ -6,6 +6,7 @@ import type { MenuItem, VenueAmenities, WeeklyHours } from "@visita/shared-types
  * both hand it to the same island.
  */
 export interface WalkthroughCafe {
+  id: string;
   slug: string;
   name: string;
   address: string | null;

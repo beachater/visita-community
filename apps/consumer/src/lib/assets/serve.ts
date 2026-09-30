@@ -4,10 +4,10 @@
 // who can open the site must be able to load its assets from the same place.
 
 /**
- * Public prefixes. Review photos are public like the review itself; their keys
+ * Public prefixes. Review and event photos are public like what they belong to; their keys
  * carry random ids. Everything else in the bucket (owner proofs, drafts) stays private.
  */
-const PUBLIC_PREFIXES = ["splats/", "basemaps/", "reviews/"];
+const PUBLIC_PREFIXES = ["splats/", "basemaps/", "reviews/", "events/"];
 
 export function isServableKey(key: string): boolean {
   if (!key || key.includes("..") || key.includes("//") || key.startsWith("/")) return false;

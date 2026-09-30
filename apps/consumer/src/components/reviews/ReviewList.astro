@@ -25,6 +25,7 @@ type Row = {
   status: "visible" | "hidden";
   created_at: string;
   profiles: { display_name: string | null; avatar_url: string | null } | null;
+  review_replies: { body: string; created_at: string } | null;
 };
 
 let rows: Row[] = [];
@@ -32,7 +33,7 @@ let failed = false;
 if (supabase) {
   const { data, error } = await supabase
     .from("reviews")
-    .select("id, author_id, rating, body, photo_url, status, created_at, profiles(display_name, avatar_url)")
+    .select("id, author_id, rating, body, photo_url, status, created_at, profiles(display_name, avatar_url), review_replies(body, created_at)")
     .eq("venue_id", venueId)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -91,6 +92,7 @@ const next = `/cafe/${slug}?review=1`;
         createdAt={own.created_at}
         own
         hidden={own.status === "hidden"}
+        reply={own.review_replies}
       />
     )
   }
@@ -105,6 +107,7 @@ const next = `/cafe/${slug}?review=1`;
         createdAt={r.created_at}
         own={false}
         hidden={false}
+        reply={r.review_replies}
       />
     ))
   }

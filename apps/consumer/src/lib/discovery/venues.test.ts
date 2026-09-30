@@ -23,6 +23,8 @@ const row = (over: Partial<CafeRow> = {}): CafeRow => ({
 });
 
 describe("toMapVenue", () => {
+  it("keeps the venue id, for live occupancy and events", () => expect(toMapVenue(row()).id).toBe("aaaaaaaa-0000-0000-0000-000000000001"));
+  it("passes the id on to the walkthrough", () => expect(toWalkthrough(toMapVenue(row()))?.id).toBe("aaaaaaaa-0000-0000-0000-000000000001"));
   it("marks a venue with a walkthrough as scanned", () => expect(toMapVenue(row()).scanned).toBe(true));
   it("marks a venue without one as not scanned", () => expect(toMapVenue(row({ splat_url: null, splat_preview_url: null })).scanned).toBe(false));
   it("keeps top pick and search terms", () => {

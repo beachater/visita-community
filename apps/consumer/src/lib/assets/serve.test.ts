@@ -4,7 +4,7 @@ import { assetHeaders, isServableKey } from "./serve";
 const object = { size: 10_686_607, httpEtag: '"abc"', contentType: "application/vnd.pmtiles", cacheControl: "public, max-age=31536000, immutable" };
 
 describe("isServableKey", () => {
-  it.each(["splats/sonnys/v1.sog", "splats/sonnys/v1/lod-meta.json", "basemaps/cdo-20260927.pmtiles", "reviews/bbbbbbbb-0000/11112222.jpg"])("serves %s", (k) =>
+  it.each(["splats/sonnys/v1.sog", "splats/sonnys/v1/lod-meta.json", "basemaps/cdo-20260927.pmtiles", "reviews/bbbbbbbb-0000/11112222.jpg", "events/eeee-0000/1111.jpg"])("serves %s", (k) =>
     expect(isServableKey(k)).toBe(true),
   );
   it.each(["", "secrets/owner-proof.jpg", "../splats/x", "splats/../proofs/a.jpg", "basemaps//x", "owner-proofs/3fbce4bf/permit.jpg"])("refuses %s", (k) =>

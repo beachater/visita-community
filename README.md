@@ -108,7 +108,22 @@ Claims live in `venue_owners`; only `review_owner_claim()` changes their status,
 only admins may call it, and nobody reviews their own claim. Proof photos are
 stored in R2 under `owner-proofs/<claim id>/`, which the public site never
 serves; the Worker's `/api/claims/<id>/proof` streams them to the claimant and
-admins only. Local setup: copy `apps/admin/.env.example` to `.env` and
+admins only.
+
+An approved owner's venue area has four tabs:
+
+| Tab | What changes | How |
+|---|---|---|
+| Overview | Occupancy: quiet / moderate / full, cleared after 3 hours | `set_occupancy()`; live on the cafe page and walkthrough via Realtime |
+| Listing | Menu and hours, directly; verified amenities, by request | `owner_update_listing()` (menu and hours only); `amenity_change_requests`, approved with `review_amenity_change()` |
+| Events | Events and promotions, with an optional photo | `venue_events`; photos under the public `events/<id>/` prefix via the Worker |
+| Reviews | One public reply per review | `review_replies` |
+
+Cafe pages are still built at deploy time, so menu and hours edits reach the
+deployed site on the next deploy until cafe pages render on request (plan Task
+1b). Occupancy, events and replies load fresh on every visit.
+
+Local setup: copy `apps/admin/.env.example` to `.env` and
 `.dev.vars.example` to `.dev.vars`, then `pnpm dev:admin` (port 4322).
 
 ## UI kit

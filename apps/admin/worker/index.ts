@@ -1,10 +1,12 @@
-import { checkPhoto, MAX_PHOTO_BYTES, ownerProofKey } from "@visita/uploads/photo";
-import { bearerToken, proofClaimId } from "../src/lib/proof-route";
+import { checkPhoto, eventPhotoKey, MAX_PHOTO_BYTES, ownerProofKey, type PhotoType } from "@visita/uploads/photo";
+import { bearerToken, eventPhotoId, proofClaimId } from "../src/lib/proof-route";
 
 // The owner and admin app's Worker. It serves the SPA's static files, plus
-// one API: owner claim proofs (PRD 4.4), which are private.
-//   POST /api/claims/<id>/proof  the claimant uploads proof for their own pending claim
-//   GET  /api/claims/<id>/proof  the claimant or an admin views it
+// photo uploads that need the server to check who's uploading and what:
+//   POST   /api/claims/<id>/proof  the claimant uploads proof for their own pending claim (private)
+//   GET    /api/claims/<id>/proof  the claimant or an admin views it
+//   POST   /api/events/<id>/photo  a venue owner adds or replaces an event photo (public)
+//   DELETE /api/events/<id>/photo  and removes it
 // Every Supabase call runs as the caller (their access token), so RLS decides
 // what they can read and write. No service key lives here.
 
@@ -97,16 +99,64 @@ async function viewProof(env: Env, token: string, claimId: string): Promise<Resp
   });
 }
 
+type PhotoUpload = { ok: false; response: Response } | { ok: true; bytes: Uint8Array; type: PhotoType };
+
+async function readPhoto(request: Request): Promise<PhotoUpload> {
+  if (!(request.headers.get("content-type") ?? "").startsWith("image/")) return { ok: false, response: json(415, { error: "Send a photo." }) };
+  if (Number(request.headers.get("content-length") ?? "0") > MAX_PHOTO_BYTES) return { ok: false, response: json(413, { error: "Photos can be up to 8 MB." }) };
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  const check = checkPhoto(bytes.subarray(0, 16), bytes.byteLength);
+  if (!check.ok) return { ok: false, response: json(check.status, { error: check.error }) };
+  return { ok: true, bytes, type: check.type };
+}
+
+async function eventPhoto(request: Request, env: Env, token: string, eventId: string): Promise<Response> {
+  const sb = supabase(env, token);
+  const res = await sb(`/rest/v1/venue_events?id=eq.${eventId}&select=id,venue_id,photo_url`);
+  const [event] = res.ok ? ((await res.json()) as { id: string; venue_id: string; photo_url: string | null }[]) : [];
+  if (!event) return json(404, { error: "Event not found." });
+  const owner = await sb("/rest/v1/rpc/is_venue_owner", { method: "POST", body: JSON.stringify({ p_venue_id: event.venue_id }) });
+  if (!owner.ok || (await owner.json()) !== true) return json(404, { error: "Event not found." });
+
+  let key: string | null = null;
+  if (request.method === "POST") {
+    const photo = await readPhoto(request);
+    if (!photo.ok) return photo.response;
+    key = eventPhotoKey(event.id, crypto.randomUUID(), photo.type);
+    await env.ASSETS_BUCKET.put(key, photo.bytes, {
+      httpMetadata: { contentType: photo.type, cacheControl: "public, max-age=31536000, immutable" },
+    });
+  }
+  const patch = await sb(`/rest/v1/venue_events?id=eq.${event.id}`, {
+    method: "PATCH",
+    headers: { prefer: "return=minimal" },
+    body: JSON.stringify({ photo_url: key }),
+  });
+  if (!patch.ok) {
+    if (key) await env.ASSETS_BUCKET.delete(key);
+    return json(502, { error: "Couldn't save the photo. Try again." });
+  }
+  if (event.photo_url) await env.ASSETS_BUCKET.delete(event.photo_url);
+  return json(request.method === "POST" ? 201 : 200, { photoUrl: key });
+}
+
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
 
     const claimId = proofClaimId(url.pathname);
-    if (!claimId) return json(404, { error: "Not found." });
+    const eventId = eventPhotoId(url.pathname);
+    if (!claimId && !eventId) return json(404, { error: "Not found." });
     if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return json(503, { error: "Not configured." });
     const token = bearerToken(request.headers.get("authorization"));
     if (!token) return json(401, { error: "Sign in to continue." });
+
+    if (eventId) {
+      if (request.method === "POST" || request.method === "DELETE") return eventPhoto(request, env, token, eventId);
+      return json(405, { error: "Method not allowed." });
+    }
+    if (!claimId) return json(404, { error: "Not found." });
 
     if (request.method === "POST") return uploadProof(request, env, token, claimId);
     if (request.method === "GET") return viewProof(env, token, claimId);

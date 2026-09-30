@@ -1,5 +1,5 @@
 import { resizeToJpeg } from "@visita/uploads/resize";
-import { proofPath } from "./proof-route";
+import { eventPhotoPath, proofPath } from "./proof-route";
 import { supabase } from "./supabase";
 
 // Calls to this app's own Worker (owner proofs), authorised with the
@@ -35,4 +35,22 @@ export async function fetchProof(claimId: string): Promise<string | null> {
   const res = await fetch(proofPath(claimId), { headers: { authorization: `Bearer ${await token()}` } });
   if (!res.ok) return null;
   return URL.createObjectURL(await res.blob());
+}
+
+/** Adds or replaces an event's photo (resized on the device), or removes it with `null`. */
+export async function setEventPhoto(eventId: string, file: Blob | null): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(eventPhotoPath(eventId), {
+      method: file ? "POST" : "DELETE",
+      headers: { authorization: `Bearer ${await token()}`, ...(file ? { "content-type": "image/jpeg" } : {}) },
+      body: file ? await resizeToJpeg(file) : undefined,
+    });
+  } catch {
+    throw new Error("couldn't reach Visita; check your connection");
+  }
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? "The photo didn't save. Try again.");
+  }
 }

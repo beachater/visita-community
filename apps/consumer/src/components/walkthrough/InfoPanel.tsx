@@ -6,6 +6,8 @@ import { cn } from "@visita/ui/utils";
 import { amenityRows, summaryRows } from "@/lib/venue/amenities";
 import { isOpenAt, venueClock, weeklyRows } from "@/lib/venue/hours";
 import { openReviewSheet } from "@/lib/reviews/open";
+import { EventList } from "../venue/EventList";
+import { OccupancyPill } from "../venue/OccupancyPill";
 import { formatPhp, scanDate } from "@/lib/venue/scan";
 import type { WalkthroughCafe } from "@/lib/venue/types";
 
@@ -75,6 +77,7 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
               {open ? "Open now" : "Closed"}
             </span>
           )}
+          <OccupancyPill venueId={cafe.id} tone="glass" />
           {scan && (
             // PRD: the scan date is always in plain sight, muted past twelve months.
             <span className={cn("rounded-full border border-white/20 px-2 py-0.5", scan.stale && "opacity-60")}>
@@ -118,6 +121,8 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
               <MessageSquare /> Reviews
             </Button>
           </section>
+
+          <EventList venueId={cafe.id} tone="glass" />
 
           {cards.length > 0 && (
             <section aria-label="Amenities">

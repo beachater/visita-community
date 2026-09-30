@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bearerToken, proofClaimId, proofPath } from "./proof-route";
+import { bearerToken, eventPhotoId, eventPhotoPath, proofClaimId, proofPath } from "./proof-route";
 
 const ID = "cccccccc-0000-4000-8000-000000000001";
 
@@ -14,4 +14,12 @@ describe("proofPath / proofClaimId", () => {
 describe("bearerToken", () => {
   it("reads a bearer token", () => expect(bearerToken("Bearer abc.def.ghi")).toBe("abc.def.ghi"));
   it.each([null, "", "Basic abc", "Bearer ", "bearer"])("rejects %j", (h) => expect(bearerToken(h)).toBeNull());
+});
+
+describe("eventPhotoPath / eventPhotoId", () => {
+  it("round-trips an event id", () => expect(eventPhotoId(eventPhotoPath(ID))).toBe(ID));
+  it("doesn't confuse the two routes", () => {
+    expect(eventPhotoId(proofPath(ID))).toBeNull();
+    expect(proofClaimId(eventPhotoPath(ID))).toBeNull();
+  });
 });

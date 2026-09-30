@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessError(null);
     } catch (err) {
       console.error("[access]", err);
-      setAccessError("Couldn't load your account. Check your connection and reload.");
+      setAccessError("Couldn't load your account. Check your connection and try again.");
     }
   }, [userId]);
 

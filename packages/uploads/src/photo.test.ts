@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkPhoto, MAX_PHOTO_BYTES, ownerProofKey, reviewPhotoKey } from "./photo";
+import { checkPhoto, eventPhotoKey, MAX_PHOTO_BYTES, ownerProofKey, reviewPhotoKey } from "./photo";
 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0x10]);
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -29,4 +29,9 @@ describe("reviewPhotoKey", () => {
 describe("ownerProofKey", () => {
   it("files proof under its claim, outside every public prefix", () =>
     expect(ownerProofKey("cccccccc-0000-0000-0000-000000000001", "u", "image/png")).toBe("owner-proofs/cccccccc-0000-0000-0000-000000000001/u.png"));
+});
+
+describe("eventPhotoKey", () => {
+  it("files the photo under its event, in the public events/ prefix", () =>
+    expect(eventPhotoKey("eeee", "u", "image/jpeg")).toBe("events/eeee/u.jpg"));
 });

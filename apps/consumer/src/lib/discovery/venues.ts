@@ -6,6 +6,7 @@ import type { WalkthroughCafe } from "../venue/types";
 // search and filters, and to open the walkthrough without another request.
 
 export interface MapVenue {
+  id: string;
   slug: string;
   name: string;
   address: string | null;
@@ -28,6 +29,7 @@ export type CardAction = "walkthrough" | "demand" | "directions";
 
 export function toMapVenue(row: CafeRow): MapVenue {
   return {
+    id: row.id,
     slug: row.slug,
     name: row.name,
     address: row.address,
@@ -60,6 +62,7 @@ export function cardActions(v: MapVenue): CardAction[] {
 export function toWalkthrough(v: MapVenue): WalkthroughCafe | null {
   if (!v.scanned || !v.splatKey) return null;
   return {
+    id: v.id,
     slug: v.slug,
     name: v.name,
     address: v.address,

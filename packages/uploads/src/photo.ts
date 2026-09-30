@@ -36,3 +36,8 @@ export function reviewPhotoKey(reviewId: string, id: string, type: PhotoType): s
 export function ownerProofKey(claimId: string, id: string, type: PhotoType): string {
   return `owner-proofs/${claimId}/${id}.${EXT[type]}`;
 }
+
+/** Event photo. Public, like the event itself. */
+export function eventPhotoKey(eventId: string, id: string, type: PhotoType): string {
+  return `events/${eventId}/${id}.${EXT[type]}`;
+}

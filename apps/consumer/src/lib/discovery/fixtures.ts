@@ -2,6 +2,7 @@ import type { MapVenue } from "./venues";
 
 // Test fixtures shaped like the real imported cafes. Test-only.
 export const venue = (over: Partial<MapVenue> = {}): MapVenue => ({
+  id: "aaaaaaaa-0000-0000-0000-000000000001",
   slug: "sonnys",
   name: "Sonny's Coffee + Diner",
   address: null,

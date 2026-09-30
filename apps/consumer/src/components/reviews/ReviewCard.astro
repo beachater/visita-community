@@ -13,8 +13,10 @@ interface Props {
   createdAt: string;
   own: boolean;
   hidden: boolean;
+  /** The cafe's public reply (PRD 4.4), if any. */
+  reply?: { body: string; created_at: string } | null;
 }
-const { name, avatarUrl, rating, body, photoUrl, createdAt, own, hidden } = Astro.props;
+const { name, avatarUrl, rating, body, photoUrl, createdAt, own, hidden, reply } = Astro.props;
 const date = new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" }).format(new Date(createdAt));
 ---
 
@@ -50,6 +52,14 @@ const date = new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric", 
       <a href={`/assets/${photoUrl}`} class="w-fit" target="_blank" rel="noopener">
         <img src={`/assets/${photoUrl}`} alt={`Photo from ${name}'s review`} class="max-h-56 rounded-lg border object-cover" loading="lazy" />
       </a>
+    )
+  }
+  {
+    reply && (
+      <div class="ml-4 grid gap-1 border-l-2 border-primary/30 pl-3">
+        <p class="text-xs font-bold uppercase tracking-wide text-muted-foreground">Reply from the cafe</p>
+        <p class="whitespace-pre-line text-sm leading-relaxed">{reply.body}</p>
+      </div>
     )
   }
 </article>
