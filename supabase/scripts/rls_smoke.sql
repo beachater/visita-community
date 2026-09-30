@@ -267,5 +267,112 @@ do $$ begin assert not public.is_venue_owner('aaaaaaaa-0000-0000-0000-0000000000
 select pg_temp.pass('signed-out visitors own nothing');
 reset role;
 
+-- ---------- owner workflow: listing edits, amenity requests, events, occupancy, replies (PRD 4.4) ----------
+-- Bob is the approved owner of "Owned" (aaaa…0003) from the block above.
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+insert into public.reviews (venue_id, rating, body) values ('aaaaaaaa-0000-0000-0000-000000000003', 4, 'Nice patio');
+select pg_temp.expect_error($q$select public.owner_update_listing('aaaaaaaa-0000-0000-0000-000000000003', '{"menu": []}')$q$, 'non-owners cannot edit a listing');
+select pg_temp.expect_error($q$select public.set_occupancy('aaaaaaaa-0000-0000-0000-000000000003', 'full')$q$, 'non-owners cannot set occupancy');
+select pg_temp.expect_error($q$insert into public.venue_events (venue_id, title, starts_at, ends_at) values ('aaaaaaaa-0000-0000-0000-000000000003', 'Fake', now(), now() + interval '1 hour')$q$, 'non-owners cannot post events');
+select pg_temp.expect_error($q$insert into public.review_replies (review_id, body) values ((select id from public.reviews where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'), 'Thanks!')$q$, 'non-owners cannot reply to reviews');
+
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+select public.owner_update_listing('aaaaaaaa-0000-0000-0000-000000000003',
+  '{"menu": [{"name": "Latte", "price_php": 140, "section": "Coffee"}], "hours": {"mon": ["08:00", "20:00"], "fri": ["18:00", "02:00"], "sun": null}}');
+do $$ begin
+  assert (select menu -> 0 ->> 'name' from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'Latte';
+  assert (select hours -> 'fri' ->> 1 from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000003') = '02:00';
+end $$;
+select pg_temp.pass('an owner edits their menu and hours, including overnight');
+select public.owner_update_listing('aaaaaaaa-0000-0000-0000-000000000003', '{"hours": null}');
+do $$ begin
+  assert (select hours from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000003') is null;
+  assert (select menu -> 0 ->> 'name' from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'Latte';
+end $$;
+select pg_temp.pass('a patch changes only the fields it names');
+select pg_temp.expect_error($q$select public.owner_update_listing('aaaaaaaa-0000-0000-0000-000000000003', '{"name": "Renamed"}')$q$, 'owners cannot edit fields outside menu and hours');
+select pg_temp.expect_error($q$select public.owner_update_listing('aaaaaaaa-0000-0000-0000-000000000003', '{"amenities": {"wifi": {"value": true}}}')$q$, 'verified amenities cannot be edited directly');
+select pg_temp.expect_error($q$select public.owner_update_listing('aaaaaaaa-0000-0000-0000-000000000003', '{"menu": [{"name": "Latte", "price_php": "cheap"}]}')$q$, 'menu edits are validated');
+select pg_temp.expect_error($q$select public.owner_update_listing('aaaaaaaa-0000-0000-0000-000000000003', '{"hours": {"mon": ["8am", "8pm"]}}')$q$, 'hours edits are validated');
+select pg_temp.expect_error($q$select public.owner_update_listing('aaaaaaaa-0000-0000-0000-000000000001', '{"menu": []}')$q$, 'the owner of venue A cannot edit venue B');
+update public.venues set menu = '[]' where id = 'aaaaaaaa-0000-0000-0000-000000000003';
+
+-- Amenity change requests
+insert into public.amenity_change_requests (venue_id, amenity_key, entry) values ('aaaaaaaa-0000-0000-0000-000000000003', 'wifi', '{"value": true, "label": "Fibre, 100 Mbps"}');
+do $$ begin assert (select status from public.amenity_change_requests where amenity_key = 'wifi') = 'pending'; end $$;
+select pg_temp.pass('an owner requests a verified amenity change, pending review');
+select pg_temp.expect_error($q$insert into public.amenity_change_requests (venue_id, amenity_key, entry) values ('aaaaaaaa-0000-0000-0000-000000000003', 'wifi', '{"value": false}')$q$, 'one pending request per amenity');
+select pg_temp.expect_error($q$insert into public.amenity_change_requests (venue_id, amenity_key, entry) values ('aaaaaaaa-0000-0000-0000-000000000003', 'jacuzzi', '{"value": true}')$q$, 'requests must name a defined amenity');
+select pg_temp.expect_error($q$insert into public.amenity_change_requests (venue_id, amenity_key, entry) values ('aaaaaaaa-0000-0000-0000-000000000003', 'power_outlets', '{"value": "lots"}')$q$, 'requested values are validated');
+select pg_temp.expect_error($q$insert into public.amenity_change_requests (venue_id, amenity_key, entry) values ('aaaaaaaa-0000-0000-0000-000000000001', 'parking', '{"value": true}')$q$, 'owners cannot request changes for venues they do not own');
+select pg_temp.expect_error($q$select public.review_amenity_change((select id from public.amenity_change_requests where amenity_key = 'wifi'), 'approved', null)$q$, 'owners cannot approve their own amenity requests');
+insert into public.amenity_change_requests (venue_id, amenity_key, entry) values ('aaaaaaaa-0000-0000-0000-000000000003', 'outdoor', null);
+select pg_temp.pass('an owner can request removing an amenity');
+
+-- Events
+insert into public.venue_events (venue_id, title, description, starts_at, ends_at)
+  values ('aaaaaaaa-0000-0000-0000-000000000003', 'Open mic', 'Bring a song', now() + interval '1 day', now() + interval '1 day 3 hours');
+select pg_temp.pass('an owner posts an event');
+select pg_temp.expect_error($q$insert into public.venue_events (venue_id, title, starts_at, ends_at) values ('aaaaaaaa-0000-0000-0000-000000000003', 'Backwards', now(), now() - interval '1 hour')$q$, 'an event ends after it starts');
+update public.venue_events set title = 'Open mic night' where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003';
+do $$ begin assert (select title from public.venue_events where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'Open mic night'; end $$;
+select pg_temp.pass('an owner edits their event');
+select pg_temp.expect_error($q$update public.venue_events set venue_id = 'aaaaaaaa-0000-0000-0000-000000000001'$q$, 'events cannot move to another venue');
+
+-- Occupancy
+select public.set_occupancy('aaaaaaaa-0000-0000-0000-000000000003', 'moderate');
+select public.set_occupancy('aaaaaaaa-0000-0000-0000-000000000003', 'full');
+do $$ begin
+  assert (select level from public.venue_occupancy where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'full';
+  assert (select expires_at - set_at from public.venue_occupancy where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = interval '3 hours';
+end $$;
+select pg_temp.pass('occupancy is one tap and expires three hours after it is set');
+select pg_temp.expect_error($q$insert into public.venue_occupancy (venue_id, level, set_at) values ('aaaaaaaa-0000-0000-0000-000000000003', 'quiet', now() + interval '1 day')$q$, 'occupancy is set only through set_occupancy');
+
+-- Review replies
+insert into public.review_replies (review_id, body) values ((select id from public.reviews where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'), 'Thanks for visiting!');
+select pg_temp.pass('an owner replies to a review of their venue');
+select pg_temp.expect_error($q$insert into public.review_replies (review_id, body) values ((select id from public.reviews where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003'), 'Again')$q$, 'one reply per review');
+select pg_temp.expect_error($q$insert into public.review_replies (review_id, body) values ('bbbbbbbb-0000-0000-0000-000000000001', 'Not my venue')$q$, 'owners cannot reply to reviews of other venues');
+
+-- What the public sees
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  assert (select count(*) from public.venue_events where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 1;
+  assert (select level from public.venue_occupancy where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'full';
+  assert (select body from public.review_replies) = 'Thanks for visiting!';
+  assert (select count(*) from public.amenity_change_requests) = 0;
+end $$;
+select pg_temp.pass('visitors see events, current occupancy and replies, not amenity requests');
+do $$ begin assert (select menu -> 0 ->> 'name' from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'Latte', 'direct update got through'; end $$;
+select pg_temp.pass('owners cannot bypass the RPC with a direct update');
+
+reset role;
+update public.venue_occupancy set set_at = now() - interval '4 hours', expires_at = now() - interval '1 hour' where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003';
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin assert (select count(*) from public.venue_occupancy) = 0; end $$;
+select pg_temp.pass('expired occupancy is not shown');
+
+-- Admin reviews amenity requests
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+select public.review_amenity_change((select id from public.amenity_change_requests where amenity_key = 'wifi'), 'approved', 'Checked on the rescan');
+select public.review_amenity_change((select id from public.amenity_change_requests where amenity_key = 'outdoor'), 'rejected', 'The patio is still there');
+do $$ begin
+  assert (select amenities -> 'wifi' ->> 'label' from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'Fibre, 100 Mbps';
+  assert (select status from public.amenity_change_requests where amenity_key = 'outdoor') = 'rejected';
+end $$;
+select pg_temp.pass('approving an amenity request updates the listing');
+select pg_temp.expect_error($q$select public.review_amenity_change((select id from public.amenity_change_requests where amenity_key = 'wifi'), 'rejected', null)$q$, 'a reviewed amenity request is final');
+reset role;
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED

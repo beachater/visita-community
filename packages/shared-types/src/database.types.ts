@@ -9,6 +9,67 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      amenity_change_requests: {
+        Row: {
+          amenity_key: string
+          created_at: string
+          entry: Json | null
+          id: string
+          requested_by: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["change_request_status"]
+          venue_id: string
+        }
+        Insert: {
+          amenity_key: string
+          created_at?: string
+          entry?: Json | null
+          id?: string
+          requested_by?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["change_request_status"]
+          venue_id: string
+        }
+        Update: {
+          amenity_key?: string
+          created_at?: string
+          entry?: Json | null
+          id?: string
+          requested_by?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["change_request_status"]
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amenity_change_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amenity_change_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amenity_change_requests_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       amenity_definitions: {
         Row: {
           created_at: string
@@ -355,6 +416,45 @@ export type Database = {
           },
         ]
       }
+      review_replies: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          review_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string
+          body: string
+          created_at?: string
+          review_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          review_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_replies_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_replies_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: true
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           author_id: string
@@ -489,6 +589,99 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      venue_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string
+          id: string
+          photo_url: string | null
+          starts_at: string
+          title: string
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at: string
+          id?: string
+          photo_url?: string | null
+          starts_at: string
+          title: string
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string
+          id?: string
+          photo_url?: string | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_occupancy: {
+        Row: {
+          expires_at: string
+          level: Database["public"]["Enums"]["occupancy_level"]
+          set_at: string
+          set_by: string | null
+          venue_id: string
+        }
+        Insert: {
+          expires_at: string
+          level: Database["public"]["Enums"]["occupancy_level"]
+          set_at?: string
+          set_by?: string | null
+          venue_id: string
+        }
+        Update: {
+          expires_at?: string
+          level?: Database["public"]["Enums"]["occupancy_level"]
+          set_at?: string
+          set_by?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_occupancy_set_by_fkey"
+            columns: ["set_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_occupancy_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: true
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       venue_owners: {
         Row: {
@@ -647,6 +840,35 @@ export type Database = {
     Functions: {
       is_admin: { Args: never; Returns: boolean }
       is_venue_owner: { Args: { p_venue_id: string }; Returns: boolean }
+      owner_update_listing: {
+        Args: { p_patch: Json; p_venue_id: string }
+        Returns: undefined
+      }
+      review_amenity_change: {
+        Args: {
+          p_decision: Database["public"]["Enums"]["change_request_status"]
+          p_note: string
+          p_request_id: string
+        }
+        Returns: {
+          amenity_key: string
+          created_at: string
+          entry: Json | null
+          id: string
+          requested_by: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["change_request_status"]
+          venue_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "amenity_change_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       review_owner_claim: {
         Args: {
           p_claim_id: string
@@ -674,6 +896,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      review_venue_id: { Args: { p_review_id: string }; Returns: string }
+      set_occupancy: {
+        Args: {
+          p_level: Database["public"]["Enums"]["occupancy_level"]
+          p_venue_id: string
+        }
+        Returns: {
+          expires_at: string
+          level: Database["public"]["Enums"]["occupancy_level"]
+          set_at: string
+          set_by: string | null
+          venue_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "venue_occupancy"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       unique_venue_slug: { Args: { p_name: string }; Returns: string }
       validate_venue_amenities: {
         Args: {
@@ -688,7 +930,9 @@ export type Database = {
     Enums: {
       amenity_value_type: "boolean" | "number" | "text" | "list"
       app_role: "admin"
+      change_request_status: "pending" | "approved" | "rejected"
       check_in_status: "pending" | "verified" | "rejected"
+      occupancy_level: "quiet" | "moderate" | "full"
       owner_claim_status: "pending" | "approved" | "rejected"
       point_reason:
         | "review"
@@ -835,7 +1079,9 @@ export const Constants = {
     Enums: {
       amenity_value_type: ["boolean", "number", "text", "list"],
       app_role: ["admin"],
+      change_request_status: ["pending", "approved", "rejected"],
       check_in_status: ["pending", "verified", "rejected"],
+      occupancy_level: ["quiet", "moderate", "full"],
       owner_claim_status: ["pending", "approved", "rejected"],
       point_reason: [
         "review",
