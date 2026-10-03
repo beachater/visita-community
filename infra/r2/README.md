@@ -22,6 +22,32 @@ third-party sites (PRD 5.4). Apply changes with:
 npx wrangler r2 bucket cors set visita-assets-dev --file infra/r2/cors.json
 ```
 
+## Making a scan (.ply → .sog)
+
+With `@playcanvas/splat-transform` (v3.9). On this laptop pass `-g 1` (the RTX
+4050); adapter 0 is the integrated AMD GPU, which hits GPU timeouts on big scans.
+
+```sh
+# Full scan
+npx @playcanvas/splat-transform -g 1 <slug>.ply <slug>.sog
+
+# Preview (~300K splats, loads first). Decimation must be the last action and
+# write a .ply, so it takes two steps.
+npx @playcanvas/splat-transform <slug>.ply -d 300000 <slug>-300k.ply
+npx @playcanvas/splat-transform -g 1 <slug>-300k.ply <slug>-preview.sog
+
+# Check both: each must report its gaussian count
+npx @playcanvas/splat-transform <slug>.sog null
+npx @playcanvas/splat-transform <slug>-preview.sog null
+```
+
+Optional clean-up before the output name: `-N` drops NaN/broken gaussians, `-F`
+removes floaters. `-w` overwrites an existing output.
+
+The easiest upload is the owner app: **Venues → the cafe → 3D scan** (full scan,
+preview and scan date). It stores the next version (`v<n+1>`) and points the
+cafe at it. The CLI route below still works.
+
 ## Uploading a scan
 
 A bundled `.sog` is an uncompressed zip of `meta.json` plus its `.webp`
