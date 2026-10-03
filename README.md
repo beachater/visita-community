@@ -70,7 +70,7 @@ Run `pnpm db:types` after every migration and commit the result.
 | Route | Mode |
 |---|---|
 | `/` (map hero + marketing), `/explore` (map only) | prerendered shell, map is a `client:only` island |
-| `/cafe/[slug]` | prerendered per published cafe; reviews (incl. your own) are a server island |
+| `/cafe/[slug]`, `/api/venues.json` | rendered on request, edge-cached 5 min; reviews (incl. your own) are a server island |
 | `/community`, `/community/badges`, `/for-cafes`, `/about`, `/contact`, `/faq`, `/privacy`, `/terms` | prerendered |
 | `/saved` | prerendered shell; list from this device, merged with the account via `/api/saved` when signed in |
 | `/me`, `/auth/login`, `/referrals`, `/vouchers`, `/check-in/[slug]`, `/cafe/[slug]/verify`, `/r/[code]` | server-rendered |
@@ -87,9 +87,22 @@ shareable URL whose direct visit gets correct link-preview tags.
 
 `output: 'server'`, and every page declares `export const prerender = true | false`.
 Prerendered pages that need per-visitor or fast-changing content use server
-islands (`server:defer`), so the shell stays cached. Venue pages are built from
-published venues at deploy time, so publishing or rescanning a venue must
-trigger a deploy hook (not wired yet).
+islands (`server:defer`), so the shell stays cached.
+
+Cafe pages and the map's venue list (`/api/venues.json`) render on request, so
+publishing a venue or an owner's edit shows up without a rebuild. The middleware
+skips the session for them (no Set-Cookie can reach a shared cache) and keeps a
+copy in the Workers Cache API for 5 minutes (`s-maxage=300`, ignoring query
+strings). The Cache API works on a custom domain such as visita.ph; on
+`*.workers.dev` every request renders fresh from Supabase. Unknown slugs get
+the 404 page.
+
+### Hosted Supabase (newer projects)
+
+Hosted projects don't grant the `anon` role access to new tables by default,
+though the local stack does, so local tests won't catch a missing grant. Any new
+table signed-out visitors should read needs an explicit `grant select ... to
+anon` in its migration (see `20261004000200_anon_read_grants.sql`).
 
 ## Owner and admin app
 
@@ -128,9 +141,9 @@ An approved owner's venue area has these tabs (admins can open them too):
 | Reviews | One public reply per review | `review_replies` |
 | Analytics | Totals, peak hours, filters, demand before joining | `venue_stats()` |
 
-Cafe pages are still built at deploy time, so menu and hours edits reach the
-deployed site on the next deploy until cafe pages render on request (plan Task
-1b). Occupancy, events and replies load fresh on every visit.
+Menu and hours edits reach the
+public site within 5 minutes (the edge cache), with no rebuild. Occupancy,
+events and replies load fresh on every visit.
 
 Local setup: copy `apps/admin/.env.example` to `.env` and
 `.dev.vars.example` to `.dev.vars`, then `pnpm dev:admin` (port 4322).

@@ -3,9 +3,9 @@ import { toMapVenue } from "../../lib/discovery/venues";
 import { loadPublishedCafes } from "../../lib/venue/load";
 
 // Every published venue (scanned and not) for the discovery map, plus the
-// amenity catalog its cards and filters need. Built at deploy time for now;
-// becomes a cached on-request route once the hosted database exists (Task 1b).
-export const prerender = true;
+// amenity catalog its cards and filters need. Rendered on request and cached
+// at the edge for 5 minutes (plan Task 1b; see middleware).
+export const prerender = false;
 
 export const GET: APIRoute = async () => {
   const { cafes, definitions } = await loadPublishedCafes();
