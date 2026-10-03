@@ -12,8 +12,8 @@
   // Non-secret: the publishable key is meant for browsers. Local values come
   // from .dev.vars (see .dev.vars.example).
   "vars": {
-    "SUPABASE_URL": "",
-    "SUPABASE_PUBLISHABLE_KEY": ""
+    "SUPABASE_URL": "https://zgbvtnoticzhlyuavwdc.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable__LuJPCWzTVyuqNRLnzxo9A_pubSq5lL"
   },
   "r2_buckets": [
     {

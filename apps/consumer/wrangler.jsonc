@@ -6,7 +6,7 @@
   // Worker vars (non-secret). The service key is a secret:
   //   npx wrangler secret put SUPABASE_SECRET_KEY
   "vars": {
-    "SUPABASE_URL": ""
+    "SUPABASE_URL": "https://zgbvtnoticzhlyuavwdc.supabase.co"
   },
   // Per-IP limits for public write routes. Counters are per Cloudflare location.
   "ratelimits": [
