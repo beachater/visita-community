@@ -1,15 +1,13 @@
 ---
-// Temporary scaffold marker: names the route, its rendering mode, and what
-// will live here. Delete once the real page exists.
+// Temporary page body for routes whose real content isn't built yet; each
+// page passes its route and rendering mode so the TODOs stay findable.
+// Delete once the real page exists.
 interface Props {
   route: string;
   mode: "prerendered" | "server-rendered";
 }
-
-const { route, mode } = Astro.props;
 ---
 
 <main style="padding: 2rem 1rem; max-width: 40rem; margin: 0 auto;">
-  <p style="font-size: 0.875rem; color: var(--ocean);">{route} · {mode}</p>
   <slot />
 </main>
