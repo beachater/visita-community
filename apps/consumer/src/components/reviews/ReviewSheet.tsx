@@ -247,7 +247,7 @@ export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: P
                 aria-checked={rating === n}
                 aria-label={`${n} star${n > 1 ? "s" : ""}`}
                 onClick={() => setRating(n)}
-                className="grid size-11 place-items-center rounded-md text-rating hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+                className="grid size-11 place-items-center rounded-full text-rating hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
               >
                 <Star className={cn("size-8", n <= rating ? "fill-current" : "opacity-40")} aria-hidden="true" />
               </button>
@@ -271,7 +271,7 @@ export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: P
           <span className="text-sm font-medium">Photo (optional)</span>
           {shownPhoto ? (
             <div className="relative w-fit">
-              <img src={shownPhoto} alt="Your review photo" className="max-h-48 rounded-lg border object-cover" />
+              <img src={shownPhoto} alt="Your review photo" className="max-h-48 rounded-2xl object-cover shadow-float" />
               <Button
                 variant="secondary"
                 size="icon-sm"

@@ -4,13 +4,13 @@
 // banner, and takes effect at once: the tracker checks consent on every event.
 ---
 
-<div class="privacy-choice grid gap-3 rounded-xl border bg-card p-4 not-prose" data-privacy-choice>
+<div class="privacy-choice grid gap-3 rounded-card bg-card shadow-card p-4 not-prose" data-privacy-choice>
   <p class="text-sm">
     Usage statistics are <strong data-privacy-state>not set</strong> on this device.
   </p>
   <div class="flex flex-wrap gap-2">
-    <button type="button" class="rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent" data-choice="essential">Essential only</button>
-    <button type="button" class="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground" data-choice="all">Allow usage stats</button>
+    <button type="button" class="rounded-full border px-4 py-2 text-sm font-medium hover:bg-accent" data-choice="essential">Essential only</button>
+    <button type="button" class="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground" data-choice="all">Allow usage stats</button>
   </div>
 </div>
 

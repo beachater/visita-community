@@ -23,7 +23,7 @@ const error = ERRORS[Astro.url.searchParams.get("error") ?? ""];
 <BaseLayout title="Sign in">
   <main class="mx-auto grid max-w-md gap-6 px-4 py-12">
     <PageHeader title="Sign in" lede="Keep your saved cafes on every device and write reviews." class="pb-0" />
-    {error && <p role="alert" class="rounded-lg border border-destructive/40 bg-card px-4 py-3 text-sm text-destructive">{error}</p>}
+    {error && <p role="alert" class="rounded-2xl border border-destructive/40 bg-card px-4 py-3 text-sm text-destructive">{error}</p>}
     <form method="post" action="/auth/google">
       <input type="hidden" name="next" value={next} />
       <button type="submit" class={cn(buttonVariants({ size: "lg" }), "w-full")}>

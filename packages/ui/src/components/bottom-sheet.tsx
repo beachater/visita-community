@@ -26,7 +26,7 @@ export function BottomSheet({ title, description, trigger, open, onOpenChange, f
       {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
       <SheetContent
         side="bottom"
-        className={cn("mx-auto flex max-h-[85dvh] w-full max-w-2xl flex-col gap-0 rounded-t-2xl p-0", className)}
+        className={cn("mx-auto flex max-h-[85dvh] w-full max-w-2xl flex-col gap-0 rounded-t-sheet border-0 bg-card p-0 shadow-[inset_0_1.5px_0_#fff,0_-18px_40px_-24px_rgba(4,44,83,0.5)]", className)}
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="mx-auto mt-2.5 h-1.5 w-10 shrink-0 rounded-full bg-border" aria-hidden="true" />

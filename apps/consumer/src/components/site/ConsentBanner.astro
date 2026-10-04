@@ -14,10 +14,10 @@ import { cn } from "@visita/ui/utils";
   id="consent-banner"
   hidden
   aria-label="Privacy choices"
-  class="fixed inset-x-0 bottom-0 z-50 border-t bg-card shadow-[0_-8px_24px_rgba(4,44,83,0.12)]"
-  style="padding-bottom: env(safe-area-inset-bottom, 0px)"
+  class="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3"
+  style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem)"
 >
-  <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-6">
+  <div class="surface-raised pointer-events-auto mx-auto flex max-w-4xl flex-col gap-3 rounded-card px-5 py-4 sm:flex-row sm:items-center sm:gap-6">
     <p class="text-sm">
       Visita keeps a little data on this device so the site works: your sign-in, saved cafes and recently viewed.
       With your OK, we also count visits and walkthrough opens so cafes can see how their listing is doing.

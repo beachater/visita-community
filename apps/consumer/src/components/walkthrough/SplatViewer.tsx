@@ -416,8 +416,10 @@ function DetailPill({ detail, onRetry }: { detail: NonNullable<DetailState>; onR
         maxWidth: "calc(100vw - 2rem)",
         padding: "0.4rem 0.8rem",
         borderRadius: "999px",
-        background: "rgba(4, 44, 83, 0.8)",
-        backdropFilter: "blur(8px)",
+        background: "rgba(4, 44, 83, 0.62)",
+        backdropFilter: "blur(14px) saturate(160%)",
+        WebkitBackdropFilter: "blur(14px) saturate(160%)",
+        boxShadow: "inset 0 1px 0 rgba(230, 241, 251, 0.45), 0 10px 24px -14px rgba(0, 0, 0, 0.6)",
         color: "var(--cloud)",
         fontSize: "0.8rem",
         fontVariantNumeric: "tabular-nums",
@@ -447,8 +449,15 @@ function Joystick({ base, stick }: { base: [number, number]; stick: [number, num
   });
   return (
     <>
-      <div style={{ ...ring(base[0], base[1], 52, "rgba(230, 241, 251, 0.18)"), border: "2px solid rgba(230, 241, 251, 0.5)" }} />
-      <div style={ring(stick[0], stick[1], 22, "rgba(230, 241, 251, 0.85)")} />
+      <div
+        style={{
+          ...ring(base[0], base[1], 52, "rgba(230, 241, 251, 0.14)"),
+          backdropFilter: "blur(10px) saturate(150%)",
+          WebkitBackdropFilter: "blur(10px) saturate(150%)",
+          boxShadow: "inset 0 1.5px 0 rgba(255, 255, 255, 0.55), inset 0 0 18px rgba(230, 241, 251, 0.12), 0 10px 24px -14px rgba(0, 0, 0, 0.6)",
+        }}
+      />
+      <div style={{ ...ring(stick[0], stick[1], 22, "rgba(230, 241, 251, 0.9)"), boxShadow: "inset 0 1px 0 #fff, 0 6px 14px -6px rgba(0, 0, 0, 0.55)" }} />
     </>
   );
 }

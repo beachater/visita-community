@@ -28,9 +28,9 @@ export function EventList({ venueId, tone = "light", heading = true }: { venueId
       {heading && <h2 className={cn(tone === "glass" ? "text-xs font-bold uppercase tracking-wider opacity-70" : "font-display text-2xl font-semibold")}>Events</h2>}
       <ul className="grid gap-2">
         {events.map((e) => (
-          <li key={e.id} className={cn("flex gap-3 rounded-xl p-3", tone === "glass" ? "bg-white/10" : "border bg-card")}>
+          <li key={e.id} className={cn("flex gap-3 rounded-2xl p-3", tone === "glass" ? "bg-white/10" : "bg-card shadow-card")}>
             {e.photo_url ? (
-              <img src={`/assets/${e.photo_url}`} alt="" className="size-16 shrink-0 rounded-lg object-cover" loading="lazy" />
+              <img src={`/assets/${e.photo_url}`} alt="" className="size-16 shrink-0 rounded-xl object-cover" loading="lazy" />
             ) : (
               <CalendarDays className="mt-0.5 size-5 shrink-0 opacity-70" aria-hidden="true" />
             )}

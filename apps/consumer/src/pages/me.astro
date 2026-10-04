@@ -21,7 +21,7 @@ Astro.response.headers.set("cache-control", "private, no-store");
 <BaseLayout title="Your account">
   <main class="mx-auto grid max-w-2xl gap-8 px-4 py-10">
     <PageHeader title="Your account" class="pb-0" />
-    <section class="flex items-center gap-4 rounded-xl border bg-card p-4">
+    <section class="flex items-center gap-4 rounded-card bg-card shadow-card p-4">
       {
         profile?.avatar_url ? (
           <img src={profile.avatar_url} alt="" width="56" height="56" class="size-14 rounded-full object-cover" referrerpolicy="no-referrer" />
@@ -38,7 +38,7 @@ Astro.response.headers.set("cache-control", "private, no-store");
     </section>
 
     <nav aria-label="Your things" class="grid gap-2">
-      <a href="/saved" class="flex h-14 items-center justify-between rounded-xl border bg-card px-4 hover:bg-accent">
+      <a href="/saved" class="flex h-14 items-center justify-between rounded-card bg-card shadow-card px-4 hover:bg-accent">
         <span class="font-medium">Saved cafes</span>
         <span class="text-muted-foreground">{count ?? 0}</span>
       </a>

@@ -825,7 +825,7 @@ const positionClasses = {
 
 function ControlGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-border bg-background [&>button:not(:last-child)]:border-border flex flex-col overflow-hidden rounded-md border shadow-sm [&>button:not(:last-child)]:border-b">
+    <div className="glass text-foreground flex flex-col overflow-hidden rounded-full p-1">
       {children}
     </div>
   );
@@ -848,9 +848,8 @@ function ControlButton({
       aria-label={label}
       type="button"
       className={cn(
-        "flex size-8 items-center justify-center transition-colors",
-        "first:rounded-t-md last:rounded-b-md",
-        "hover:bg-accent dark:hover:bg-accent/40",
+        "flex size-11 items-center justify-center rounded-full transition-colors",
+        "hover:bg-white/70 active:bg-white/90",
         "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
         "disabled:pointer-events-none disabled:opacity-50",
       )}
@@ -925,7 +924,7 @@ function MapControls({
   return (
     <div
       className={cn(
-        "absolute z-10 flex flex-col gap-1.5",
+        "absolute z-10 flex flex-col gap-2.5",
         positionClasses[position],
         className,
       )}

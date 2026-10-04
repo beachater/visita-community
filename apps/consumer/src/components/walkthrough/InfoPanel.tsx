@@ -48,10 +48,10 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
   return (
     <aside
       aria-label={`About ${cafe.name}`}
-      className="pointer-events-auto flex max-h-full flex-col overflow-hidden rounded-xl border border-glass-border bg-glass text-glass-foreground shadow-lg backdrop-blur-md"
+      className="glass-dark pointer-events-auto flex max-h-full flex-col overflow-hidden rounded-card text-glass-foreground"
     >
       {/* Always visible: identity, state, and the three-stat strip. */}
-      <div className="grid gap-2.5 p-4">
+      <div className="grid gap-2.5 p-5">
         <div className="flex items-start justify-between gap-3">
           <h2 className="font-display text-xl font-semibold leading-tight">{cafe.name}</h2>
           <Button
@@ -101,7 +101,7 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
 
       {/* Everything else we know. */}
       <div id={bodyId} hidden={!expanded} className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/15">
-        <div className="grid gap-5 p-4">
+        <div className="grid gap-5 p-5">
           <section className="grid gap-2" aria-label="Location">
             {cafe.address && <p className="text-sm">{cafe.address}</p>}
             {distance ? (

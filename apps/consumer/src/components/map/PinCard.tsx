@@ -31,7 +31,7 @@ export function PinCard({ venue, definitions, distance, onClose, onWalkthrough, 
   return (
     <section
       aria-label={venue.name}
-      className="pointer-events-auto grid gap-3 rounded-2xl border bg-card p-4 text-card-foreground shadow-xl"
+      className="surface-raised pointer-events-auto grid gap-3 rounded-card p-5 text-card-foreground"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="grid gap-1.5">

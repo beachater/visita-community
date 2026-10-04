@@ -190,8 +190,9 @@ const description = scanned
   .not-scanned {
     padding: 1.25rem;
     border: 1px dashed var(--mist);
-    border-radius: 16px;
-    background: #ffffff;
+    border-radius: var(--radius-card);
+    corner-shape: squircle;
+    background: rgba(255, 255, 255, 0.7);
   }
   .not-scanned p {
     margin: 0;
@@ -207,9 +208,10 @@ const description = scanned
   .strip li,
   .amenity {
     padding: 0.85rem 1rem;
-    border: 1px solid var(--mist);
-    border-radius: 12px;
+    border-radius: 1.25rem;
+    corner-shape: squircle;
     background: #ffffff;
+    box-shadow: var(--shadow-card);
   }
   .strip-label,
   .amenity dt {
@@ -236,8 +238,9 @@ const description = scanned
     width: 100%;
     max-width: 28rem;
     background: #ffffff;
-    border: 1px solid var(--mist);
-    border-radius: 12px;
+    border-radius: var(--radius-card);
+    corner-shape: squircle;
+    box-shadow: var(--shadow-card);
     overflow: hidden;
   }
   .hours th,
@@ -255,8 +258,10 @@ const description = scanned
     margin: 0;
     padding: 0;
     background: #ffffff;
-    border: 1px solid var(--mist);
-    border-radius: 12px;
+    border-radius: var(--radius-card);
+    corner-shape: squircle;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
   }
   .menu li {
     display: flex;

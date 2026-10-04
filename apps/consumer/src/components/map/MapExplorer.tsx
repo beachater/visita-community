@@ -184,7 +184,7 @@ export function MapExplorer({ mode }: Props) {
       </Map>
 
       {error && (
-        <p role="alert" className="absolute inset-x-3 top-3 rounded-lg border bg-card px-4 py-3 text-sm shadow">
+        <p role="alert" className="surface-raised absolute inset-x-3 top-3 rounded-card px-5 py-3 text-sm">
           {error}
         </p>
       )}

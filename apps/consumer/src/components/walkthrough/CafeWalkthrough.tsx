@@ -72,7 +72,7 @@ export function CafeWalkthrough({ cafe, definitions }: Props) {
     <>
       <section
         aria-label={`3D walkthrough of ${cafe.name}`}
-        className="relative grid aspect-[4/3] max-h-[70vh] w-full place-items-center overflow-hidden rounded-2xl bg-scan p-6 text-center text-glass-foreground"
+        className="relative grid aspect-[4/3] max-h-[70vh] w-full place-items-center overflow-hidden rounded-card bg-scan p-6 shadow-card text-center text-glass-foreground"
         style={{ backgroundImage: "radial-gradient(circle at 70% 30%, rgba(24,95,165,0.55) 0, transparent 60%)" }}
       >
         <div className="grid max-w-sm justify-items-center gap-3">

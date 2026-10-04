@@ -62,7 +62,7 @@ export function SearchBar({ venues, onPick }: Props) {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
       }}
     >
-      <label className="flex h-12 items-center gap-2 rounded-full border bg-card px-4 shadow-lg focus-within:outline-2 focus-within:outline-ring">
+      <label className="glass flex h-12 items-center gap-2 rounded-full px-4 focus-within:outline-2 focus-within:outline-ring">
         <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
         <span className="sr-only">Search cafes</span>
         <input
@@ -86,14 +86,14 @@ export function SearchBar({ venues, onPick }: Props) {
           className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
         />
         {query && (
-          <button type="button" aria-label="Clear search" onClick={() => setQuery("")} className="grid size-8 place-items-center rounded-full hover:bg-accent">
+          <button type="button" aria-label="Clear search" onClick={() => setQuery("")} className="grid size-8 place-items-center rounded-full hover:bg-white/70">
             <X className="size-4" />
           </button>
         )}
       </label>
 
       {open && (list.length > 0 || !showingRecent) && (
-        <div id={listId} className="absolute inset-x-0 top-14 z-20 max-h-[50dvh] overflow-y-auto rounded-2xl border bg-card px-3 py-1 shadow-xl">
+        <div id={listId} className="surface-raised absolute inset-x-0 top-14 z-20 max-h-[50dvh] overflow-y-auto rounded-card px-4 py-2">
           {showingRecent && <p className="px-1 pt-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Recently viewed</p>}
           <VenueList venues={list} onPick={pick} empty={`No cafes on Visita match "${query.trim()}" yet.`} />
         </div>

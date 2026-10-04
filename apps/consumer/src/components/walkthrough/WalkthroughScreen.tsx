@@ -31,7 +31,7 @@ interface Props {
 }
 
 const glassButton =
-  "border border-glass-border bg-glass text-glass-foreground backdrop-blur-md hover:bg-glass hover:text-glass-foreground hover:brightness-125";
+  "glass-dark size-11 border-0 hover:text-glass-foreground hover:brightness-125";
 
 export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props) {
   const saved = useStore($saved).includes(cafe.slug);

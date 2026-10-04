@@ -10,6 +10,12 @@
  *     never a button colour and never a text colour. Use --verified only.
  *   - Amber backgrounds take navy text (6.48:1), never white.
  *   - Playfair Display for display type only; DM Sans for everything else.
+ *
+ * Shape and material (2026-10-04, "soft glass"): controls are pills, cards
+ * and sheets have continuous (squircle) corners, and only things that float
+ * over the map or a walkthrough are glass. Text-heavy surfaces stay nearly
+ * solid so contrast never depends on what's behind them. Glass falls back
+ * to a solid fill where blur isn't supported or transparency is reduced.
  */
 :root {
   /* Brand palette (raw). Components use the semantic tokens below. */
@@ -43,15 +49,28 @@
   --input: var(--brand-mist);
   --ring: var(--brand-sky);
   --radius: 0.75rem;
+  /* Card and sheet corners; larger where squircle corners are drawn, so the
+     softer curve keeps the same visual size. */
+  --radius-card: 1.5rem;
+  --radius-sheet: 1.75rem;
+
+  /* Floating glass over the map (light) and over a walkthrough (dark). */
+  --glass-light: rgba(255, 255, 255, 0.62);
+  --glass-light-edge: rgba(255, 255, 255, 0.95);
+  --glass-light-solid: rgba(255, 255, 255, 0.96);
+  --surface-raised: rgba(255, 255, 255, 0.9);  /* cards over the map */
+  --shadow-float: 0 14px 34px -18px rgba(4, 44, 83, 0.55), 0 2px 6px -3px rgba(4, 44, 83, 0.2);
+  --shadow-card: 0 22px 44px -26px rgba(4, 44, 83, 0.55), 0 2px 8px -4px rgba(4, 44, 83, 0.12);
 
   /* Visita meanings. */
   --verified: var(--brand-amber);             /* scanned & verified: badges, map pins */
   --verified-foreground: var(--brand-navy);
   --rating: var(--brand-amber-deep);          /* stars on light surfaces */
   --scan-surface: var(--brand-navy);          /* behind the 3D walkthrough */
-  --glass: rgba(4, 44, 83, 0.72);             /* panels floating over the scan */
+  --glass: rgba(4, 44, 83, 0.58);             /* panels floating over the scan */
   --glass-foreground: var(--brand-cloud);
-  --glass-border: rgba(181, 212, 244, 0.35);
+  --glass-border: rgba(181, 212, 244, 0.32);
+  --glass-dark-edge: rgba(230, 241, 251, 0.45);
   --glass-positive: #a7e8c9;                  /* "Open now" on glass */
   --success: #1f7a4d;                         /* open now */
   --warning: #9a5b00;                         /* stale scan date */
@@ -107,6 +126,80 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+}
+
+@supports (corner-shape: squircle) {
+  :root {
+    --radius-card: 2.25rem;
+    --radius-sheet: 2.5rem;
+  }
+}
+
+/* Continuous corners (Apple-style squircle) where the browser supports them. */
+@utility rounded-card {
+  border-radius: var(--radius-card);
+  corner-shape: squircle;
+}
+@utility rounded-t-sheet {
+  border-top-left-radius: var(--radius-sheet);
+  border-top-right-radius: var(--radius-sheet);
+  corner-shape: squircle;
+}
+@utility shadow-float {
+  box-shadow: var(--shadow-float);
+}
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+/* Light glass: floating controls over the map (search, dock, map buttons). */
+@utility glass {
+  background: linear-gradient(160deg, var(--glass-light), rgba(255, 255, 255, 0.4));
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  box-shadow:
+    inset 0 1.5px 0 var(--glass-light-edge),
+    inset 0 0 18px rgba(255, 255, 255, 0.2),
+    var(--shadow-float);
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--glass-light-solid);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background: var(--glass-light-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Raised reading surface over the map: nearly solid, a touch of blur. */
+@utility surface-raised {
+  background: var(--surface-raised);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: inset 0 1.5px 0 #ffffff, var(--shadow-card);
+  @media (prefers-reduced-transparency: reduce) {
+    background: #ffffff;
+  }
+}
+
+/* Dark glass: controls and panels over the 3D walkthrough. */
+@utility glass-dark {
+  background: linear-gradient(160deg, rgba(4, 44, 83, 0.5), var(--glass));
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-dark-edge),
+    inset 0 0 20px rgba(230, 241, 251, 0.06),
+    0 16px 36px -18px rgba(0, 0, 0, 0.6);
+  color: var(--glass-foreground);
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: rgba(4, 44, 83, 0.9);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background: rgba(4, 44, 83, 0.94);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 @layer base {

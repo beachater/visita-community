@@ -20,7 +20,7 @@ export function VenueList({ venues, onPick, empty }: Props) {
         const open = isOpenAt(v.hours, now);
         return (
           <li key={v.slug}>
-            <button type="button" onClick={() => onPick(v)} className="flex w-full items-center gap-3 px-1 py-3 text-left hover:bg-accent/60">
+            <button type="button" onClick={() => onPick(v)} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-accent/60">
               <span className="grid min-w-0 flex-1 gap-0.5">
                 <span className="flex items-center gap-2">
                   <span className="truncate font-medium">{v.name}</span>

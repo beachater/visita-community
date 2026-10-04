@@ -40,7 +40,7 @@ export function SavedList({ loginHref }: Props) {
   return (
     <div className="grid gap-6">
       {!signedIn && (
-        <p className="rounded-xl border bg-card px-4 py-3 text-sm">
+        <p className="rounded-card bg-card shadow-card px-5 py-4 text-sm">
           These are saved on this device only.{" "}
           <a href={loginHref} className="font-medium underline">
             Sign in
@@ -51,7 +51,7 @@ export function SavedList({ loginHref }: Props) {
       {failed && <p role="alert" className="text-sm text-destructive">Couldn't load cafes. Check your connection and reload.</p>}
       {venues === null && !failed && <p className="text-sm text-muted-foreground">Loading…</p>}
       {venues !== null && saved.length === 0 && (
-        <div className="grid justify-items-center gap-3 rounded-xl border border-dashed bg-card px-6 py-10 text-center">
+        <div className="grid justify-items-center gap-3 rounded-card border border-dashed border-mist bg-card/70 px-6 py-10 text-center">
           <p className="font-medium">No saved cafes yet</p>
           <p className="max-w-[48ch] text-sm text-muted-foreground">Tap the heart inside a 3D walkthrough to keep a cafe here.</p>
           <Button asChild>
@@ -62,7 +62,7 @@ export function SavedList({ loginHref }: Props) {
       {saved.length > 0 && (
         <ul className="grid gap-2">
           {saved.map((v) => (
-            <li key={v.slug} className="flex items-center gap-2 rounded-xl border bg-card px-3">
+            <li key={v.slug} className="flex items-center gap-2 rounded-card bg-card shadow-card px-4">
               <div className="min-w-0 flex-1">
                 <VenueList venues={[v]} onPick={() => (window.location.href = `/cafe/${v.slug}`)} />
               </div>

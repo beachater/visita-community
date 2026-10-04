@@ -27,15 +27,15 @@ export function Dock({ scanned, topPicks, saved, activeFilters, onOpenFilters, o
   };
 
   const pill =
-    "pointer-events-auto inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full border bg-card px-4 text-sm font-medium shadow-lg hover:bg-accent";
+    "glass pointer-events-auto inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium hover:bg-white/80";
 
   return (
     <>
-      <nav aria-label="Browse cafes" className="flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+      <nav aria-label="Browse cafes" className="-mx-3 -mb-3 flex gap-2 overflow-x-auto px-4 pt-1 pb-4 [scrollbar-width:none]">
         <button type="button" className={pill} onClick={() => setPanel("scanned")}>
           <Box className="size-4" aria-hidden="true" /> 3D Layout
         </button>
-        <button type="button" className={cn(pill, activeFilters > 0 && "border-primary text-primary")} onClick={onOpenFilters}>
+        <button type="button" className={cn(pill, activeFilters > 0 && "text-primary ring-2 ring-primary/50")} onClick={onOpenFilters}>
           <SlidersHorizontal className="size-4" aria-hidden="true" /> Filter
           {activeFilters > 0 && (
             <span className="grid size-5 place-items-center rounded-full bg-primary text-[0.7rem] text-primary-foreground" aria-label={`${activeFilters} active`}>
