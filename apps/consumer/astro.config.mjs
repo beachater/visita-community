@@ -21,5 +21,26 @@ export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
+    // Dev only. The Cloudflare adapter adds these to the server environment's
+    // pre-bundle too. Without them Vite finds them mid-session (the linked
+    // @visita/* packages aren't pre-bundled, so their imports surface late),
+    // re-optimizes, and the running worker asks for files under the old hash:
+    // "The file does not exist at .../deps_ssr/astro_app_entrypoint_dev.js".
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "@supabase/ssr",
+        "@supabase/supabase-js",
+        "@nanostores/react",
+        "nanostores",
+        "lucide-react",
+        "radix-ui",
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge",
+        "sonner",
+      ],
+    },
   },
 });
