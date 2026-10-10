@@ -75,7 +75,7 @@ function EventForm({ draft, onClose, onSaved }: { draft: Draft; onClose: () => v
   };
 
   return (
-    <div className="grid gap-3 rounded-xl border bg-card p-5">
+    <div className="grid gap-3 rounded-card border bg-card shadow-card p-5">
       <div className="grid gap-1.5">
         <Label htmlFor="ev-title">Title</Label>
         <Input id="ev-title" value={d.title} maxLength={120} onChange={(e) => setD({ ...d, title: e.target.value })} placeholder="Open mic night" />
@@ -167,12 +167,12 @@ export function EventsEditor() {
       </div>
       {draft && <EventForm draft={draft} onClose={() => setDraft(null)} onSaved={() => void load()} />}
       {events === null && <p className="text-muted-foreground">Loading…</p>}
-      {events?.length === 0 && !draft && <p className="rounded-xl border border-dashed bg-card p-8 text-center text-muted-foreground">No events yet.</p>}
+      {events?.length === 0 && !draft && <p className="rounded-card border border-dashed bg-card shadow-card p-8 text-center text-muted-foreground">No events yet.</p>}
       <ul className="grid gap-3">
         {events?.map((e) => {
           const when = eventWhen(e.starts_at, e.ends_at, now);
           return (
-            <li key={e.id} className={`flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-4 ${when === "past" ? "opacity-60" : ""}`}>
+            <li key={e.id} className={`flex flex-wrap items-start justify-between gap-3 rounded-card border bg-card shadow-card p-4 ${when === "past" ? "opacity-60" : ""}`}>
               <div className="flex min-w-0 gap-3">
                 {e.photo_url && <img src={`${CONSUMER_URL}/assets/${e.photo_url}`} alt="" className="size-16 shrink-0 rounded-lg object-cover" loading="lazy" />}
                 <div className="min-w-0">

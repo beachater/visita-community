@@ -1,8 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import SiteHeader from "../components/site/SiteHeader.astro";
 import { MapExplorer } from "../components/map/MapExplorer";
-import { buttonVariants } from "@visita/ui/button";
 
 export const prerender = true;
 ---
@@ -10,14 +9,11 @@ export const prerender = true;
 <BaseLayout
   title="Visita"
   description="Step inside a cafe before you go. Real, unedited 3D walkthroughs of cafes in Cagayan de Oro."
+  chrome="bare"
 >
   <h1 class="sr-only">Visita: step inside with confidence</h1>
-  <!-- The map is the hero. -->
+  <div class="absolute inset-x-0 top-0 z-40">
+    <SiteHeader />
+  </div>
   <MapExplorer client:only="react" mode="hero" />
-
-  <Placeholder route="/" mode="prerendered">
-    <!-- TODO (Tier 2, marketing pages): the problem, how it works (find it,
-         step inside, go), featured cafes, for cafe owners, about. -->
-    <p><a href="/explore" class={buttonVariants({ variant: "outline" })}>Open the full map</a></p>
-  </Placeholder>
 </BaseLayout>

@@ -104,14 +104,14 @@ export function VenueLayout() {
             </Button>
           )}
         </header>
-        <nav aria-label="Manage this cafe" className="flex gap-1 overflow-x-auto overflow-y-hidden border-b">
+        <nav aria-label="Manage this cafe" className="flex gap-1 overflow-x-auto rounded-full bg-accent/60 p-1">
           {TABS.map((t) => (
             <NavLink
               key={t.label}
               to={t.to}
               end={t.end}
               className={({ isActive }) =>
-                cn("-mb-px border-b-2 px-3 py-2 text-sm font-medium", isActive ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")
+                cn("inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-medium transition-colors", isActive ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:bg-card/60 hover:text-foreground")
               }
             >
               {t.label}

@@ -44,7 +44,7 @@ export function VenueDashboard() {
         </h2>
         <dl className="grid gap-3 sm:grid-cols-3">
           {facts.map((f) => (
-            <div key={f.label} className="rounded-xl border bg-card p-4">
+            <div key={f.label} className="rounded-card border bg-card shadow-card p-4">
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">{f.label}</dt>
               <dd className="mt-1 font-medium">
                 {f.to ? (
@@ -64,7 +64,7 @@ export function VenueDashboard() {
         <h2 id="owners-h" className="text-lg font-semibold">
           People who manage this cafe
         </h2>
-        <ul className="divide-y rounded-xl border bg-card">
+        <ul className="divide-y overflow-hidden rounded-card border bg-card shadow-card">
           {owners.map((o) => (
             <li key={o.id} className="flex items-center justify-between px-4 py-3">
               <span className="font-medium">{o.name}</span>

@@ -68,14 +68,14 @@ export function AmenityQueue() {
         <p className="text-muted-foreground">Owners' requested changes to verified amenities, oldest first. Check against the latest scan before approving.</p>
       </header>
       {items === null && <p className="text-muted-foreground">Loading…</p>}
-      {items?.length === 0 && <p className="rounded-xl border border-dashed bg-card p-8 text-center text-muted-foreground">No changes waiting.</p>}
+      {items?.length === 0 && <p className="rounded-card border border-dashed bg-card shadow-card p-8 text-center text-muted-foreground">No changes waiting.</p>}
       <ul className="grid gap-3">
         {items?.map((item) => {
           const def = defs[item.amenityKey];
           const label = def?.label ?? item.amenityKey;
           const fmt = (e: AmenityEntry | null | undefined) => (def ? describeEntry(def, e) : JSON.stringify(e));
           return (
-            <li key={item.id} className="grid gap-3 rounded-xl border bg-card p-4">
+            <li key={item.id} className="grid gap-3 rounded-card border bg-card shadow-card p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="font-medium">
                   {item.venueName} · {label}

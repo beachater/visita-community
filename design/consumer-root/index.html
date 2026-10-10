@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Visita · Consumer map concepts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #042c53; --ocean: #185fa5; --sky: #378add; --amber: #ef9f27;
+      --ink-soft: #526b83; --edge: #d5e5f2; --paper: #fff;
+      --float: 0 18px 48px -22px rgba(4,44,83,.38), 0 3px 12px rgba(4,44,83,.12);
+      font-family: "DM Sans", system-ui, sans-serif; color: var(--navy);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #e6f1fb; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+    .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; flex: none; }
+    .lab-bar { min-height: 56px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 8px 24px; background: #062d50; color: #fff; position: relative; z-index: 30; }
+    .lab-label { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #b9def5; }
+    .lab-note { font-size: 12px; color: #d1e7f6; margin-right: auto; }
+    .switcher { display: flex; gap: 4px; padding: 4px; background: rgba(255,255,255,.12); border-radius: 999px; }
+    .switcher button { border: 0; background: transparent; color: #e1eff8; padding: 7px 13px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .switcher button[aria-pressed="true"] { background: #fff; color: var(--navy); }
+    .replay { border: 1px solid rgba(255,255,255,.36); border-radius: 999px; background: transparent; color: #fff; min-height: 36px; padding: 0 14px; font-size: 12px; font-weight: 700; }
+    .canvas { position: relative; height: calc(100dvh - 56px); min-height: 600px; overflow: hidden; isolation: isolate; background: #d7ecf3; }
+    .map-art { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .map-art text { font: 600 13px "DM Sans", sans-serif; fill: #7a91a3; letter-spacing: .11em; }
+    .map-art .city { font: 700 25px "DM Sans", sans-serif; letter-spacing: -.025em; fill: #627787; }
+    .map-art .road { fill: none; stroke: #fff; stroke-width: 7; stroke-linecap: round; opacity: .96; }
+    .map-art .minor { fill: none; stroke: #f7fbfc; stroke-width: 2.2; opacity: .9; }
+    .map-art .river { fill: none; stroke: #5acde0; stroke-width: 19; opacity: .83; }
+    .map-art .river-edge { fill: none; stroke: #a5eef4; stroke-width: 27; opacity: .65; }
+    .map-wash { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(230,241,251,.38), transparent 46%), linear-gradient(0deg, rgba(230,241,251,.2), transparent 35%); pointer-events: none; }
+    .app-header { position: absolute; z-index: 12; top: 24px; left: 24px; right: 24px; display: flex; align-items: flex-start; gap: 16px; pointer-events: none; }
+    .search-cluster { width: min(440px, calc(100vw - 48px)); pointer-events: auto; }
+    .brand-search { display: flex; align-items: center; height: 56px; gap: 15px; padding: 0 10px 0 20px; border: 1px solid rgba(255,255,255,.92); border-radius: 24px; background: rgba(255,255,255,.94); box-shadow: var(--float); backdrop-filter: blur(16px); }
+    .brand { font-family: "Playfair Display", Georgia, serif; font-size: 24px; font-weight: 700; letter-spacing: -.035em; white-space: nowrap; }
+    .brand-divider { height: 25px; width: 1px; background: #cbdbe8; }
+    .search-input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--navy); background: transparent; font-size: 15px; }
+    .search-input::placeholder { color: #647b90; }
+    .search-icon { color: var(--ocean); }
+    .quick-actions { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .quick-actions::-webkit-scrollbar { display: none; }
+    .chip { min-height: 42px; display: inline-flex; align-items: center; gap: 7px; flex: none; padding: 0 15px; border: 1px solid #e1edf5; border-radius: 999px; background: rgba(255,255,255,.95); box-shadow: 0 6px 18px rgba(4,44,83,.12); color: var(--navy); font-size: 13px; font-weight: 700; }
+    .chip.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .chip .icon { width: 16px; height: 16px; }
+    .account { margin-left: auto; pointer-events: auto; min-height: 48px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #e1edf5; border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: var(--float); color: var(--navy); padding: 0 16px; font-size: 13px; font-weight: 700; }
+    .account .icon { width: 17px; height: 17px; }
+    .map-tools { position: absolute; z-index: 9; right: 24px; bottom: 54px; display: grid; gap: 10px; }
+    .tool-group { display: grid; overflow: hidden; border: 1px solid rgba(255,255,255,.95); border-radius: 18px; background: rgba(255,255,255,.96); box-shadow: var(--float); }
+    .tool { width: 48px; height: 48px; display: grid; place-items: center; border: 0; background: transparent; color: var(--navy); }
+    .tool + .tool { border-top: 1px solid var(--edge); }
+    .tool:hover, .chip:hover, .account:hover { background: #eef7fc; }
+    .map-pin { position: absolute; z-index: 4; width: 34px; height: 43px; display: grid; place-items: center; border: 0; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); background: #fff; color: var(--navy); box-shadow: 0 8px 22px rgba(4,44,83,.25); outline: 3px solid var(--navy); outline-offset: -3px; }
+    .map-pin span { transform: rotate(45deg); font-size: 17px; font-weight: 700; }
+    .map-pin.scanned { background: var(--amber); }
+    .pin-one { left: 53%; top: 46%; } .pin-two { left: 63%; top: 59%; } .pin-three { left: 73%; top: 37%; }
+    .map-caption { position: absolute; bottom: 15px; right: 24px; z-index: 2; font-size: 11px; color: #506878; background: rgba(255,255,255,.76); padding: 5px 8px; border-radius: 7px; }
+    .venue-card { position: absolute; left: 24px; bottom: 28px; z-index: 9; width: min(392px, calc(100% - 32px)); padding: 21px; border: 1px solid rgba(255,255,255,.96); border-radius: 25px; background: rgba(255,255,255,.97); box-shadow: var(--float); }
+    .eyebrow { display: flex; align-items: center; gap: 6px; color: var(--ocean); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+    .venue-card h2, .discovery-panel h2 { font-family: "Playfair Display", Georgia, serif; font-size: 24px; line-height: 1.12; margin: 10px 0 6px; }
+    .venue-card p { color: var(--ink-soft); margin: 0; font-size: 13px; line-height: 1.5; }
+    .card-rule { border: 0; border-top: 1px solid var(--edge); margin: 18px 0; }
+    .card-actions { display: flex; gap: 8px; }
+    .primary-action, .secondary-action { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 999px; font-size: 13px; font-weight: 700; padding: 0 18px; }
+    .primary-action { flex: 1; border: 1px solid var(--ocean); background: var(--ocean); color: #fff; }
+    .secondary-action { border: 1px solid var(--edge); background: #f4f9fd; color: var(--navy); }
+    .primary-action .icon, .secondary-action .icon { width: 17px; height: 17px; }
+    .discovery-panel { display: none; position: absolute; top: 102px; left: 24px; bottom: 24px; z-index: 8; width: 360px; overflow: auto; padding: 22px; border: 1px solid rgba(255,255,255,.95); border-radius: 25px; background: rgba(255,255,255,.97); box-shadow: var(--float); }
+    .discovery-panel .summary { margin: 8px 0 18px; color: var(--ink-soft); font-size: 13px; }
+    .discovery-panel .quick-actions { flex-wrap: wrap; overflow: visible; }
+    .list-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--edge); border-radius: 18px; background: #f8fbfe; margin-top: 10px; padding: 12px; color: var(--navy); }
+    .list-thumb { width: 48px; height: 48px; border-radius: 13px; background: linear-gradient(145deg, #b9dfe4, #5ca8b4 55%, #245b70); flex: none; }
+    .list-card strong { display: block; font-size: 13px; } .list-card small { color: var(--ink-soft); }
+    .concept-b .app-header { align-items: center; }
+    .concept-b .search-cluster { width: min(480px, calc(100vw - 250px)); }
+    .concept-b .app-header > .search-cluster > .quick-actions { display: none; }
+    .concept-b .brand-search { border-radius: 999px; }
+    .concept-b .venue-card { display: none; }
+    .concept-b .discovery-panel { display: block; }
+    .concept-b .pin-one { left: 62%; }
+    .concept-b .pin-two { left: 70%; }
+    .search-results { display: none; position: absolute; z-index: 20; top: 68px; width: min(440px, calc(100vw - 48px)); background: #fff; border: 1px solid var(--edge); border-radius: 20px; padding: 10px; box-shadow: var(--float); }
+    .search-results.visible { display: block; }
+    .search-results button { width: 100%; min-height: 44px; text-align: left; border: 0; border-radius: 12px; padding: 0 12px; background: transparent; color: var(--navy); }
+    .search-results button:hover { background: #eaf3fa; }
+    .mock-label { position: absolute; left: 50%; bottom: 20px; z-index: 7; transform: translateX(-50%); padding: 7px 11px; border-radius: 999px; background: rgba(4,44,83,.79); color: white; white-space: nowrap; font-size: 11px; font-weight: 600; }
+    .intro { position: absolute; inset: 0; z-index: 25; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 45%, #244d6a, #062947 55%, #031b32); color: #fff; }
+    .intro[hidden] { display: none; }
+    .intro-copy { position: absolute; top: 25px; left: 24px; right: 24px; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .intro-copy strong { font-family: "Playfair Display", Georgia, serif; font-size: 23px; }
+    .intro-copy button { min-height: 44px; border: 1px solid rgba(255,255,255,.48); border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; padding: 0 18px; font-weight: 700; }
+    .globe { width: min(48vw, 460px); aspect-ratio: 1; border-radius: 50%; overflow: hidden; box-shadow: inset -34px -30px 70px rgba(0,19,42,.55), inset 15px 18px 42px rgba(222,250,255,.28), 0 0 90px rgba(94,191,216,.25); background: radial-gradient(circle at 36% 27%, #9be3df 0, #2e8ca5 33%, #0e537f 70%, #0b335c 100%); }
+    .globe svg { width: 100%; height: 100%; opacity: .8; }
+    .intro .destination { position: absolute; bottom: 12%; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .17em; text-transform: uppercase; color: #bee8f2; }
+    .intro.playing .globe { animation: approach 2.4s cubic-bezier(.55,.02,.17,1) forwards; }
+    .intro.playing { animation: dissolve .5s ease 2s forwards; }
+    @keyframes approach { 0% { transform: scale(.85) rotate(-13deg); } 65% { transform: scale(1.4) rotate(4deg); } 100% { transform: scale(7) rotate(12deg); } }
+    @keyframes dissolve { to { opacity: 0; } }
+    @media (max-width: 767px) {
+      .lab-bar { padding: 8px 16px; gap: 8px; flex-wrap: nowrap; }
+      .lab-note { display: none; }
+      .lab-label { display: none; }
+      .switcher { margin-right: auto; }
+      .switcher button { padding: 7px 9px; }
+      .replay { padding: 0 9px; }
+      .canvas { height: calc(100dvh - 56px); min-height: 520px; }
+      .app-header { top: 16px; left: 16px; right: 16px; flex-wrap: wrap; gap: 10px; }
+      .search-cluster, .concept-b .search-cluster { width: 100%; order: 2; }
+      .brand-search { height: 52px; border-radius: 18px; }
+      .brand { font-size: 21px; }
+      .account { order: 1; margin-left: auto; min-height: 44px; padding: 0 13px; }
+      .app-header::before { content: "Visita"; pointer-events: auto; order: 0; font-family: "Playfair Display", Georgia, serif; font-weight: 700; font-size: 24px; background: rgba(255,255,255,.94); border-radius: 999px; padding: 6px 16px; box-shadow: var(--float); }
+      .brand-search .brand, .brand-divider { display: none; }
+      .quick-actions { margin-top: 9px; }
+      .map-tools { right: 16px; bottom: 206px; }
+      .venue-card { left: 16px; right: 16px; bottom: 16px; width: auto; padding: 18px; }
+      .venue-card h2 { font-size: 22px; }
+      .concept-b .discovery-panel { top: auto; left: 16px; right: 16px; bottom: 16px; width: auto; max-height: 235px; padding: 16px; }
+      .concept-b .discovery-panel h2 { font-size: 19px; }
+      .concept-b .discovery-panel .summary, .concept-b .discovery-panel .list-card:not(:first-of-type) { display: none; }
+      .concept-b .discovery-panel .quick-actions { display: none; }
+      .concept-b .map-tools { bottom: 265px; }
+      .search-results { top: 108px; left: 0; width: 100%; }
+      .map-caption { right: 16px; bottom: 5px; font-size: 9px; }
+      .mock-label { display: none; }
+      .globe { width: min(75vw, 360px); }
+    }
+    @media (prefers-reduced-motion: reduce) { .intro.playing .globe, .intro.playing { animation: none; } * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute"><defs>
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="sliders" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="white"/><circle cx="16" cy="12" r="2" fill="white"/></symbol>
+    <symbol id="cube" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5ZM3 7v10l9 5 9-5V7M12 12v10"/></symbol>
+    <symbol id="locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></symbol>
+    <symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path d="m12 2 3 6 7 .9-5 4.9 1.2 7-6.2-3.3-6.2 3.3 1.2-7-5-4.9L9 8z"/></symbol>
+  </defs></svg>
+  <div class="lab-bar">
+    <span class="lab-label">Visita · UI lab</span>
+    <span class="lab-note">Illustrative screens · no live map or venue data</span>
+    <div class="switcher" aria-label="Choose concept">
+      <button id="concept-a" aria-pressed="true" type="button">A · Map-first</button>
+      <button id="concept-b" aria-pressed="false" type="button">B · Discovery</button>
+    </div>
+    <button class="replay" id="replay" type="button">Replay intro</button>
+  </div>
+  <main class="canvas" id="canvas" aria-label="Consumer root page concept">
+    <svg class="map-art" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1440" height="800" fill="#e9ece9"/>
+      <path d="M0 0H1440V184c-138-42-206-26-317-45-153-26-224-41-389-30-166 12-245-8-365-64C223-23 116-13 0 0Z" fill="#8ddce5"/>
+      <path d="M0 530c180-54 276-162 398-117 73 26 111 110 198 95 114-20 103-171 216-176 95-5 135 117 224 119 131 2 123-159 404-205" class="river-edge"/>
+      <path d="M0 530c180-54 276-162 398-117 73 26 111 110 198 95 114-20 103-171 216-176 95-5 135 117 224 119 131 2 123-159 404-205" class="river"/>
+      <path d="M0 225c180 10 335 84 520 164 195 84 387 130 920 91M190 800C300 585 432 467 603 280 732 139 892 96 1115 0M448 800c163-158 362-203 528-368 133-132 185-289 245-432M0 690c239-53 410-44 657-48 240-4 526-67 783-135" class="road"/>
+      <path d="M0 304c265 49 394 77 729 233 258 120 445 143 711 90M72 800c82-212 185-308 283-480M518 800c86-228 108-352 196-610M886 800c70-194 96-270 191-533M1172 800c-39-241-91-335-110-613M0 439c322-28 435-63 682-181 237-113 404-107 758-117M274 0c105 205 143 336 150 800" class="minor"/>
+      <path d="M280 159c164 39 310 37 419 29M815 676c167-31 311-46 495-15M1020 272c147-38 268-40 420-13" class="minor"/>
+      <path d="M1040 464c60-34 107-42 183-29l-12 66c-91 10-130-3-171-37ZM690 561c48-60 98-58 148-25l-24 61c-48 19-81 13-124-36Z" fill="#b5d9b7" opacity=".8"/>
+      <text x="734" y="391" class="city">Cagayan de Oro</text><text x="1147" y="257">LAPASAN</text><text x="645" y="219">BULUA</text><text x="386" y="669">UPTOWN</text><text x="1042" y="627">MACASANDIG</text><text x="797" y="104">MACAJALAR BAY</text>
+    </svg>
+    <div class="map-wash"></div>
+    <header class="app-header">
+      <div class="search-cluster">
+        <label class="brand-search">
+          <span class="brand">Visita</span><span class="brand-divider"></span>
+          <svg class="icon search-icon"><use href="#search"/></svg>
+          <input class="search-input" id="search-input" type="search" autocomplete="off" placeholder="Search cafes in Cagayan de Oro" aria-label="Search cafes">
+        </label>
+        <div class="search-results" id="search-results" aria-label="Sample search suggestions"><button type="button">Example cafe · illustrative result</button></div>
+        <nav class="quick-actions" aria-label="Browse options">
+          <button class="chip active" type="button"><svg class="icon"><use href="#cube"/></svg> Scanned in 3D</button>
+          <button class="chip" type="button">Open now</button>
+          <button class="chip" type="button"><svg class="icon"><use href="#sliders"/></svg> Filters</button>
+        </nav>
+      </div>
+      <button class="account" type="button"><svg class="icon"><use href="#user"/></svg> Sign in</button>
+    </header>
+    <button class="map-pin scanned pin-one" type="button" aria-label="Open example scanned cafe"><span>3D</span></button>
+    <button class="map-pin scanned pin-two" type="button" aria-label="Open another example scanned cafe"><span>3D</span></button>
+    <button class="map-pin pin-three" type="button" aria-label="Open example unscanned cafe"><span>•</span></button>
+    <section class="venue-card" aria-label="Selected sample cafe">
+      <div class="eyebrow">Scanned in 3D · Sample content</div>
+      <h2>Explore a cafe before you go</h2>
+      <p>See how venue details would appear after selecting a pin. No cafe facts are shown in this mockup.</p>
+      <hr class="card-rule">
+      <div class="card-actions"><button class="primary-action" type="button">Enter 3D walkthrough <svg class="icon"><use href="#arrow"/></svg></button><button class="secondary-action" type="button">Details</button></div>
+    </section>
+    <aside class="discovery-panel" aria-label="Discovery panel concept">
+      <div class="eyebrow">Discover nearby · Sample content</div>
+      <h2>Find your kind of cafe</h2>
+      <p class="summary">Search, filters, and browse results stay together while the map remains visible.</p>
+      <nav class="quick-actions" aria-label="Browse options"><button class="chip active" type="button">Scanned in 3D</button><button class="chip" type="button">Open now</button><button class="chip" type="button">Filters</button></nav>
+      <button class="list-card" type="button"><span class="list-thumb"></span><span><strong>Example cafe</strong><small>Illustrative listing · 3D walkthrough</small></span></button>
+      <button class="list-card" type="button"><span class="list-thumb"></span><span><strong>Another example</strong><small>Illustrative listing · details</small></span></button>
+    </aside>
+    <div class="map-tools" aria-label="Map controls">
+      <div class="tool-group"><button class="tool" type="button" aria-label="Zoom in">+</button><button class="tool" type="button" aria-label="Zoom out">−</button></div>
+      <div class="tool-group"><button class="tool" type="button" aria-label="Current location"><svg class="icon"><use href="#locate"/></svg></button></div>
+    </div>
+    <span class="mock-label">UI concept only · map art and venues are illustrative</span>
+    <span class="map-caption">Concept map · not geographic data</span>
+    <div class="intro" id="intro" hidden aria-label="Globe intro concept">
+      <div class="intro-copy"><strong>Visita</strong><button id="skip-intro" type="button">Skip intro</button></div>
+      <div class="globe" aria-hidden="true"><svg viewBox="0 0 400 400"><path d="M37 110c38-17 69-26 104-18 30 7 29 28 59 37 18 5 33-4 46 7 10 9-7 25-24 28-19 4-37-3-48 18-15 30 22 39 22 64 0 22-41 52-63 77-30-45-84-65-99-117-13-45-10-69 3-96Z" fill="#8dc6aa"/><path d="M238 51c45 8 82 27 115 68-1 20-15 24-34 20-16-3-20 16-38 26-17 8-36 0-47-18-15-24-36-27-43-47-8-23 17-42 47-49ZM263 212c36-17 72 6 94 34-11 38-44 74-84 90-9-29-31-51-36-78-3-20 9-37 26-46Z" fill="#a4d1ac"/></svg></div>
+      <div class="destination">From the world to Cagayan de Oro</div>
+    </div>
+  </main>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const intro = document.getElementById('intro');
+    const conceptA = document.getElementById('concept-a');
+    const conceptB = document.getElementById('concept-b');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let introTimer;
+    function choose(concept) {
+      const isB = concept === 'b';
+      canvas.classList.toggle('concept-b', isB);
+      conceptA.setAttribute('aria-pressed', String(!isB));
+      conceptB.setAttribute('aria-pressed', String(isB));
+    }
+    function stopIntro() {
+      clearTimeout(introTimer);
+      intro.hidden = true;
+      intro.classList.remove('playing');
+    }
+    function playIntro() {
+      stopIntro();
+      if (reducedMotion.matches) return;
+      intro.hidden = false;
+      void intro.offsetWidth;
+      intro.classList.add('playing');
+      introTimer = setTimeout(stopIntro, 2600);
+    }
+    conceptA.addEventListener('click', () => choose('a'));
+    conceptB.addEventListener('click', () => choose('b'));
+    document.getElementById('replay').addEventListener('click', playIntro);
+    document.getElementById('skip-intro').addEventListener('click', stopIntro);
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+    searchInput.addEventListener('input', () => searchResults.classList.toggle('visible', searchInput.value.trim().length > 0));
+    searchInput.addEventListener('keydown', event => { if (event.key === 'Escape') searchResults.classList.remove('visible'); });
+    searchResults.querySelector('button').addEventListener('click', () => { searchInput.value = 'Example cafe'; searchResults.classList.remove('visible'); });
+    for (const chip of document.querySelectorAll('.chip')) chip.addEventListener('click', () => chip.classList.toggle('active'));
+    playIntro();
+  </script>
+</body>
+</html>

@@ -153,7 +153,7 @@ export function MapExplorer({ mode }: Props) {
   }, [walkthrough]);
 
   return (
-    <div className={cn("relative overflow-hidden bg-muted", mode === "full" ? "h-dvh w-full" : "h-[70dvh] min-h-[28rem] w-full")}>
+    <div className="relative h-dvh w-full overflow-hidden bg-muted">
       <Toaster position="top-center" />
       <Map
         ref={attachMap}
@@ -171,7 +171,7 @@ export function MapExplorer({ mode }: Props) {
           position="top-right"
           showZoom
           showLocate
-          className="mt-16"
+          className={mode === "hero" ? "mt-36" : "mt-16"}
           onLocate={({ latitude, longitude }) => setHere({ lat: latitude, lng: longitude })}
         />
         {pins.map((v) => (
@@ -192,7 +192,7 @@ export function MapExplorer({ mode }: Props) {
       {/* Search sits at the top; in full-screen mode it leaves room for the Visita chip. */}
       <div
         className={cn("pointer-events-none absolute right-3 z-10", mode === "full" ? "left-[6.75rem] sm:left-auto sm:w-[26rem]" : "left-3 sm:left-auto sm:w-[26rem]")}
-        style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
+        style={{ top: mode === "hero" ? "calc(max(0.75rem, env(safe-area-inset-top)) + 4.5rem)" : "max(0.75rem, env(safe-area-inset-top))" }}
       >
         {data && <SearchBar venues={venues} onPick={select} />}
       </div>

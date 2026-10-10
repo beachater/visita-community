@@ -126,7 +126,7 @@ export function ClaimPage() {
       </header>
 
       {submitError && (
-        <p role="alert" className="rounded-lg border border-destructive/40 bg-card px-4 py-3 text-sm text-destructive">
+        <p role="alert" className="rounded-card border border-destructive/40 bg-card shadow-card px-4 py-3 text-sm text-destructive">
           {submitError}
         </p>
       )}
@@ -138,7 +138,7 @@ export function ClaimPage() {
         {!notListed && (
           <>
             {picked ? (
-              <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4">
+              <div className="flex items-center justify-between gap-3 rounded-card border bg-card shadow-card p-4">
                 <div className="min-w-0">
                   <p className="font-medium">{picked.name}</p>
                   {picked.address && <p className="truncate text-sm text-muted-foreground">{picked.address}</p>}
@@ -163,7 +163,7 @@ export function ClaimPage() {
                   />
                 </div>
                 {results.length > 0 && (
-                  <ul className="divide-y rounded-xl border bg-card">
+                  <ul className="divide-y overflow-hidden rounded-card border bg-card shadow-card">
                     {results.map((v) => {
                       const claimed = openClaims.has(v.id);
                       return (
@@ -192,7 +192,7 @@ export function ClaimPage() {
           </>
         )}
         {notListed && (
-          <div className="grid gap-3 rounded-xl border bg-card p-4">
+          <div className="grid gap-3 rounded-card border bg-card shadow-card p-4">
             <div className="grid gap-2">
               <Label htmlFor={ids.name}>Cafe name</Label>
               <Input id={ids.name} value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={120} aria-invalid={Boolean(errors.venue)} />

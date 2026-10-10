@@ -51,7 +51,7 @@ export function ScanUpload({ venue, onDone }: { venue: AdminVenue; onDone: () =>
   };
 
   return (
-    <section aria-labelledby="scan-h" className="grid gap-4 rounded-xl border bg-card p-5">
+    <section aria-labelledby="scan-h" className="grid gap-4 rounded-card border bg-card shadow-card p-5">
       <div>
         <h2 id="scan-h" className="text-lg font-semibold">
           3D scan

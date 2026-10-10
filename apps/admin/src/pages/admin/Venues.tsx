@@ -61,21 +61,21 @@ export function Venues() {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input aria-label="Search venues" placeholder="Name, slug or address" value={query} onChange={(e) => setQuery(e.target.value)} className="pl-9" />
         </div>
-        <div role="group" aria-label="Show" className="inline-flex rounded-lg border bg-card p-0.5">
+        <div role="group" aria-label="Show" className="inline-flex rounded-full border bg-card p-1 shadow-card">
           {(["all", "published", "draft"] as const).map((s) => (
             <button
               key={s}
               type="button"
               aria-pressed={show === s}
               onClick={() => setShow(s)}
-              className={cn("rounded-md px-3 py-1.5 text-sm capitalize", show === s ? "bg-primary text-primary-foreground" : "hover:bg-accent")}
+              className={cn("min-h-11 rounded-full px-4 py-2 text-sm capitalize", show === s ? "bg-primary text-primary-foreground" : "hover:bg-accent")}
             >
               {s === "draft" ? "Not published" : s}
             </button>
           ))}
         </div>
       </div>
-      <ul className="divide-y rounded-xl border bg-card">
+      <ul className="divide-y overflow-hidden rounded-card border bg-card shadow-card">
         {shown.map((r) => (
           <li key={r.id}>
             <Link to={`/admin/venues/${r.id}`} className="flex flex-wrap items-center gap-3 px-4 py-3 hover:bg-accent">

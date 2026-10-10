@@ -81,14 +81,14 @@ export function Moderation() {
           <h1 className="font-display text-3xl font-bold">Reviews</h1>
           <p className="text-muted-foreground">The 100 most recent. Hidden reviews stay visible to their author, marked as hidden.</p>
         </div>
-        <div role="group" aria-label="Show" className="inline-flex rounded-lg border bg-card p-0.5">
+        <div role="group" aria-label="Show" className="inline-flex rounded-full border bg-card p-1 shadow-card">
           {(["all", "visible", "hidden"] as const).map((s) => (
             <button
               key={s}
               type="button"
               aria-pressed={show === s}
               onClick={() => setShow(s)}
-              className={cn("rounded-md px-3 py-1.5 text-sm capitalize", show === s ? "bg-primary text-primary-foreground" : "hover:bg-accent")}
+              className={cn("min-h-11 rounded-full px-4 py-2 text-sm capitalize", show === s ? "bg-primary text-primary-foreground" : "hover:bg-accent")}
             >
               {s}
             </button>
@@ -96,10 +96,10 @@ export function Moderation() {
         </div>
       </header>
       {rows === null && <p className="text-muted-foreground">Loading…</p>}
-      {rows?.length === 0 && <p className="rounded-xl border border-dashed bg-card p-8 text-center text-muted-foreground">No reviews here.</p>}
+      {rows?.length === 0 && <p className="rounded-card border border-dashed bg-card shadow-card p-8 text-center text-muted-foreground">No reviews here.</p>}
       <ul className="grid gap-3">
         {rows?.map((r) => (
-          <li key={r.id} className={cn("grid gap-2 rounded-xl border bg-card p-4", r.status === "hidden" && "opacity-70")}>
+          <li key={r.id} className={cn("grid gap-2 rounded-card border bg-card shadow-card p-4", r.status === "hidden" && "opacity-70")}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-medium">
                 {r.author} on {r.venue}

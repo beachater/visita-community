@@ -54,7 +54,7 @@ export function HoursEditor() {
         </h2>
         <p className="text-sm text-muted-foreground">If you close after midnight, set the closing time for the next morning, like 6:00 PM to 2:00 AM.</p>
       </div>
-      <div className="divide-y rounded-xl border bg-card">
+      <div className="divide-y overflow-hidden rounded-card border bg-card shadow-card">
         {rows.map((r, i) => {
           const label = DAYS[i]!.label;
           return (

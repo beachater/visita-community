@@ -46,7 +46,7 @@ export function OccupancyButtons({ venueId }: { venueId: string }) {
 
   const current = currentOccupancy(row, now);
   return (
-    <section aria-labelledby="occ-h" className="grid gap-3 rounded-xl border bg-card p-5">
+    <section aria-labelledby="occ-h" className="grid gap-3 rounded-card border bg-card shadow-card p-5">
       <div>
         <h2 id="occ-h" className="text-lg font-semibold">
           How busy is it right now?

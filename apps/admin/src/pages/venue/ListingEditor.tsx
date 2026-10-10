@@ -83,7 +83,7 @@ function AmenityRow({ def, current, pending, onRequested }: { def: AmenityDefini
         )}
       </div>
       {editing && (
-        <div className="grid gap-3 rounded-lg bg-muted p-3 sm:grid-cols-2">
+        <div className="grid gap-3 rounded-2xl bg-muted p-3 sm:grid-cols-2">
           <div className="grid gap-1.5">
             <Label htmlFor={`v-${def.key}`}>{def.value_type === "list" ? "Values (comma-separated)" : "Value"}</Label>
             {def.value_type === "boolean" ? (
@@ -156,7 +156,7 @@ function AmenityRequests() {
         </h2>
         <p className="text-sm text-muted-foreground">Visita verifies amenities, so changes go to our team first. Your listing keeps the current details until a change is approved.</p>
       </div>
-      <ul className="divide-y rounded-xl border bg-card">
+      <ul className="divide-y overflow-hidden rounded-card border bg-card shadow-card">
         {defs.map((def) => (
           <AmenityRow
             key={def.key}

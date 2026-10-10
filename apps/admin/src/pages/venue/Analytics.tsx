@@ -40,7 +40,7 @@ function niceMax(n: number): number {
 
 function StatTile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="grid content-start gap-1 rounded-xl border bg-card p-4">
+    <div className="grid content-start gap-1 rounded-card border bg-card shadow-card p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="text-3xl font-semibold">{value}</p>
       {note && <p className="text-xs text-muted-foreground">{note}</p>}
@@ -239,7 +239,7 @@ function FilterBars({ filters }: { filters: VenueStats["filters"] }) {
 function Section({ title, subtitle, table, children }: { title: string; subtitle?: string; table?: ReactNode; children: ReactNode }) {
   const [asTable, setAsTable] = useState(false);
   return (
-    <section className="grid content-start gap-3 rounded-xl border bg-card p-5">
+    <section className="grid content-start gap-3 rounded-card border bg-card shadow-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="font-semibold">{title}</h3>
@@ -288,14 +288,14 @@ export function Analytics() {
           <h2 className="text-lg font-semibold">How visitors find you</h2>
           <p className="text-sm text-muted-foreground">Counted only for visitors who allow usage statistics, so real numbers are higher.</p>
         </div>
-        <div role="group" aria-label="Time range" className="inline-flex rounded-lg border bg-card p-0.5">
+        <div role="group" aria-label="Time range" className="inline-flex rounded-full border bg-card p-1 shadow-card">
           {RANGES.map((r) => (
             <button
               key={r}
               type="button"
               aria-pressed={days === r}
               onClick={() => setDays(r)}
-              className={cn("rounded-md px-3 py-1.5 text-sm", days === r ? "bg-primary text-primary-foreground" : "hover:bg-accent")}
+              className={cn("min-h-11 rounded-full px-4 py-2 text-sm", days === r ? "bg-primary text-primary-foreground" : "hover:bg-accent")}
             >
               {r} days
             </button>

@@ -43,8 +43,8 @@ function ProofImage({ claimId, hasProof }: { claimId: string; hasProof: boolean 
       if (url) URL.revokeObjectURL(url);
     };
   }, [claimId, hasProof]);
-  if (src === undefined) return <div className="grid h-48 place-items-center rounded-lg bg-muted text-sm text-muted-foreground">Loading proof…</div>;
-  if (src === null) return <div className="grid h-48 place-items-center rounded-lg bg-muted text-sm text-muted-foreground">No proof uploaded yet</div>;
+  if (src === undefined) return <div className="grid h-48 place-items-center rounded-2xl bg-muted text-sm text-muted-foreground">Loading proof…</div>;
+  if (src === null) return <div className="grid h-48 place-items-center rounded-2xl bg-muted text-sm text-muted-foreground">No proof uploaded yet</div>;
   return (
     <a href={src} target="_blank" rel="noopener">
       <img src={src} alt="Proof submitted with this claim" className="max-h-72 rounded-lg border object-contain" />
@@ -76,7 +76,7 @@ function ClaimReview({ item, own, onDone }: { item: QueueItem; own: boolean; onD
 
   const venue = item.venueName ?? item.proposed?.name ?? "Unknown";
   return (
-    <article className="grid gap-4 rounded-xl border bg-card p-5 md:grid-cols-[1fr_18rem]">
+    <article className="grid gap-4 rounded-card border bg-card shadow-card p-5 md:grid-cols-[1fr_18rem]">
       <div className="grid content-start gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{item.venueName ? "Existing listing" : "New listing request"}</p>
@@ -98,7 +98,7 @@ function ClaimReview({ item, own, onDone }: { item: QueueItem; own: boolean; onD
           <dd>{when(item.createdAt)}</dd>
         </dl>
         {own ? (
-          <p className="rounded-lg bg-muted p-3 text-sm">This is your own claim. Another admin has to review it.</p>
+          <p className="rounded-2xl bg-muted p-3 text-sm">This is your own claim. Another admin has to review it.</p>
         ) : (
           <div className="grid gap-2">
             <Label htmlFor={`note-${item.id}`}>Note to the claimant (required to reject)</Label>
@@ -170,7 +170,7 @@ export function ApprovalsPage() {
       </header>
       {error && <p role="alert">{error}</p>}
       {items === null && !error && <p className="text-muted-foreground">Loading…</p>}
-      {items?.length === 0 && <p className="rounded-xl border border-dashed bg-card p-8 text-center text-muted-foreground">No claims waiting.</p>}
+      {items?.length === 0 && <p className="rounded-card border border-dashed bg-card shadow-card p-8 text-center text-muted-foreground">No claims waiting.</p>}
       {items?.map((item) => <ClaimReview key={item.id} item={item} own={item.profileId === session?.user.id} onDone={load} />)}
     </div>
   );

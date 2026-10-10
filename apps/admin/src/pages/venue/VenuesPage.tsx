@@ -9,7 +9,7 @@ export function VenuesPage() {
   return (
     <div className="grid max-w-2xl gap-6">
       <h1 className="font-display text-3xl font-bold">Your cafes</h1>
-      <ul className="divide-y rounded-xl border bg-card">
+      <ul className="divide-y overflow-hidden rounded-card border bg-card shadow-card">
         {owned.map((c) => (
           <li key={c.id}>
             <Link to={`/venue/${c.venueId}`} className="flex items-center gap-3 px-4 py-4 hover:bg-accent">

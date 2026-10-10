@@ -55,7 +55,7 @@ function ReplyBox({ review, onSaved }: { review: ReviewRow; onSaved: () => void 
 
   if (!editing && review.reply)
     return (
-      <div className="grid gap-2 rounded-lg bg-muted p-3 text-sm">
+      <div className="grid gap-2 rounded-2xl bg-muted p-3 text-sm">
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Your reply</p>
         <p className="whitespace-pre-line">{review.reply}</p>
         <div className="flex gap-2">
@@ -129,7 +129,7 @@ export function Reviews() {
       </div>
       <ul className="grid gap-3">
         {reviews?.map((r) => (
-          <li key={r.id} className="grid gap-3 rounded-xl border bg-card p-4">
+          <li key={r.id} className="grid gap-3 rounded-card border bg-card shadow-card p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="font-medium">{r.author}</p>
               <p className="flex items-center gap-2 text-xs text-muted-foreground">

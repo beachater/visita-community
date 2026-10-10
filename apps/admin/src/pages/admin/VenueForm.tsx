@@ -82,7 +82,7 @@ function AmenityEditor({ venue, onSaved }: { venue: AdminVenue; onSaved: () => v
   };
 
   return (
-    <section aria-labelledby="amen-h" className="grid gap-3 rounded-xl border bg-card p-5">
+    <section aria-labelledby="amen-h" className="grid gap-3 rounded-card border bg-card shadow-card p-5">
       <div>
         <h2 id="amen-h" className="text-lg font-semibold">
           Amenities
@@ -215,7 +215,7 @@ export function VenueForm() {
         )}
       </header>
 
-      <section aria-label="Details" className="grid gap-4 rounded-xl border bg-card p-5">
+      <section aria-label="Details" className="grid gap-4 rounded-card border bg-card shadow-card p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           {field("name", "Name")}
           {field("slug", "Slug (the /cafe/… address)")}

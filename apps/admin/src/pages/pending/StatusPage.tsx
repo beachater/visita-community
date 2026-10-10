@@ -31,7 +31,7 @@ function ClaimCard({ claim }: { claim: MyClaim }) {
   };
 
   return (
-    <article className="grid gap-3 rounded-xl border bg-card p-5">
+    <article className="grid gap-3 rounded-card border bg-card shadow-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-xl font-semibold">{name}</h2>
@@ -57,7 +57,7 @@ function ClaimCard({ claim }: { claim: MyClaim }) {
       </div>
 
       {claim.status === "pending" && !claim.hasProof && (
-        <div className="grid gap-2 rounded-lg bg-muted p-3 text-sm">
+        <div className="grid gap-2 rounded-2xl bg-muted p-3 text-sm">
           <p>We can't review this claim until it has proof: a business permit photo or a storefront selfie.</p>
           <Button variant="outline" size="sm" className="w-fit" disabled={busy} onClick={() => fileRef.current?.click()}>
             <ImagePlus /> {busy ? "Uploading…" : "Add proof"}
@@ -83,7 +83,7 @@ function ClaimCard({ claim }: { claim: MyClaim }) {
       )}
       {claim.status === "pending" && claim.hasProof && <p className="text-sm text-muted-foreground">Proof received. We'll review it soon.</p>}
       {claim.reviewNote && (
-        <p className="rounded-lg bg-muted p-3 text-sm">
+        <p className="rounded-2xl bg-muted p-3 text-sm">
           <span className="font-medium">Note from Visita: </span>
           {claim.reviewNote}
         </p>
