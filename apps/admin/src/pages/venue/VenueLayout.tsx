@@ -1,14 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useParams } from "react-router";
+import { Link, Outlet, useParams } from "react-router";
 import { ExternalLink } from "lucide-react";
 import type { MenuItem, VenueAmenities, VenueType, WeeklyHours } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
-import { cn } from "@visita/ui/utils";
 import { CONSUMER_URL, supabase } from "@/lib/supabase";
 
 // An approved owner's area for one venue (PRD 4.4): overview and occupancy,
 // the listing (menu, hours, amenities), events, and reviews. RLS decides what
-// loads; a venue that isn't theirs simply doesn't come back.
+// loads; a venue that isn't theirs simply doesn't come back. Its pages are
+// listed under the cafe in the sidebar (routes/nav.ts).
 
 export interface OwnedVenue {
   id: string;
@@ -35,14 +35,6 @@ export function useVenue(): VenueState {
   if (!ctx) throw new Error("useVenue must be used inside VenueLayout");
   return ctx;
 }
-
-const TABS = [
-  { to: "", label: "Overview", end: true },
-  { to: "listing", label: "Listing", end: false },
-  { to: "events", label: "Events", end: false },
-  { to: "reviews", label: "Reviews", end: false },
-  { to: "analytics", label: "Analytics", end: false },
-];
 
 export function VenueLayout() {
   const { venueId = "" } = useParams();
@@ -104,20 +96,6 @@ export function VenueLayout() {
             </Button>
           )}
         </header>
-        <nav aria-label="Manage this cafe" className="flex gap-1 overflow-x-auto rounded-full bg-accent/60 p-1">
-          {TABS.map((t) => (
-            <NavLink
-              key={t.label}
-              to={t.to}
-              end={t.end}
-              className={({ isActive }) =>
-                cn("inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-medium transition-colors", isActive ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:bg-card/60 hover:text-foreground")
-              }
-            >
-              {t.label}
-            </NavLink>
-          ))}
-        </nav>
         <Outlet />
       </div>
     </VenueContext.Provider>
