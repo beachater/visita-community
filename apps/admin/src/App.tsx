@@ -12,6 +12,7 @@ import { ClaimPage } from "@/pages/claim/ClaimPage";
 import { StatusPage } from "@/pages/pending/StatusPage";
 import { ApprovalsPage } from "@/pages/admin/approvals/ApprovalsPage";
 import { AmenityQueue } from "@/pages/admin/AmenityQueue";
+import { AmenityReports } from "@/pages/admin/AmenityReports";
 import { DemandQueue } from "@/pages/admin/DemandQueue";
 import { BillingList } from "@/pages/admin/billing/BillingList";
 import { VenueBilling } from "@/pages/admin/billing/VenueBilling";
@@ -133,6 +134,7 @@ export function App() {
             <Route path="admin/billing" element={<RequireAdmin><BillingList /></RequireAdmin>} />
             <Route path="admin/billing/:venueId" element={<RequireAdmin><VenueBilling /></RequireAdmin>} />
             <Route path="admin/amenities" element={<RequireAdmin><AmenityQueue /></RequireAdmin>} />
+            <Route path="admin/amenity-reports" element={<RequireAdmin><AmenityReports /></RequireAdmin>} />
             <Route path="admin/reviews" element={<RequireAdmin><Moderation /></RequireAdmin>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

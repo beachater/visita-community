@@ -685,5 +685,46 @@ do $$ begin assert (select count(*) from public.amenity_confirmations('aaaaaaaa-
 select pg_temp.pass('confirmations older than 90 days are excluded');
 reset role;
 
+-- 9. Admin review of visitor amenity reports: close every open dispute for
+-- one venue amenity at once, stamped with who closed it.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+insert into public.amenity_reports (venue_id, amenity_key, verdict, comment)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'dispute', 'Only 3 outlets now');
+select pg_temp.expect_error($q$select public.admin_resolve_amenity_reports('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'resolved', null)$q$, 'visitors cannot close amenity reports');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+insert into public.amenity_reports (venue_id, amenity_key, verdict)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'dispute');
+insert into public.amenity_reports (venue_id, amenity_key, verdict)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'wifi', 'dispute');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+select pg_temp.expect_error($q$select public.admin_resolve_amenity_reports('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'open', null)$q$, 'reports close as resolved or dismissed only');
+select pg_temp.expect_error($q$select public.admin_resolve_amenity_reports('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'resolved', repeat('x', 501))$q$, 'resolution notes have a 500 character limit');
+do $$
+declare n integer := public.admin_resolve_amenity_reports('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'resolved', '  Listing updated after a call  ');
+begin
+  assert n = 2, 'closes both open disputes';
+  assert (select count(*) from public.amenity_reports where amenity_key = 'power_outlets' and status = 'open') = 0;
+  assert (select count(*) from public.amenity_reports where amenity_key = 'power_outlets' and status = 'resolved' and resolved_by = '33333333-3333-3333-3333-333333333333' and resolved_at is not null and resolution_note = 'Listing updated after a call') = 2;
+  assert (select status from public.amenity_reports where amenity_key = 'wifi' and verdict = 'dispute') = 'open', 'other amenities untouched';
+  assert (select status from public.amenity_reports where amenity_key = 'wifi' and verdict = 'confirm') = 'open', 'confirmations untouched';
+end $$;
+select pg_temp.pass('admins close all open disputes for one amenity, and nothing else');
+do $$ begin
+  assert public.admin_resolve_amenity_reports('aaaaaaaa-0000-0000-0000-000000000001', 'wifi', 'dismissed', '') = 1;
+  assert (select resolution_note from public.amenity_reports where amenity_key = 'wifi' and verdict = 'dispute') is null, 'blank note stored as null';
+  assert public.admin_resolve_amenity_reports('aaaaaaaa-0000-0000-0000-000000000001', 'wifi', 'dismissed', null) = 0, 'nothing left to close';
+end $$;
+select pg_temp.pass('admins dismiss a report without a note');
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+select pg_temp.expect_error($q$select public.admin_resolve_amenity_reports('aaaaaaaa-0000-0000-0000-000000000001', 'wifi', 'resolved', null)$q$, 'signed-out visitors cannot close amenity reports');
+reset role;
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED

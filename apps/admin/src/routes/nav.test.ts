@@ -37,6 +37,6 @@ describe("navFor", () => {
   it("adds the admin tools for admins, last", () =>
     expect(labels(navFor({ isAdmin: true, claims: [] }, "/admin/venues"))).toEqual([
       ["Claims", ["My claims", "Claim a cafe"]],
-      ["Admin", ["Owner approvals", "Venues", "Demand queue", "Billing", "Amenity changes", "Reviews"]],
+      ["Admin", ["Owner approvals", "Venues", "Demand queue", "Billing", "Amenity changes", "Amenity reports", "Reviews"]],
     ]));
 });

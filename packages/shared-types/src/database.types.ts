@@ -1118,6 +1118,15 @@ export type Database = {
           venue_id: string
         }[]
       }
+      admin_resolve_amenity_reports: {
+        Args: {
+          p_amenity_key: string
+          p_note: string
+          p_status: Database["public"]["Enums"]["amenity_report_status"]
+          p_venue_id: string
+        }
+        Returns: number
+      }
       amenity_confirmations: {
         Args: { p_venue_id: string }
         Returns: {

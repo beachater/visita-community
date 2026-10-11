@@ -6,6 +6,7 @@ import {
   ClipboardList,
   CreditCard,
   Eye,
+  Flag,
   Coffee,
   FileText,
   LayoutDashboard,
@@ -38,6 +39,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   venues: Store,
   demand: Eye,
   amenities: ListChecks,
+  reports: Flag,
   moderation: MessageSquareWarning,
 };
 
