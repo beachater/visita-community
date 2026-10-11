@@ -35,7 +35,7 @@ begin
   select
     v.id,
     v.name,
-    v.slug,
+    v.slug::text,
     v.address,
     v.is_published,
     v.splat_url is not null,
