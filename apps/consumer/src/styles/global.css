@@ -10,6 +10,19 @@
   --map-overlay-inset: 1.5rem;
   --map-account-inset: clamp(3rem, 8vw, 9rem);
 }
+
+/* The active marker rises above adjacent MapLibre markers when pins overlap. */
+.maplibregl-marker:has(.visita-venue-pin[aria-pressed="true"]) {
+  z-index: 2;
+}
+
+/* Keep scan download status clear of the mobile walkthrough's cafe card. */
+@media (max-width: 767px) {
+  .walkthrough-detail-pill {
+    bottom: auto !important;
+    top: max(4.5rem, calc(env(safe-area-inset-top) + 4rem));
+  }
+}
 .map-home-header {
   padding-left: calc(var(--map-overlay-inset) + env(safe-area-inset-left, 0px));
   padding-right: calc(var(--map-account-inset) + env(safe-area-inset-right, 0px));

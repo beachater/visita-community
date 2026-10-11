@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visita · Selected map pin study</title>
+  <style>
+    :root { --navy:#042c53; --ocean:#185fa5; --sky:#378add; --mist:#b5d4f4; --amber:#ef9f27; --cloud:#e6f1fb; --ink:#11395b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#e9f2f8; color:var(--navy); font:14px/1.45 "DM Sans",Arial,sans-serif; }
+    button { font:inherit; cursor:pointer; }
+    .page { max-width:1440px; min-height:100vh; margin:auto; display:grid; grid-template-columns:minmax(320px,1fr) 340px; box-shadow:0 20px 80px #042c5318; }
+    .map { position:relative; min-height:760px; overflow:hidden; background:#e4e4e1; isolation:isolate; }
+    .map-art { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .map::after { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(180deg,#d4e8f447 0,transparent 25%,transparent 72%,#06314a1b 100%); }
+    .map-ui { position:absolute; z-index:2; top:24px; left:24px; right:24px; display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
+    .search { width:min(440px,75%); min-height:56px; display:flex; gap:15px; align-items:center; padding:0 18px; border:1px solid #ffffff; border-radius:18px; background:#f7fbfeeF; box-shadow:0 8px 26px #163d5a2d; }
+    .brand { font:700 24px Georgia,serif; letter-spacing:-.04em; }
+    .divider { width:1px; height:27px; background:#bad6e8; }
+    .search-copy { color:#55718b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .label { padding:10px 14px; border-radius:999px; background:#042c53e9; color:var(--cloud); font-size:11px; font-weight:700; letter-spacing:.11em; text-transform:uppercase; box-shadow:0 5px 18px #092d467a; }
+    .pin { position:absolute; z-index:1; width:48px; height:52px; padding:4px 8px 8px; border:0; background:none; transform:translate(-50%,-100%); transition:transform .2s,filter .2s; }
+    .pin svg { display:block; width:32px; height:40px; overflow:visible; filter:drop-shadow(0 3px 4px #082b4c77); }
+    .pin .halo { opacity:0; stroke:var(--cloud); stroke-width:7; fill:none; stroke-linejoin:round; }
+    .pin .body { fill:var(--amber); stroke:var(--navy); stroke-width:2; stroke-linejoin:round; }
+    .pin[data-scanned="false"] .body { fill:white; }
+    .pin .center { fill:var(--navy); }
+    .pin[aria-pressed="true"] { z-index:3; transform:translate(-50%,-100%) scale(1.25); }
+    .pin[aria-pressed="true"] svg { filter:drop-shadow(0 5px 8px #042c5399); }
+    .pin[aria-pressed="true"] .halo { opacity:1; }
+    .pin:focus-visible { outline:3px solid var(--sky); outline-offset:2px; border-radius:18px; }
+    .p1 { left:34%; top:43%; } .p2 { left:57%; top:56%; } .p3 { left:68%; top:32%; } .p4 { left:78%; top:69%; } .p5 { left:46%; top:72%; }
+    .selected-card { position:absolute; z-index:2; left:24px; bottom:24px; width:min(375px,calc(100% - 48px)); padding:20px; border:1px solid #fff; border-radius:21px; background:#f9fcffee; box-shadow:0 12px 35px #15395147; backdrop-filter:blur(14px); }
+    .selected-card .eyebrow { margin:0 0 6px; color:var(--ocean); text-transform:uppercase; letter-spacing:.11em; font-size:11px; font-weight:700; }
+    .selected-card h2 { margin:0 0 6px; font:700 24px/1.2 Georgia,serif; }
+    .selected-card p:last-child { margin:0; color:#526e86; }
+    aside { padding:34px 28px; background:#f8fbfe; border-left:1px solid #cadeea; }
+    .eyebrow { margin:0 0 10px; color:var(--ocean); font-size:11px; letter-spacing:.14em; font-weight:800; text-transform:uppercase; }
+    h1 { margin:0; max-width:290px; font:700 34px/1.1 Georgia,serif; letter-spacing:-.025em; }
+    .lead { margin:16px 0 25px; color:#547089; line-height:1.6; }
+    .compare { display:grid; gap:10px; }
+    .sample { display:flex; align-items:center; gap:14px; min-height:97px; padding:13px; border:1px solid #c8dce9; border-radius:16px; background:#e5e5e2; }
+    .sample .pin { position:relative; left:auto; top:auto; flex:none; transform:none; pointer-events:none; }
+    .sample .pin.current { transform:scale(1.25); }
+    .sample .pin.proposed { transform:scale(1.25); }
+    .sample .pin.current .halo { opacity:0; }
+    .sample strong { display:block; }
+    .sample small { display:block; margin-top:3px; color:#526e86; line-height:1.35; }
+    .rules { margin-top:23px; padding-top:19px; border-top:1px solid #c8dce9; }
+    .rules h2 { margin:0 0 10px; font:700 19px Georgia,serif; }
+    .rules ul { padding-left:18px; margin:0; color:#47657e; line-height:1.6; }
+    .rules li+li { margin-top:7px; }
+    .note { margin-top:23px; padding:13px 14px; border-radius:13px; background:#e5f0fa; color:#3c5c77; font-size:12px; }
+    @media(max-width:850px) { .page { display:flex; flex-direction:column; } .map { min-height:min(690px,78dvh); } aside { border-left:0; border-top:1px solid #cadeea; } .map-ui { top:16px; left:16px; right:16px; } .selected-card { left:16px; bottom:16px; width:calc(100% - 32px); } .label { display:none; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="map" aria-label="Illustrative Cagayan de Oro map with interactive pins">
+      <svg class="map-art" viewBox="0 0 1000 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <rect width="1000" height="760" fill="#e4e3df"/>
+        <path d="M0 55 C182 75 230 30 362 72 S608 23 742 84 S923 80 1000 56 V0 H0Z" fill="#83d9e6"/>
+        <path d="M792 0 C695 98 696 174 633 239 C573 301 523 274 486 349 C451 418 530 486 448 570 C397 625 405 705 367 760" fill="none" stroke="#80d7e7" stroke-width="67"/>
+        <path d="M792 0 C695 98 696 174 633 239 C573 301 523 274 486 349 C451 418 530 486 448 570 C397 625 405 705 367 760" fill="none" stroke="#b5ebed" stroke-width="4"/>
+        <path d="M-40 177 C149 145 296 154 510 186 S825 241 1040 184 M-50 321 C159 288 260 309 447 291 S766 324 1045 290 M-20 473 C185 431 289 456 466 424 S770 449 1030 421 M-20 636 C187 597 350 609 526 573 S770 617 1040 551" fill="none" stroke="#fafafa" stroke-width="8"/>
+        <path d="M50 0 L117 760 M231 0 L266 760 M358 0 L345 760 M882 0 L814 760 M965 0 L953 760 M0 122 L1000 367 M0 520 L1000 690" fill="none" stroke="#f9faf8" stroke-width="5"/>
+        <path d="M0 234 L1000 150 M0 397 L1000 353 M0 708 L1000 648 M72 0 L206 760 M468 0 L559 760 M690 0 L732 760" fill="none" stroke="#f9faf8" stroke-width="2.5" opacity=".9"/>
+        <path d="M61 205l103-9 19 64-89 14z M244 504l113-17 9 72-118 14z M773 451l88-8 15 64-94 11z M753 103l82 8-5 73-89-8z" fill="#a6d9b9"/>
+        <g fill="#8495a0" font-family="Arial,sans-serif" font-size="18"><text x="86" y="354">Patag</text><text x="265" y="566">Youngsville</text><text x="690" y="350">Cagayan de Oro</text><text x="798" y="611">Nazareth</text><text x="609" y="115">Opol</text></g>
+      </svg>
+      <div class="map-ui"><div class="search"><span class="brand">Visita</span><span class="divider"></span><span class="search-copy">Search cafes in Cagayan de Oro</span></div><span class="label">Pin selection study</span></div>
+      <div id="pins"></div>
+      <div class="selected-card" aria-live="polite"><p class="eyebrow" id="card-status">Scanned cafe</p><h2 id="card-title">Sonny's Coffee + Diner</h2><p>Selected pin keeps its venue color and gains a Cloud halo.</p></div>
+    </section>
+    <aside>
+      <p class="eyebrow">Visita · map UI study</p>
+      <h1>Make selection unmistakable.</h1>
+      <p class="lead">Tap any pin on the map. Amber still means scanned; the Cloud edge and deeper navy shadow show which cafe is selected.</p>
+      <div class="compare" aria-label="Selected pin comparison">
+        <div class="sample"><span id="current"></span><span><strong>Current</strong><small>Size increase only. Easy to miss among nearby pins.</small></span></div>
+        <div class="sample"><span id="proposed"></span><span><strong>Proposed</strong><small>Same amber fill, with a Cloud outline and stronger depth.</small></span></div>
+      </div>
+      <div class="rules"><h2>Brand fit</h2><ul><li>Amber remains the scanned signal.</li><li>Cloud creates separation from the basemap.</li><li>Deep Navy gives the selected pin a crisp edge and shadow.</li><li>Unscanned white pins receive the same selected treatment.</li></ul></div>
+      <p class="note">Illustrative map only. This file changes no app code or venue data.</p>
+    </aside>
+  </main>
+  <script>
+    const cafes = [
+      { name:"Lito's Meals and Cafe", scanned:true, place:"p1" },
+      { name:"Sonny's Coffee + Diner", scanned:true, place:"p2" },
+      { name:"Coastal Coffee", scanned:false, place:"p3" },
+      { name:"Carmen Cafe", scanned:true, place:"p4" },
+      { name:"Riverbend", scanned:false, place:"p5" }
+    ];
+    const shape = '<path class="halo" d="M14 35s11-11.2 11-20.5C25 7.6 20.1 3 14 3S3 7.6 3 14.5C3 23.8 14 35 14 35z"/><path class="body" d="M14 35s11-11.2 11-20.5C25 7.6 20.1 3 14 3S3 7.6 3 14.5C3 23.8 14 35 14 35z"/><circle class="center" cx="14" cy="14.5" r="4"/>';
+    const svg = `<svg viewBox="0 0 28 36" aria-hidden="true">${shape}</svg>`;
+    const pins = document.getElementById('pins');
+    cafes.forEach((cafe, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `pin ${cafe.place}`;
+      button.dataset.scanned = String(cafe.scanned);
+      button.setAttribute('aria-label', `${cafe.name}, ${cafe.scanned ? 'scanned' : 'not scanned yet'}`);
+      button.setAttribute('aria-pressed', String(index === 1));
+      button.innerHTML = svg;
+      button.addEventListener('click', () => {
+        pins.querySelectorAll('.pin').forEach(pin => pin.setAttribute('aria-pressed', String(pin === button)));
+        document.getElementById('card-title').textContent = cafe.name;
+        document.getElementById('card-status').textContent = cafe.scanned ? 'Scanned cafe' : 'Cafe listing';
+      });
+      pins.append(button);
+    });
+    document.getElementById('current').innerHTML = `<span class="pin current" data-scanned="true">${svg}</span>`;
+    document.getElementById('proposed').innerHTML = `<span class="pin proposed" data-scanned="true" aria-pressed="true">${svg}</span>`;
+  </script>
+</body>
+</html>

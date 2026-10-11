@@ -2,7 +2,7 @@ import { track } from "@/lib/analytics/track";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { toast } from "sonner";
-import { Heart, Share2, X } from "lucide-react";
+import { BadgeCheck, ChevronUp, Heart, Share2, X } from "lucide-react";
 import type { AmenityDefinition } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
 import { Toaster } from "@visita/ui/sonner";
@@ -12,10 +12,12 @@ import type { DeviceProfile } from "@/lib/splat/device";
 import { splatSrc } from "@/lib/splat/source";
 import { currentPosition, formatDistance, haversineMeters, locationAlreadyAllowed } from "@/lib/venue/distance";
 import { formatPhp } from "@/lib/venue/scan";
+import { isOpenAt } from "@/lib/venue/hours";
 import type { WalkthroughCafe } from "@/lib/venue/types";
 import { $saved, recordRecent, toggleSaved } from "@/lib/visitor/stores";
 import { useDirections } from "../directions/useDirections";
 import { InfoPanel } from "./InfoPanel";
+import { MobileInfoSheet } from "./MobileInfoSheet";
 import { SplatViewer } from "./SplatViewer";
 
 // PRD 4.2 in one screen: the 3D walkthrough full-screen, a glass info panel
@@ -36,16 +38,33 @@ const glassButton =
 export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props) {
   const saved = useStore($saved).includes(cafe.slug);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches && new URLSearchParams(window.location.search).get("walkthrough") === "1",
+  );
+  const [now, setNow] = useState(() => new Date());
   const [distance, setDistance] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const hasCoords = cafe.lat !== null && cafe.lng !== null;
   const shareUrl = `${location.origin}/cafe/${cafe.slug}`;
+  const venueOpen = isOpenAt(cafe.hours, now);
 
   useEffect(() => {
     recordRecent(cafe.slug);
     closeRef.current?.focus();
   }, [cafe.slug]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const closeSheetOnDesktop = () => { if (media.matches) setInfoOpen(false); };
+    media.addEventListener("change", closeSheetOnDesktop);
+    return () => media.removeEventListener("change", closeSheetOnDesktop);
+  }, []);
 
   // Show distance without prompting if location was already allowed.
   const measure = async (prompt: boolean) => {
@@ -101,7 +120,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
       aria-label={`Walkthrough of ${cafe.name}`}
       className="fixed inset-0 z-50 bg-scan"
       onKeyDown={(e) => {
-        if (e.key === "Escape" && !menuOpen && !directions.isOpen) onClose();
+        if (e.key === "Escape" && !infoOpen && !menuOpen && !directions.isOpen) onClose();
       }}
     >
       <Toaster position="top-center" />
@@ -109,7 +128,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
       <SplatViewer src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} />
 
       {/* Controls float above the scan; the gaps between them stay touchable for looking around. */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-3" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
+      <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-4 md:p-3" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
         <div className="flex items-center justify-between gap-2">
           <Button ref={closeRef} size="icon" className={cn(glassButton, "pointer-events-auto rounded-full")} aria-label="Close walkthrough" onClick={onClose}>
             <X className="size-5" />
@@ -126,7 +145,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
 
         {/* PRD: the panel sits on the left. It caps its height so the lower
             screen stays free for the walking joystick. */}
-        <div className="flex max-h-[calc(100%-9rem)] w-[min(22rem,100%)] min-h-0">
+        <div className="hidden max-h-[calc(100%-9rem)] w-[min(22rem,100%)] min-h-0 md:flex">
           <InfoPanel
             cafe={cafe}
             definitions={definitions}
@@ -137,6 +156,35 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
           />
         </div>
       </div>
+
+      <button
+        type="button"
+        className="glass-dark absolute right-4 left-4 z-10 flex min-h-[66px] items-center gap-3 rounded-[1.2rem] border border-white/25 px-4 py-2 text-left text-glass-foreground shadow-[0_10px_30px_rgba(0,20,36,0.35)] backdrop-blur-xl md:hidden"
+        style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
+        aria-label={`Show details about ${cafe.name}`}
+        aria-expanded={infoOpen}
+        onClick={() => setInfoOpen(true)}
+      >
+        <span className="min-w-0 flex-1">
+          <strong className="block truncate font-display text-base leading-tight">{cafe.name}</strong>
+          <span className="mt-1 flex items-center gap-1 text-xs text-glass-foreground/80">
+            <BadgeCheck className="size-3.5 shrink-0 text-verified" aria-hidden="true" />
+            <span className="truncate">Scanned{venueOpen === null ? "" : venueOpen ? " · Open now" : " · Closed"} · Tap for details</span>
+          </span>
+        </span>
+        <ChevronUp className="size-5 shrink-0" aria-hidden="true" />
+      </button>
+
+      <MobileInfoSheet
+        cafe={cafe}
+        definitions={definitions}
+        open={infoOpen}
+        onOpenChange={setInfoOpen}
+        distance={distance}
+        onRequestDistance={hasCoords ? () => void measure(true) : null}
+        onDirections={() => { setInfoOpen(false); onDirections(); }}
+        onOpenMenu={() => { setInfoOpen(false); setMenuOpen(true); }}
+      />
 
       <BottomSheet open={menuOpen} onOpenChange={setMenuOpen} title="Menu" description={cafe.name}>
         {sections.map((section) => (

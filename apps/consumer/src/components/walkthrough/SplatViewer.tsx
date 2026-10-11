@@ -405,6 +405,7 @@ function DetailPill({ detail, onRetry }: { detail: NonNullable<DetailState>; onR
     <div
       role="status"
       aria-live="polite"
+      className="walkthrough-detail-pill"
       style={{
         position: "absolute",
         left: "50%",

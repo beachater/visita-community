@@ -12,9 +12,10 @@ interface Props {
   venueId: string;
   slug: string;
   tone?: "page" | "glass";
+  returnToWalkthrough?: boolean;
 }
 
-export function AmenityList({ rows, venueId, slug, tone = "page" }: Props) {
+export function AmenityList({ rows, venueId, slug, tone = "page", returnToWalkthrough = tone === "glass" }: Props) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [openKeys, setOpenKeys] = useState<string[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
@@ -56,7 +57,7 @@ export function AmenityList({ rows, venueId, slug, tone = "page" }: Props) {
         if (verdict === "dispute") {
           try { sessionStorage.setItem(`visita:amenity-note:${venueId}:${key}`, comment); } catch { /* Storage may be blocked. */ }
         }
-        const next = amenityReturnPath(slug, key, glass);
+        const next = amenityReturnPath(slug, key, returnToWalkthrough);
         location.assign(`/auth/login?next=${encodeURIComponent(next)}`);
         return;
       }

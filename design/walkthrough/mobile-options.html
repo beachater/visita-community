@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Visita · Mobile walkthrough concepts</title>
+  <style>
+    :root { font: 15px/1.4 Arial, sans-serif; color: #042c53; background: #e6f1fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #b5d4f4; outline-offset: 3px; }
+    [hidden] { display: none !important; }
+    svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    .page { max-width: 1180px; margin: auto; padding: 28px 24px 48px; }
+    .heading { margin-bottom: 24px; }
+    .eyebrow { margin: 0 0 7px; color: #185fa5; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0 0 7px; font: 700 clamp(26px, 3.4vw, 40px)/1.12 Georgia, serif; }
+    .heading > p:last-child { max-width: 680px; margin: 0; color: #486680; }
+    .workspace { display: grid; grid-template-columns: minmax(250px, 1fr) 390px; align-items: start; gap: clamp(24px, 5vw, 90px); }
+    .choices { display: grid; gap: 12px; }
+    .choice { width: 100%; min-height: 100px; display: grid; grid-template-columns: 36px 1fr; align-items: start; gap: 14px; padding: 18px; border: 1px solid #b5d4f4; border-radius: 20px; background: #fff; color: #042c53; text-align: left; box-shadow: 0 8px 30px #042c530c; }
+    .choice[aria-selected="true"] { border-color: #185fa5; box-shadow: 0 0 0 2px #185fa5, 0 12px 30px #042c5316; }
+    .choice .letter { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; background: #e6f1fb; color: #185fa5; font-weight: 700; }
+    .choice[aria-selected="true"] .letter { background: #185fa5; color: #fff; }
+    .choice strong, .choice small { display: block; }
+    .choice strong { margin-bottom: 5px; font-size: 16px; }
+    .choice small { color: #587188; line-height: 1.45; }
+    .notes { padding: 18px 20px; border: 1px solid #b5d4f4; border-radius: 18px; background: #f6fbff; font-size: 13px; }
+    .notes strong { display: block; margin-bottom: 6px; }
+    .notes p { margin: 0; color: #486680; }
+    .notes p + p { margin-top: 9px; }
+    .phone { position: relative; width: 390px; height: 780px; overflow: hidden; isolation: isolate; border: 8px solid #152137; border-radius: 48px; background: #0a2842; box-shadow: 0 0 0 2px #cbbfd1, 0 24px 65px #042c5340; }
+    .phone::before { content: ""; position: absolute; z-index: 30; top: 7px; left: 50%; transform: translateX(-50%); width: 102px; height: 22px; border-radius: 18px; background: #020b14; }
+    .status { position: absolute; z-index: 22; inset: 0 0 auto; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 4px 31px 0; background: #042c53; color: #fff; font-size: 12px; font-weight: 700; }
+    .status .right { letter-spacing: 1px; }
+    .scene { position: absolute; inset: 44px 0 99px; overflow: hidden; background: #1d2a21; }
+    .scene-image { position: absolute; inset: -3%; width: 106%; height: 106%; object-fit: cover; object-position: 50% 48%; transition: transform .55s ease, filter .3s ease; transform: translate(var(--pan-x, 0px), var(--pan-y, 0px)) scale(1.05); }
+    .scene::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, #051b27a1, transparent 21%, transparent 66%, #031b2d6b); }
+    .hud { position: absolute; z-index: 6; inset: 56px 12px 109px; pointer-events: none; }
+    .hud button, .hud .joystick { pointer-events: auto; }
+    .top-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .action-pair { display: flex; gap: 8px; }
+    .round { display: grid; place-items: center; width: 46px; height: 46px; padding: 0; border: 1px solid #d9effa75; border-radius: 50%; background: #042c53b8; color: #fff; box-shadow: 0 4px 14px #001a2580; backdrop-filter: blur(12px); }
+    .round svg { width: 21px; height: 21px; }
+    .round.active svg { fill: #fff; }
+    .top-actions .close { border-color: #7dcbe3; background: #053e5ad9; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; background: #ef9f27; color: #042c53; font-size: 10px; font-weight: 700; }
+    .status-badge { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 8px; border: 1px solid #ffffff54; border-radius: 999px; color: #ecf7fa; font-size: 10px; }
+    .variant { display: none; }
+    .phone[data-option="a"] .variant-a, .phone[data-option="b"] .variant-b, .phone[data-option="c"] .variant-c, .phone[data-option="d"] .variant-d { display: block; }
+    .name-chip { position: absolute; top: 59px; left: 0; max-width: calc(100% - 8px); min-height: 44px; display: flex; align-items: center; gap: 7px; padding: 7px 12px; border: 1px solid #dcf5f86e; border-radius: 999px; background: #042c53cf; color: #fff; box-shadow: 0 6px 20px #00192575; backdrop-filter: blur(16px); text-align: left; }
+    .name-chip strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; }
+    .name-chip svg { width: 15px; height: 15px; }
+    .name-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: #ef9f27; flex: none; }
+    .hint { position: absolute; left: 0; right: 0; bottom: 91px; margin: 0; color: #fff; font-size: 11px; text-align: center; text-shadow: 0 2px 8px #001925; transition: opacity .25s; }
+    .quiet .hint, .quiet .name-chip, .quiet .navigation { opacity: .12; }
+    .peek { position: absolute; bottom: 65px; left: 0; right: 0; min-height: 122px; padding: 13px 16px; border: 1px solid #d8eaf076; border-radius: 20px; background: linear-gradient(135deg, #042c53e8, #355366d9); color: #fff; box-shadow: 0 10px 30px #001a2899; backdrop-filter: blur(18px); }
+    .peek-top { width: 100%; min-height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0; border: 0; background: transparent; color: #fff; text-align: left; }
+    .peek-title strong { display: block; font: 700 18px/1.1 Georgia, serif; }
+    .peek-title small { display: block; margin-top: 5px; color: #d5e9f0; font-size: 11px; }
+    .peek-top svg { width: 18px; height: 18px; }
+    .peek-stats { display: flex; gap: 8px; margin-top: 9px; padding-top: 10px; border-top: 1px solid #ffffff3b; }
+    .peek-stats span { flex: 1; min-width: 0; font-size: 11px; }
+    .peek-stats strong { display: block; font-size: 12px; }
+    .hybrid-peek { position: absolute; bottom: 4px; left: 0; right: 0; width: 100%; min-height: 66px; display: flex; align-items: center; gap: 9px; padding: 9px 14px; border: 1px solid #d8eaf076; border-radius: 19px; background: linear-gradient(125deg, #042c53ed, #34586edb); color: #fff; box-shadow: 0 8px 28px #001a2899; backdrop-filter: blur(18px); text-align: left; }
+    .hybrid-peek .peek-copy { min-width: 0; flex: 1; }
+    .hybrid-peek strong { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 16px/1.2 Georgia, serif; }
+    .hybrid-peek small { display: block; margin-top: 4px; color: #d9eaf2; font-size: 11px; }
+    .hybrid-peek .scan-dot { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #ef9f27; vertical-align: 1px; }
+    .hybrid-peek svg { width: 18px; height: 18px; transform: rotate(180deg); }
+    .compact-card { position: absolute; top: 59px; left: 0; right: 0; border: 1px solid #d8eaf076; border-radius: 17px; background: linear-gradient(130deg, #042c53e5, #355366d1); color: #fff; box-shadow: 0 10px 28px #001a2888; backdrop-filter: blur(18px); overflow: hidden; }
+    .compact-head { width: 100%; min-height: 54px; display: flex; align-items: center; gap: 10px; padding: 8px 14px; border: 0; background: transparent; color: #fff; text-align: left; }
+    .compact-head strong { flex: 1; font: 700 17px/1.1 Georgia, serif; }
+    .compact-head svg { width: 18px; height: 18px; transition: transform .2s; }
+    .compact-card.expanded .compact-head svg { transform: rotate(180deg); }
+    .compact-body { display: none; padding: 0 14px 14px; }
+    .compact-card.expanded .compact-body { display: block; }
+    .compact-body .badges { display: flex; gap: 6px; margin: 2px 0 11px; }
+    .compact-body .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding-top: 10px; border-top: 1px solid #ffffff38; }
+    .stats small { display: block; color: #c9dbe7; font-size: 9px; text-transform: uppercase; }
+    .stats strong { display: block; margin-top: 3px; font-size: 11px; }
+    .full-details { width: 100%; min-height: 44px; margin-top: 10px; border: 1px solid #ffffff65; border-radius: 11px; background: #ffffff1a; color: #fff; font-size: 12px; font-weight: 700; }
+    .navigation { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; gap: 12px; height: 50px; padding: 0 8px; border: 1px solid #ffffff31; border-radius: 999px; background: #061e2abf; box-shadow: 0 6px 20px #00192599; backdrop-filter: blur(14px); transition: opacity .25s; }
+    .navigation button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #fff; }
+    .navigation button:active { background: #ffffff30; }
+    .navigation svg { width: 19px; height: 19px; }
+    .navigation .center { width: 34px; height: 34px; border: 1px solid #ffffff4a; border-radius: 50%; background: #ffffff1a; }
+    .phone[data-option="d"] .navigation { bottom: 81px; }
+    .phone[data-option="d"].quiet .navigation, .phone[data-option="d"].quiet .action-pair { opacity: .16; }
+    .browser { position: absolute; z-index: 15; inset: auto 0 0; height: 99px; padding: 9px 11px 7px; background: #292929; color: #f4f4f4; }
+    .address { height: 38px; display: flex; align-items: center; justify-content: space-between; padding: 0 13px; border-radius: 9px; background: #505050; font-size: 12px; }
+    .address span:first-child { font-size: 15px; }
+    .browser-tools { height: 44px; display: flex; align-items: center; justify-content: space-around; font-size: 22px; font-weight: 300; }
+    .home-indicator { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); width: 100px; height: 4px; border-radius: 8px; background: #090909; }
+    .sheet-scrim { position: absolute; z-index: 19; inset: 44px 0 99px; border: 0; background: #031b2d8a; opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .sheet-scrim.show { opacity: 1; pointer-events: auto; }
+    .sheet { position: absolute; z-index: 20; left: 0; right: 0; bottom: 99px; max-height: 68%; padding: 8px 18px 20px; border-radius: 25px 25px 0 0; background: #fff; color: #042c53; box-shadow: 0 -18px 45px #00192580; overflow-y: auto; transform: translateY(calc(100% + 110px)); transition: transform .25s; }
+    .sheet.show { transform: translateY(0); }
+    .handle { width: 42px; height: 5px; margin: 0 auto 14px; border-radius: 9px; background: #b5d4f4; }
+    .sheet-head { display: flex; align-items: start; gap: 8px; }
+    .sheet h2 { flex: 1; margin: 0 0 4px; font: 700 23px/1.14 Georgia, serif; }
+    .sheet-head button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: #e6f1fb; color: #042c53; }
+    .sheet .sub { margin: 0 0 16px; color: #486680; font-size: 12px; }
+    .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 20px; }
+    .sheet-actions button { min-height: 48px; border: 1px solid #b5d4f4; border-radius: 14px; background: #fff; color: #185fa5; font-weight: 700; }
+    .sheet-actions button:first-child { border-color: #185fa5; background: #185fa5; color: #fff; }
+    .sheet h3 { margin: 17px 0 9px; font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: #185fa5; }
+    .amenities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .amenities div { padding: 10px; border-radius: 12px; background: #e6f1fb; }
+    .amenities small { display: block; color: #486680; font-size: 9px; text-transform: uppercase; }
+    .amenities strong { display: block; margin-top: 4px; font-size: 12px; }
+    .sheet-links { display: grid; gap: 6px; }
+    .sheet-links button { width: 100%; min-height: 45px; padding: 0 5px; display: flex; align-items: center; justify-content: space-between; border: 0; border-bottom: 1px solid #e6f1fb; background: #fff; color: #042c53; text-align: left; }
+    .toast { position: absolute; z-index: 25; left: 24px; right: 24px; bottom: 130px; padding: 12px 16px; border-radius: 13px; background: #042c53; color: #fff; text-align: center; box-shadow: 0 6px 22px #00192599; font-size: 12px; }
+    .closed-screen { position: absolute; z-index: 21; inset: 44px 0 99px; display: grid; place-items: center; background: #042c53e6; color: #fff; text-align: center; }
+    .closed-screen > div { max-width: 230px; }
+    .closed-screen h2 { margin: 0 0 8px; font: 700 26px Georgia, serif; }
+    .closed-screen p { margin: 0 0 18px; font-size: 13px; color: #d8eaf3; }
+    .closed-screen button { min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: #fff; color: #042c53; font-weight: 700; }
+    @media (max-width: 800px) {
+      .page { padding: 14px 14px 30px; }
+      .heading { margin-bottom: 12px; }
+      .heading h1 { font-size: 24px; }
+      .heading > p:last-child { font-size: 12px; }
+      .workspace { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .choices { width: 100%; max-width: 480px; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+      .choice { min-height: 52px; display: block; padding: 9px; border-radius: 13px; text-align: center; }
+      .choice .letter { display: none; }
+      .choice strong { margin: 0; font-size: 11px; }
+      .choice small, .notes { display: none; }
+    }
+    @media (max-width: 420px) {
+      .page { padding: 0; }
+      .heading { padding: 12px 16px 6px; margin: 0; background: #e6f1fb; }
+      .heading .eyebrow { display: none; }
+      .heading h1 { margin: 0; font-size: 19px; }
+      .heading > p:last-child { display: none; }
+      .choices { padding: 7px 8px; background: #e6f1fb; }
+      .phone { width: 100%; height: calc(100dvh - 92px); min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .phone::before { top: 5px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="x" viewBox="0 0 24 24"><path d="M5 5 19 19M19 5 5 19"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M20.5 8.5c0 4.2-8.5 10-8.5 10s-8.5-5.8-8.5-10a4.4 4.4 0 0 1 8.5-1.5 4.4 4.4 0 0 1 8.5 1.5Z"/></symbol>
+    <symbol id="share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><path d="m7 11 9-5M7 13l9 5"/></symbol>
+    <symbol id="chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+    <symbol id="right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="forward" viewBox="0 0 24 24"><path d="m5 15 7-8 7 8M12 8v11"/></symbol>
+    <symbol id="reset" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></symbol>
+  </svg>
+
+  <main class="page">
+    <header class="heading">
+      <p class="eyebrow">Visita · walkthrough study</p>
+      <h1>Give the room more space</h1>
+      <p>Four mobile layouts over the same illustrative cafe scene. The new hybrid combines the bottom peek with a clearer view of the room. This is a UI mock, not a live scan.</p>
+    </header>
+
+    <div class="workspace">
+      <div class="choices" role="tablist" aria-label="Mobile walkthrough options">
+        <button class="choice" type="button" role="tab" id="tab-a" aria-controls="phone" aria-selected="false" data-select="a"><span class="letter">A</span><span><strong>A · Minimal overlay</strong><small>Small venue chip, clear room, full details in a sheet. The scan stays in focus.</small></span></button>
+        <button class="choice" type="button" role="tab" id="tab-b" aria-controls="phone" aria-selected="false" data-select="b"><span class="letter">B</span><span><strong>B · Bottom peek</strong><small>Name and essentials stay visible near the bottom; tap to expand.</small></span></button>
+        <button class="choice" type="button" role="tab" id="tab-c" aria-controls="phone" aria-selected="false" data-select="c"><span class="letter">C</span><span><strong>C · Collapsible top</strong><small>A quieter version of today’s panel, one row until expanded.</small></span></button>
+        <button class="choice" type="button" role="tab" id="tab-d" aria-controls="phone" aria-selected="true" data-select="d"><span class="letter">D</span><span><strong>D · Hybrid peek</strong><small>One slim cafe card at the bottom, essential actions at the top, and the room open in between.</small></span></button>
+        <div class="notes"><strong>What to compare</strong><p>Look at how much of the seating and floor remains visible, and whether the cafe details are easy to find.</p><p>The movement controls stay above the simulated Safari toolbar in every option. All product buttons are interactive in this mock.</p></div>
+      </div>
+
+      <div class="phone" id="phone" data-option="d" role="tabpanel" aria-labelledby="tab-d" aria-label="Mobile walkthrough preview">
+        <div class="status" aria-hidden="true"><span>3:25 AM</span><span class="right">▮▮▮  ◕  ▰</span></div>
+        <div class="scene" id="scene"><img class="scene-image" src="./cafe-scene.png" alt="Illustrative view of a cafe seating area"></div>
+
+        <div class="hud" id="hud">
+          <div class="top-actions">
+            <button class="round close" type="button" id="close-walk" aria-label="Close walkthrough"><svg><use href="#x"/></svg></button>
+            <div class="action-pair">
+              <button class="round" type="button" id="save" aria-label="Save cafe" aria-pressed="false"><svg><use href="#heart"/></svg></button>
+              <button class="round" type="button" id="share-button" aria-label="Share cafe"><svg><use href="#share"/></svg></button>
+            </div>
+          </div>
+
+          <div class="variant variant-a">
+            <button class="name-chip" type="button" data-open-details aria-label="About Sonny's Coffee and Diner"><span class="dot"></span><strong>Sonny's Coffee + Diner</strong><svg><use href="#chevron"/></svg></button>
+            <p class="hint">Tap the room to hide or show controls</p>
+          </div>
+
+          <div class="variant variant-b">
+            <div class="peek">
+              <button type="button" class="peek-top" data-open-details aria-label="Open cafe details"><span class="peek-title"><strong>Sonny's Coffee + Diner</strong><small>Scanned · Closed now</small></span><svg><use href="#chevron"/></svg></button>
+              <div class="peek-stats"><span><strong>100 Mbps</strong>Wi-Fi</span><span><strong>9 outlets</strong>Power</span><span><strong>12 tables</strong>Seating</span></div>
+            </div>
+          </div>
+
+          <div class="variant variant-c">
+            <div class="compact-card" id="compact-card">
+              <button class="compact-head" type="button" id="compact-toggle" aria-expanded="false"><strong>Sonny's Coffee + Diner</strong><svg><use href="#chevron"/></svg></button>
+              <div class="compact-body"><div class="badges"><span class="badge">◉ Scanned</span><span class="status-badge">Closed now</span></div><div class="stats"><span><small>Wi-Fi</small><strong>100 Mbps</strong></span><span><small>Outlets</small><strong>9 outlets</strong></span><span><small>Tables</small><strong>12 tables</strong></span></div><button class="full-details" type="button" data-open-details>Full cafe details</button></div>
+            </div>
+          </div>
+
+          <div class="variant variant-d">
+            <button class="hybrid-peek" type="button" data-open-details aria-label="Open cafe details"><span class="peek-copy"><strong>Sonny's Coffee + Diner</strong><small><span class="scan-dot" aria-hidden="true"></span>Scanned · Closed now · Tap for details</small></span><svg><use href="#chevron"/></svg></button>
+          </div>
+
+          <div class="navigation" aria-label="Walkthrough movement controls">
+            <button type="button" data-move="left" aria-label="Look left"><svg><use href="#left"/></svg></button>
+            <button type="button" data-move="forward" aria-label="Move forward"><svg><use href="#forward"/></svg></button>
+            <button type="button" class="center" data-move="reset" aria-label="Reset view"><svg><use href="#reset"/></svg></button>
+            <button type="button" data-move="right" aria-label="Look right"><svg><use href="#right"/></svg></button>
+          </div>
+        </div>
+
+        <button class="sheet-scrim" type="button" id="sheet-scrim" aria-label="Close details"></button>
+        <section class="sheet" id="details" role="dialog" aria-modal="true" aria-label="About Sonny's Coffee and Diner" aria-hidden="true">
+          <div class="handle" aria-hidden="true"></div>
+          <div class="sheet-head"><h2>Sonny's Coffee + Diner</h2><button type="button" id="close-details" aria-label="Close details"><svg><use href="#x"/></svg></button></div>
+          <p class="sub">Scanned · Closed now · Cagayan de Oro</p>
+          <div class="sheet-actions"><button type="button" data-toast="Directions would open in your map app.">Get directions</button><button type="button" data-toast="Reviews would open here.">See reviews</button></div>
+          <h3>Amenities</h3><div class="amenities"><div><small>Wi-Fi</small><strong>100 Mbps</strong></div><div><small>Outlets</small><strong>9 outlets</strong></div><div><small>Tables</small><strong>12 tables</strong></div></div>
+          <h3>More about this cafe</h3><div class="sheet-links"><button type="button" data-toast="Menu would open here.">Menu <span>›</span></button><button type="button" data-toast="Opening hours would open here.">Opening hours <span>›</span></button><button type="button" data-toast="Amenity checks would open here.">Check amenity details <span>›</span></button></div>
+        </section>
+
+        <div class="closed-screen" id="closed-screen" hidden><div><h2>Walkthrough closed</h2><p>The mock keeps you here so you can compare another layout.</p><button type="button" id="reopen">Open walkthrough</button></div></div>
+        <div class="toast" id="toast" role="status" hidden></div>
+        <div class="browser" aria-hidden="true"><div class="address"><span>AA</span><span>♙ &nbsp; localhost</span><span>↻</span></div><div class="browser-tools"><span>‹</span><span>›</span><span>♧</span><span>▣</span><span>▢</span></div><div class="home-indicator"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const phone = document.getElementById('phone');
+    const scene = document.getElementById('scene');
+    const scrim = document.getElementById('sheet-scrim');
+    const details = document.getElementById('details');
+    details.inert = true;
+    const compact = document.getElementById('compact-card');
+    const compactToggle = document.getElementById('compact-toggle');
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    let panX = 0;
+    let panY = 0;
+
+    function notify(message) {
+      toast.textContent = message;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 2600);
+    }
+    function closeDetails() {
+      details.classList.remove('show');
+      details.setAttribute('aria-hidden', 'true');
+      details.inert = true;
+      scrim.classList.remove('show');
+      phone.querySelector('[data-open-details]')?.focus();
+    }
+    function openDetails() {
+      phone.classList.remove('quiet');
+      details.classList.add('show');
+      details.setAttribute('aria-hidden', 'false');
+      details.inert = false;
+      scrim.classList.add('show');
+      document.getElementById('close-details').focus();
+    }
+    document.querySelectorAll('[data-select]').forEach((button) => button.addEventListener('click', () => {
+      const option = button.dataset.select;
+      history.replaceState(null, '', `?option=${option}`);
+      phone.dataset.option = option;
+      phone.setAttribute('aria-labelledby', `tab-${option}`);
+      document.querySelectorAll('[data-select]').forEach((tab) => tab.setAttribute('aria-selected', String(tab === button)));
+      compact.classList.remove('expanded');
+      compactToggle.setAttribute('aria-expanded', 'false');
+      phone.classList.remove('quiet');
+      document.getElementById('closed-screen').hidden = true;
+      closeDetails();
+    }));
+    const initialParams = new URLSearchParams(location.search);
+    const initialOption = initialParams.get('option');
+    if (['a', 'b', 'c'].includes(initialOption)) document.querySelector(`[data-select="${initialOption}"]`).click();
+    document.querySelectorAll('[data-open-details]').forEach((button) => button.addEventListener('click', openDetails));
+    document.getElementById('close-details').addEventListener('click', closeDetails);
+    if (initialParams.get('details') === '1') openDetails();
+    scrim.addEventListener('click', closeDetails);
+    compactToggle.addEventListener('click', () => {
+      const expanded = compact.classList.toggle('expanded');
+      compactToggle.setAttribute('aria-expanded', String(expanded));
+    });
+    if (initialParams.get('expanded') === '1' && phone.dataset.option === 'c') compactToggle.click();
+    document.getElementById('save').addEventListener('click', (event) => {
+      const saved = event.currentTarget.getAttribute('aria-pressed') !== 'true';
+      event.currentTarget.setAttribute('aria-pressed', String(saved));
+      event.currentTarget.classList.toggle('active', saved);
+      notify(saved ? 'Cafe saved in this mock.' : 'Cafe removed from saved.');
+    });
+    document.getElementById('share-button').addEventListener('click', () => notify('A share sheet would open here.'));
+    document.getElementById('close-walk').addEventListener('click', () => { closeDetails(); document.getElementById('closed-screen').hidden = false; });
+    document.getElementById('reopen').addEventListener('click', () => { document.getElementById('closed-screen').hidden = true; });
+    document.querySelectorAll('[data-toast]').forEach((button) => button.addEventListener('click', () => notify(button.dataset.toast)));
+    document.querySelectorAll('[data-move]').forEach((button) => button.addEventListener('click', () => {
+      if (button.dataset.move === 'reset') { panX = 0; panY = 0; }
+      if (button.dataset.move === 'left') panX = Math.min(30, panX + 15);
+      if (button.dataset.move === 'right') panX = Math.max(-30, panX - 15);
+      if (button.dataset.move === 'forward') panY = Math.max(-28, panY - 12);
+      scene.style.setProperty('--pan-x', `${panX}px`);
+      scene.style.setProperty('--pan-y', `${panY}px`);
+    }));
+    scene.addEventListener('click', () => { if (['a', 'd'].includes(phone.dataset.option) && !details.classList.contains('show')) phone.classList.toggle('quiet'); });
+    window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && details.classList.contains('show')) closeDetails(); });
+  </script>
+</body>
+</html>

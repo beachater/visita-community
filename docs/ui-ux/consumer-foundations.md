@@ -51,6 +51,12 @@ Use an 8 px base rhythm with 4 px steps for compact details. Values below are CS
 
 At under 768 px, collapse the desktop brand/search arrangement into a compact brand row and a full-width search row. Keep the map usable with one hand. Inactive controls should not occupy a full-width bottom bar.
 
+## Mobile walkthrough layout
+
+The approved hybrid peek uses a 16 px inset around the floating close, save, and share controls and the bottom cafe card. Each control is at least 44 px tall. The card is at least 66 px tall and sits 16 px above the viewport edge or the phone safe area, whichever is larger. It shows the cafe name and known status; a tap opens a details sheet capped at 85% of the viewport. The sheet holds directions, reviews, amenities and their accuracy checks, hours, events, and menu when those details exist. The 3D scene keeps its existing left-side movement and right-side look gestures. Desktop retains its expandable left info panel.
+
+The card replaces the persistent mobile top info panel. Keep scan download status above the top controls so it cannot cover the card or the gesture area.
+
 ## Globe intro implementation
 
 The root page uses a short illustrated globe flight into Cagayan de Oro, based on the original consumer-root concept. A static SVG poster appears immediately. Then the globe itself rotates using Natural Earth 110m land outlines in an orthographic projection until CDO (124.6465° E, 8.4822° N) faces forward. Only then does it zoom into that centered point and reveal the map. It requests no global map tiles or video. The normal interactive map continues to use the CDO-only PMTiles basemap underneath.
