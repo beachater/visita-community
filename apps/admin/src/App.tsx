@@ -13,10 +13,13 @@ import { StatusPage } from "@/pages/pending/StatusPage";
 import { ApprovalsPage } from "@/pages/admin/approvals/ApprovalsPage";
 import { AmenityQueue } from "@/pages/admin/AmenityQueue";
 import { DemandQueue } from "@/pages/admin/DemandQueue";
+import { BillingList } from "@/pages/admin/billing/BillingList";
+import { VenueBilling } from "@/pages/admin/billing/VenueBilling";
 import { Moderation } from "@/pages/admin/Moderation";
 import { VenueForm } from "@/pages/admin/VenueForm";
 import { Venues } from "@/pages/admin/Venues";
 import { Analytics } from "@/pages/venue/Analytics";
+import { Billing } from "@/pages/venue/Billing";
 import { EventsEditor } from "@/pages/venue/EventsEditor";
 import { ListingEditor } from "@/pages/venue/ListingEditor";
 import { Reviews } from "@/pages/venue/Reviews";
@@ -120,12 +123,15 @@ export function App() {
               <Route path="events" element={<EventsEditor />} />
               <Route path="reviews" element={<Reviews />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="billing" element={<Billing />} />
             </Route>
             <Route path="admin/approvals" element={<RequireAdmin><ApprovalsPage /></RequireAdmin>} />
             <Route path="admin/venues" element={<RequireAdmin><Venues /></RequireAdmin>} />
             <Route path="admin/venues/new" element={<RequireAdmin><VenueForm /></RequireAdmin>} />
             <Route path="admin/venues/:venueId" element={<RequireAdmin><VenueForm /></RequireAdmin>} />
             <Route path="admin/demand" element={<RequireAdmin><DemandQueue /></RequireAdmin>} />
+            <Route path="admin/billing" element={<RequireAdmin><BillingList /></RequireAdmin>} />
+            <Route path="admin/billing/:venueId" element={<RequireAdmin><VenueBilling /></RequireAdmin>} />
             <Route path="admin/amenities" element={<RequireAdmin><AmenityQueue /></RequireAdmin>} />
             <Route path="admin/reviews" element={<RequireAdmin><Moderation /></RequireAdmin>} />
             <Route path="*" element={<Navigate to="/" replace />} />

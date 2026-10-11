@@ -6,7 +6,7 @@
 import type { ClaimSummary } from "./home";
 
 export type NavIcon =
-  | "cafe" | "overview" | "listing" | "events" | "reviews" | "analytics"
+  | "cafe" | "overview" | "listing" | "events" | "reviews" | "analytics" | "billing"
   | "claims" | "claim" | "approvals" | "venues" | "demand" | "amenities" | "moderation";
 
 export interface NavItem {
@@ -36,12 +36,14 @@ const venuePages = (base: string): NavItem[] => [
   { to: `${base}/events`, label: "Events", icon: "events" },
   { to: `${base}/reviews`, label: "Reviews", icon: "reviews" },
   { to: `${base}/analytics`, label: "Analytics", icon: "analytics" },
+  { to: `${base}/billing`, label: "Billing", icon: "billing" },
 ];
 
 const ADMIN: NavItem[] = [
   { to: "/admin/approvals", label: "Owner approvals", icon: "approvals" },
   { to: "/admin/venues", label: "Venues", icon: "venues" },
   { to: "/admin/demand", label: "Demand queue", icon: "demand" },
+  { to: "/admin/billing", label: "Billing", icon: "billing" },
   { to: "/admin/amenities", label: "Amenity changes", icon: "amenities" },
   { to: "/admin/reviews", label: "Reviews", icon: "moderation" },
 ];

@@ -212,6 +212,72 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_payments: {
+        Row: {
+          amount_php: number
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["payment_kind"]
+          method: Database["public"]["Enums"]["payment_method"]
+          note: string | null
+          paid_on: string
+          period_end: string | null
+          period_start: string | null
+          recorded_by: string | null
+          reference: string | null
+          venue_id: string
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          amount_php: number
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["payment_kind"]
+          method: Database["public"]["Enums"]["payment_method"]
+          note?: string | null
+          paid_on: string
+          period_end?: string | null
+          period_start?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+          venue_id: string
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          amount_php?: number
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["payment_kind"]
+          method?: Database["public"]["Enums"]["payment_method"]
+          note?: string | null
+          paid_on?: string
+          period_end?: string | null
+          period_start?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+          venue_id?: string
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_payments_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_payments_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       check_ins: {
         Row: {
           accuracy_m: number | null
@@ -660,6 +726,54 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_billing: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          monthly_fee_php: number | null
+          plan: string
+          status: Database["public"]["Enums"]["billing_status"]
+          updated_at: string
+          updated_by: string | null
+          venue_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          monthly_fee_php?: number | null
+          plan: string
+          status?: Database["public"]["Enums"]["billing_status"]
+          updated_at?: string
+          updated_by?: string | null
+          venue_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          monthly_fee_php?: number | null
+          plan?: string
+          status?: Database["public"]["Enums"]["billing_status"]
+          updated_at?: string
+          updated_by?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_billing_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_billing_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: true
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_events: {
         Row: {
           created_at: string
@@ -908,6 +1022,20 @@ export type Database = {
       }
     }
     Functions: {
+      admin_billing_overview: {
+        Args: never
+        Returns: {
+          last_paid_on: string
+          monthly_fee_php: number
+          name: string
+          paid_through: string
+          plan: string
+          slug: string
+          status: Database["public"]["Enums"]["billing_status"]
+          total_paid_php: number
+          venue_id: string
+        }[]
+      }
       admin_demand_queue: {
         Args: never
         Returns: {
@@ -928,6 +1056,7 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_venue_owner: { Args: { p_venue_id: string }; Returns: boolean }
+      owner_billing: { Args: { p_venue_id: string }; Returns: Json }
       owner_update_listing: {
         Args: { p_patch: Json; p_venue_id: string }
         Returns: undefined
@@ -1038,10 +1167,13 @@ export type Database = {
         | "filter_click"
         | "demand_tap"
       app_role: "admin"
+      billing_status: "trial" | "active" | "paused" | "cancelled"
       change_request_status: "pending" | "approved" | "rejected"
       check_in_status: "pending" | "verified" | "rejected"
       occupancy_level: "quiet" | "moderate" | "full"
       owner_claim_status: "pending" | "approved" | "rejected"
+      payment_kind: "onboarding" | "subscription" | "other"
+      payment_method: "cash" | "gcash" | "bank_transfer" | "other"
       point_reason:
         | "review"
         | "review_photo"
@@ -1195,10 +1327,13 @@ export const Constants = {
         "demand_tap",
       ],
       app_role: ["admin"],
+      billing_status: ["trial", "active", "paused", "cancelled"],
       change_request_status: ["pending", "approved", "rejected"],
       check_in_status: ["pending", "verified", "rejected"],
       occupancy_level: ["quiet", "moderate", "full"],
       owner_claim_status: ["pending", "approved", "rejected"],
+      payment_kind: ["onboarding", "subscription", "other"],
+      payment_method: ["cash", "gcash", "bank_transfer", "other"],
       point_reason: [
         "review",
         "review_photo",

@@ -12,7 +12,7 @@ describe("navFor", () => {
     const [cafes] = navFor({ isAdmin: false, claims: [claim({})] }, "/status");
     expect(cafes!.label).toBe("Your cafe");
     expect(cafes!.items[0]).toMatchObject({ to: "/venue/v1", label: "Sonny's", expanded: true });
-    expect(cafes!.items[0]!.children!.map((c) => c.to)).toEqual(["/venue/v1", "/venue/v1/listing", "/venue/v1/events", "/venue/v1/reviews", "/venue/v1/analytics"]);
+    expect(cafes!.items[0]!.children!.map((c) => c.to)).toEqual(["/venue/v1", "/venue/v1/listing", "/venue/v1/events", "/venue/v1/reviews", "/venue/v1/analytics", "/venue/v1/billing"]);
   });
 
   it("opens only the cafe being viewed when someone owns several", () => {
@@ -37,6 +37,6 @@ describe("navFor", () => {
   it("adds the admin tools for admins, last", () =>
     expect(labels(navFor({ isAdmin: true, claims: [] }, "/admin/venues"))).toEqual([
       ["Claims", ["My claims", "Claim a cafe"]],
-      ["Admin", ["Owner approvals", "Venues", "Demand queue", "Amenity changes", "Reviews"]],
+      ["Admin", ["Owner approvals", "Venues", "Demand queue", "Billing", "Amenity changes", "Reviews"]],
     ]));
 });

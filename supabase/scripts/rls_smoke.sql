@@ -562,5 +562,67 @@ set local request.jwt.claims = '{"role":"anon"}';
 select pg_temp.expect_error($q$select * from public.admin_demand_queue()$q$, 'signed-out visitors cannot read the demand queue totals');
 reset role;
 
+-- 8. Manual billing: admins record, owners read their own, nobody deletes.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+insert into public.venue_billing (venue_id, plan, monthly_fee_php, status, admin_note)
+  values ('aaaaaaaa-0000-0000-0000-000000000003', 'Founder', 150, 'active', 'Paid by the manager, not the owner');
+insert into public.billing_payments (venue_id, kind, amount_php, paid_on, method, reference, period_start, period_end) values
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'onboarding', 2000, '2026-10-01', 'gcash', 'GC-1001', null, null),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'subscription', 150, '2026-10-01', 'cash', null, '2026-10-01', '2026-10-31'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'subscription', 150, '2026-10-05', 'cash', 'typo', '2026-11-01', '2026-11-30');
+do $$ begin assert (select updated_by from public.venue_billing where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = '33333333-3333-3333-3333-333333333333'; end $$;
+select pg_temp.pass('admins set a plan and record payments');
+select pg_temp.expect_error($q$insert into public.billing_payments (venue_id, kind, amount_php, paid_on, method) values ('aaaaaaaa-0000-0000-0000-000000000003', 'subscription', 150, '2026-10-01', 'cash')$q$, 'a subscription payment says which period it covers');
+select pg_temp.expect_error($q$insert into public.billing_payments (venue_id, kind, amount_php, paid_on, method) values ('aaaaaaaa-0000-0000-0000-000000000003', 'other', 0, '2026-10-01', 'cash')$q$, 'a payment has a positive amount');
+select pg_temp.expect_error($q$insert into public.billing_payments (venue_id, amount_php, paid_on, method, period_start, period_end) values ('aaaaaaaa-0000-0000-0000-000000000003', 150, '2026-10-01', 'cash', '2026-10-31', '2026-10-01')$q$, 'a period ends after it starts');
+select pg_temp.expect_error($q$update public.billing_payments set voided_at = now() where reference = 'typo'$q$, 'voiding needs a reason');
+update public.billing_payments set voided_at = now(), void_reason = 'Recorded twice' where reference = 'typo';
+select pg_temp.pass('admins void a payment with a reason');
+select pg_temp.expect_error($q$update public.billing_payments set voided_at = null, void_reason = null where reference = 'typo'$q$, 'a voided payment stays voided');
+select pg_temp.expect_error($q$update public.billing_payments set amount_php = 999 where reference = 'GC-1001'$q$, 'payment amounts cannot be edited');
+select pg_temp.expect_error($q$delete from public.billing_payments$q$, 'payments cannot be deleted');
+do $$
+declare o record;
+begin
+  select * into o from public.admin_billing_overview() where slug = 'owned-cafe';
+  assert o.plan = 'Founder' and o.status = 'active', 'overview plan';
+  assert o.paid_through = '2026-10-31', 'voided payments do not count toward paid-through';
+  assert o.total_paid_php = 2150, 'voided payments do not count toward the total';
+end $$;
+select pg_temp.pass('the admin overview ignores voided payments');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+do $$
+declare b jsonb := public.owner_billing('aaaaaaaa-0000-0000-0000-000000000003');
+begin
+  assert b -> 'plan' ->> 'plan' = 'Founder';
+  assert not (b -> 'plan' ? 'admin_note'), 'owners never see the admin note';
+  assert b ->> 'paid_through' = '2026-10-31';
+  assert jsonb_array_length(b -> 'payments') = 2, 'owners see valid payments only';
+  assert (select count(*) from public.billing_payments) = 0, 'owners read payments directly';
+  assert (select count(*) from public.venue_billing) = 0, 'owners read the billing row directly';
+end $$;
+select pg_temp.pass('owners see their plan and valid payments, without admin notes');
+select pg_temp.expect_error($q$insert into public.billing_payments (venue_id, kind, amount_php, paid_on, method) values ('aaaaaaaa-0000-0000-0000-000000000003', 'other', 150, '2026-10-01', 'cash')$q$, 'owners cannot record payments');
+update public.venue_billing set status = 'cancelled';
+reset role;
+do $$ begin assert (select status from public.venue_billing where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003') = 'active', 'owner changed their plan'; end $$;
+select pg_temp.pass('owners cannot change their plan (0 rows updated)');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+select pg_temp.expect_error($q$select public.admin_billing_overview()$q$, 'owners cannot see the billing overview');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+select pg_temp.expect_error($q$select public.owner_billing('aaaaaaaa-0000-0000-0000-000000000003')$q$, 'non-owners cannot see a venue''s billing');
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+select pg_temp.expect_error($q$select public.owner_billing('aaaaaaaa-0000-0000-0000-000000000003')$q$, 'signed-out visitors cannot see billing');
+select pg_temp.expect_error($q$select count(*) from public.billing_payments$q$, 'signed-out visitors cannot read payments');
+reset role;
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED
