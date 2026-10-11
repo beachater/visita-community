@@ -22,7 +22,7 @@ This is a **trust gap, not an information gap.** People are not short of cafe co
 ### Principles
 
 - **Never show anything that is not real.** No stock imagery, no invented reviews, no fabricated occupancy, no filtered photos. Where data is unknown, show nothing rather than a guess.
-- **Amber means verified.** It carries one meaning across the product and is never spent on a button.
+- **Amber is where the eye must land.** It is used with restraint: at most one call to action and one highlight per screen, and "scanned and verified" is the standard highlight (see Section 2).
 - **Contribution over presence.** The points economy rewards making the data better, not merely showing up.
 - **Fix the walkthrough before adding to it.** Beta testing put confidence at 3/4 for technical reasons, not conceptual ones. Performance is the gatekeeper — this shapes the architecture decisions in Section 5 as much as it shapes the feature list.
 
@@ -30,35 +30,48 @@ This is a **trust gap, not an information gap.** People are not short of cafe co
 
 ## 2. Branding — "Clarity & Light"
 
+**Source of truth:** [visita_brand_manual.md](visita_brand_manual.md) (the Mini Brand Manual). This section summarises it and adds the accessibility rules needed to build it; where they differ, the manual wins.
+
+**Tagline:** *Step Inside From Anywhere* — title case, always set in DM Sans, never Playfair.
+
 **Essence:** Illuminating, trusted, professionally human. Filipino warmth (amber, the light inside a cafe) meets platform credibility (navy, trust for venue owners).
 
 ### Colour
 
 | Token | Hex | Use |
 |---|---|---|
-| Navy | #042C53 | Primary. Surfaces, wordmark, body text, authority |
+| Navy | #042C53 | Dominant colour. Leads hero sections, headers and primary surfaces; wordmark, body text, authority |
 | Ocean | #185FA5 | Headings, links, primary interactive |
 | Sky | #378ADD | Icons, secondary interactive |
 | Mist | #B5D4F4 | Borders, dividers |
-| Cloud | #E6F1FB | Backgrounds, breathing room |
-| Amber | #EF9F27 | Accent only. Never a text colour |
+| Cloud | #E6F1FB | Always the page background; breathing room |
+| Amber | #EF9F27 | Accent only: the one call to action and one highlight per screen. Never a text colour, never a large background |
 | Gold | #FAC775 | Soft accent support |
 | Amber Deep | #A85F0A | Star ratings and amber icons on light surfaces |
 
-**The amber rule.** Navy sets the stage, amber draws the eye, cloud gives room. One amber element per screen. In Visita, amber means one thing: *this venue is scanned and verified.* It never means "press this."
+**The amber rule.** Navy sets the stage, amber draws the eye, cloud gives room. Amber's power comes from restraint: use it only where the eye must land — at most **one call to action and one highlight** per screen. The usual highlight is the scanned-and-verified mark (Scanned badge, amber map pins, the loading "V"); the call to action is the screen's single most important action, if it needs one. Never use amber as the background of a large area, and never let it dominate.
 
-**Contrast, verified.** Amber on white is 2.17:1 and fails accessibility as a foreground, so it is a background only. Amber backgrounds take navy text at 6.48:1, never white.
+**Contrast, verified.** Amber on white is 2.17:1 and fails accessibility as a foreground, so it is never a text or icon colour on light surfaces (use Amber Deep for icons and stars). Amber fills — including an amber call-to-action button — take navy text at 6.48:1, never white.
 
 ### Type
 
-- **Playfair Display** (Bold, Semibold) — wordmark, headlines, display only. Never body text; serifs strain at small sizes on mobile.
-- **DM Sans** — everything else: body, UI, buttons, captions, data.
+- **Playfair Display** (Bold, Semibold, Italic) — wordmark, headlines, display only. Never body copy or captions; serifs strain at small sizes on mobile.
+- **DM Sans** (Regular, Medium, Bold) — everything else: body, UI, buttons, captions, data and the tagline. Use no more than two DM Sans weights in a single layout.
+
+| Level | Typeface | Size | Usage |
+|---|---|---|---|
+| Hero | Playfair Display Bold | 40–48px | Hero headlines, cover slides |
+| Heading 1 | Playfair Display Bold | 28–32px | Section titles |
+| Heading 2 | Playfair Display Semibold | 20–24px | Card headers, sub-sections |
+| Body | DM Sans Regular | 14–16px | Paragraphs, descriptions |
+| UI / Button | DM Sans Medium | 13–14px | Buttons, labels, nav |
+| Caption | DM Sans Regular | 11–12px | Tagline, metadata, hints |
 
 ### Logo and voice
 
-Wordmark in Playfair Display Bold, title case always. Navy on light, white or cloud on dark.
+Wordmark in Playfair Display Bold. The name is always written **Visita** — title case, never all caps, never lowercase. Deep Navy on light, white or cloud on dark.
 
-Voice is a trusted local friend who already scouted the place. Plain verbs, sentence case, no hype. Never overhype — overhyping recreates the problem the product solves. Never negative about any venue.
+Voice is a trusted local friend who already scouted the place: warm without being informal, honest without being cold, confident without being arrogant. Visita sounds warm and inviting, honest and transparent, confident and purposeful, local and grounded — never cold or corporate, overly technical, generic or global, or like a replacement for visiting. Plain verbs, sentence case in UI copy (the tagline is the title-case exception), no hype. Never overhype — overhyping recreates the problem the product solves. Never negative about any venue.
 
 ---
 

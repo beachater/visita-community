@@ -17,3 +17,6 @@ worker-configuration.d.ts
 # Raw and converted scans (uploaded to R2, never committed)
 *.ply
 scans/
+
+# Source brand manual (converted to visita_brand_manual.md); not pushed
+visita_brand_manual.docx

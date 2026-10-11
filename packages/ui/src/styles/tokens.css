@@ -5,10 +5,11 @@
  * colour, font and radius on the site comes from these variables, so the
  * final branding is a change to this block, not to components.
  *
- * Current values: PRD section 2, "Clarity & Light".
- *   - Amber means one thing, "this venue is scanned and verified". It is
- *     never a button colour and never a text colour. Use --verified only.
- *   - Amber backgrounds take navy text (6.48:1), never white.
+ * Current values: visita_brand_manual.md, summarised in PRD section 2.
+ *   - Amber is where the eye must land: at most one call to action and one
+ *     highlight per screen (usually the scanned mark, --verified). Never a
+ *     text colour, never a large background.
+ *   - Amber fills take navy text (6.48:1), never white.
  *   - Playfair Display for display type only; DM Sans for everything else.
  *
  * Shape and material (2026-10-04, "soft glass"): controls are pills, cards

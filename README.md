@@ -183,9 +183,12 @@ usage stats"** on the privacy notice (RA 10173):
   pieces: the Scanned badge, status pill, glass panel, rating, map pin, page
   header, empty state and draft notice.
 - **Rules:**
-  - Amber (`--verified`) means "scanned and verified" and nothing else. It's
-    never used on a button or for text.
-  - Playfair Display is for headlines only.
+  - Brand rules come from `visita_brand_manual.md` (summarised in PRD §2).
+  - Amber (`--verified`) is for where the eye must land: at most one call to
+    action and one highlight per screen, usually the scanned-and-verified mark.
+    Never amber text or large amber backgrounds; amber fills take navy text.
+  - Playfair Display is for headlines only; DM Sans for everything else,
+    including the tagline.
   - Touch targets are at least 44px.
 - **Shell:** `SiteHeader` and `SiteFooter` are zero-JS Astro; the mobile menu is
   a native `<dialog>`. `BaseLayout chrome="bare"` drops them for full-screen
