@@ -7,6 +7,7 @@ import { EventList } from "../../../components/venue/EventList";
 import { OccupancyPill } from "../../../components/venue/OccupancyPill";
 import OpenNowPill from "../../../components/cafe/OpenNowPill.astro";
 import { CafeWalkthrough } from "../../../components/walkthrough/CafeWalkthrough";
+import { AmenityList } from "../../../components/venue/AmenityList";
 import { amenityRows, summaryRows } from "../../../lib/venue/amenities";
 import { weeklyRows } from "../../../lib/venue/hours";
 import { loadPublishedCafe, toWalkthroughCafe } from "../../../lib/venue/load";
@@ -77,14 +78,7 @@ const description = scanned
     {cards.length > 0 && (
       <section>
         <h2>Amenities</h2>
-        <dl class="amenities">
-          {cards.map((row) => (
-            <div class="amenity">
-              <dt>{row.label}</dt>
-              <dd>{row.text}</dd>
-            </div>
-          ))}
-        </dl>
+        <AmenityList client:visible rows={cards} venueId={cafe.id} slug={cafe.slug} />
       </section>
     )}
 

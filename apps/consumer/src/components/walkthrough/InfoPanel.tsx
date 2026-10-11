@@ -10,6 +10,7 @@ import { EventList } from "../venue/EventList";
 import { OccupancyPill } from "../venue/OccupancyPill";
 import { formatPhp, scanDate } from "@/lib/venue/scan";
 import type { WalkthroughCafe } from "@/lib/venue/types";
+import { AmenityList } from "../venue/AmenityList";
 
 // PRD 4.2 "Cafe info panel": one glass container on the left holding every
 // known detail, collapsed to a three-stat strip by default. Unknown fields
@@ -28,7 +29,7 @@ interface Props {
 const MENU_PREVIEW = 4;
 
 export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDirections, onOpenMenu }: Props) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("walkthrough") === "1");
   const [now, setNow] = useState(() => new Date());
   const bodyId = useId();
 
@@ -127,14 +128,7 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
           {cards.length > 0 && (
             <section aria-label="Amenities">
               <h3 className="mb-2 text-xs font-bold uppercase tracking-wider opacity-70">Amenities</h3>
-              <dl className="grid gap-2">
-                {cards.map((row) => (
-                  <div key={row.key} className="grid grid-cols-[7rem_1fr] gap-3 text-sm">
-                    <dt className="opacity-70">{row.label}</dt>
-                    <dd>{row.text}</dd>
-                  </div>
-                ))}
-              </dl>
+              <AmenityList rows={cards} venueId={cafe.id} slug={cafe.slug} tone="glass" />
             </section>
           )}
 

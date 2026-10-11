@@ -624,5 +624,66 @@ select pg_temp.expect_error($q$select public.owner_billing('aaaaaaaa-0000-0000-0
 select pg_temp.expect_error($q$select count(*) from public.billing_payments$q$, 'signed-out visitors cannot read payments');
 reset role;
 
+-- ---------- visitor amenity checks ----------
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+select pg_temp.expect_error($q$select count(*) from public.amenity_reports$q$, 'signed-out visitors cannot read reports');
+select pg_temp.expect_error($q$insert into public.amenity_reports (venue_id, amenity_key, verdict) values ('aaaaaaaa-0000-0000-0000-000000000001', 'wifi', 'confirm')$q$, 'signed-out visitors cannot report amenities');
+do $$ begin assert (select count(*) from public.amenity_confirmations('aaaaaaaa-0000-0000-0000-000000000001')) = 0; end $$;
+select pg_temp.pass('public confirmation counts reveal no visitor records');
+
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+insert into public.amenity_reports (venue_id, amenity_key, verdict)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'wifi', 'confirm');
+do $$ begin assert (select count(*) from public.amenity_reports) = 1; end $$;
+select pg_temp.pass('visitor confirms a listed amenity and reads their own report');
+select pg_temp.expect_error($q$insert into public.amenity_reports (venue_id, amenity_key, verdict) values ('aaaaaaaa-0000-0000-0000-000000000001', 'wifi', 'confirm')$q$, 'one open report per person and amenity');
+select pg_temp.expect_error($q$insert into public.amenity_reports (venue_id, amenity_key, verdict, comment) values ('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'confirm', 'note')$q$, 'confirmations cannot contain a comment');
+select pg_temp.expect_error($q$insert into public.amenity_reports (venue_id, amenity_key, verdict) values ('aaaaaaaa-0000-0000-0000-000000000002', 'wifi', 'confirm')$q$, 'draft venues cannot be reported');
+select pg_temp.expect_error($q$insert into public.amenity_reports (venue_id, amenity_key, verdict) values ('aaaaaaaa-0000-0000-0000-000000000001', 'jacuzzi', 'dispute')$q$, 'undefined amenities cannot be reported');
+select pg_temp.expect_error($q$insert into public.amenity_reports (venue_id, amenity_key, verdict) values ('aaaaaaaa-0000-0000-0000-000000000001', 'outdoor_seating', 'dispute')$q$, 'amenities absent from the listing cannot be reported');
+select pg_temp.expect_error($q$insert into public.amenity_reports (venue_id, amenity_key, verdict, comment) values ('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'dispute', repeat('x', 301))$q$, 'dispute comments have a 300 character limit');
+select pg_temp.expect_error($q$insert into public.amenity_reports (venue_id, amenity_key, verdict, profile_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'dispute', '22222222-2222-2222-2222-222222222222')$q$, 'visitor cannot choose the report profile');
+update public.amenity_reports set status = 'resolved';
+do $$ begin assert (select count(*) from public.amenity_reports where status = 'open') = 1; end $$;
+select pg_temp.pass('visitor cannot resolve reports (0 rows updated)');
+
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+do $$ begin assert (select count(*) from public.amenity_reports) = 0; end $$;
+select pg_temp.pass('visitors cannot read another person''s report');
+insert into public.amenity_reports (venue_id, amenity_key, verdict, comment)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'power_outlets', 'dispute', 'The outlet count may have changed');
+
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+do $$ begin assert (select count(*) from public.amenity_reports) = 2; end $$;
+select pg_temp.pass('admin sees the report queue');
+update public.amenity_reports set status = 'resolved', resolved_by = auth.uid(), resolved_at = now(), resolution_note = 'Checked'
+  where amenity_key = 'power_outlets';
+select pg_temp.expect_error($q$update public.amenity_reports set verdict = 'confirm' where amenity_key = 'power_outlets'$q$, 'admin cannot rewrite a visitor verdict');
+
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$
+declare c record;
+begin
+  select * into c from public.amenity_confirmations('aaaaaaaa-0000-0000-0000-000000000001') where amenity_key = 'wifi';
+  assert c.confirmations = 1 and c.last_confirmed_at is not null;
+  assert (select count(*) from public.amenity_confirmations('aaaaaaaa-0000-0000-0000-000000000002')) = 0;
+end $$;
+select pg_temp.pass('anon sees only recent aggregate counts for published venues');
+reset role;
+update public.amenity_reports set created_at = now() - interval '91 days' where amenity_key = 'wifi';
+set local role anon;
+do $$ begin assert (select count(*) from public.amenity_confirmations('aaaaaaaa-0000-0000-0000-000000000001')) = 0; end $$;
+select pg_temp.pass('confirmations older than 90 days are excluded');
+reset role;
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED

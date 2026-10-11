@@ -118,6 +118,70 @@ export type Database = {
         }
         Relationships: []
       }
+      amenity_reports: {
+        Row: {
+          amenity_key: string
+          comment: string | null
+          created_at: string
+          id: string
+          profile_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["amenity_report_status"]
+          venue_id: string
+          verdict: Database["public"]["Enums"]["amenity_verdict"]
+        }
+        Insert: {
+          amenity_key: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["amenity_report_status"]
+          venue_id: string
+          verdict: Database["public"]["Enums"]["amenity_verdict"]
+        }
+        Update: {
+          amenity_key?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["amenity_report_status"]
+          venue_id?: string
+          verdict?: Database["public"]["Enums"]["amenity_verdict"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amenity_reports_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amenity_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amenity_reports_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_daily: {
         Row: {
           count: number
@@ -1054,6 +1118,14 @@ export type Database = {
           venue_id: string
         }[]
       }
+      amenity_confirmations: {
+        Args: { p_venue_id: string }
+        Returns: {
+          amenity_key: string
+          confirmations: number
+          last_confirmed_at: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_venue_owner: { Args: { p_venue_id: string }; Returns: boolean }
       owner_billing: { Args: { p_venue_id: string }; Returns: Json }
@@ -1158,7 +1230,9 @@ export type Database = {
       }
     }
     Enums: {
+      amenity_report_status: "open" | "resolved" | "dismissed"
       amenity_value_type: "boolean" | "number" | "text" | "list"
+      amenity_verdict: "confirm" | "dispute"
       analytics_event_type:
         | "profile_view"
         | "walkthrough_open"
@@ -1317,7 +1391,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      amenity_report_status: ["open", "resolved", "dismissed"],
       amenity_value_type: ["boolean", "number", "text", "list"],
+      amenity_verdict: ["confirm", "dispute"],
       analytics_event_type: [
         "profile_view",
         "walkthrough_open",

@@ -48,6 +48,12 @@ export function CafeWalkthrough({ cafe, definitions }: Props) {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("walkthrough") === "1" && profile.webgl2) {
+      setStage("open");
+    }
+  }, [profile.webgl2]);
+
   const close = () => {
     if (pushed.current) history.back();
     else setStage("idle");
