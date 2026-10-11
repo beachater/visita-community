@@ -908,6 +908,24 @@ export type Database = {
       }
     }
     Functions: {
+      admin_demand_queue: {
+        Args: never
+        Returns: {
+          address: string
+          first_at: string
+          has_owner: boolean
+          is_published: boolean
+          last_30_days: number
+          last_7_days: number
+          last_at: string
+          name: string
+          scanned: boolean
+          signed_in: number
+          slug: string
+          total: number
+          venue_id: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_venue_owner: { Args: { p_venue_id: string }; Returns: boolean }
       owner_update_listing: {

@@ -4,6 +4,7 @@ import {
   ChartColumn,
   CirclePlus,
   ClipboardList,
+  Eye,
   Coffee,
   FileText,
   LayoutDashboard,
@@ -33,6 +34,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   claim: CirclePlus,
   approvals: ShieldCheck,
   venues: Store,
+  demand: Eye,
   amenities: ListChecks,
   moderation: MessageSquareWarning,
 };

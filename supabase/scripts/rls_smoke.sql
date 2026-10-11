@@ -533,5 +533,34 @@ do $$ begin assert (select ip_hash from public.demand_requests where device_id =
 select pg_temp.pass('demand network hashes are erased after two days');
 reset role;
 
+-- 7. Admin demand queue: totals per venue, admins only.
+insert into public.demand_requests (venue_id, device_id, profile_id, created_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'device-q1aaaaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', now() - interval '2 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'device-q4aaaaaaaaaaaaaa', null, now() - interval '1 day'),
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'device-q2aaaaaaaaaaaaaa', null, now() - interval '20 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'device-q3aaaaaaaaaaaaaa', null, now() - interval '90 days');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+do $$
+declare q record;
+begin
+  select * into q from public.admin_demand_queue() where slug = 'draft-cafe';
+  assert q.total = 4, 'demand total';
+  assert q.last_7_days = 2 and q.last_30_days = 3, 'demand windows';
+  assert q.signed_in = 1, 'signed-in requests';
+  assert not q.scanned and not q.has_owner, 'scan and owner flags';
+  assert (select slug from public.admin_demand_queue() limit 1) = 'draft-cafe', 'busiest venue first';
+end $$;
+select pg_temp.pass('admins see demand totals per venue, busiest first');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+select pg_temp.expect_error($q$select * from public.admin_demand_queue()$q$, 'visitors cannot read the demand queue totals');
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+select pg_temp.expect_error($q$select * from public.admin_demand_queue()$q$, 'signed-out visitors cannot read the demand queue totals');
+reset role;
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED
