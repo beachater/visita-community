@@ -24,7 +24,7 @@ export function DemandQueue() {
     const { data, error } = await supabase.rpc("admin_demand_queue");
     if (error) {
       console.error("[demand]", error);
-      setError("Couldn't load the demand queue. Check your connection and try again.");
+      setError("Couldn't load the demand queue. Try again, or check that the database is up to date.");
       return;
     }
     setRows(data as DemandRow[]);

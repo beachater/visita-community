@@ -5,7 +5,7 @@ dist/
 .env
 .env.*
 !.env.example
-.dev.vars
+.dev.vars*
 supabase/.branches/
 supabase/.temp/
 *.log

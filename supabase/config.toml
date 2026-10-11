@@ -328,7 +328,10 @@ max_frequency = "5s"
 # Google is the only sign-in provider (PRD 4.3). Set enabled = true once the
 # OAuth client exists, with the ids in supabase/.env (never committed).
 [auth.external.google]
-enabled = false
+# Credentials go in supabase/.env (gitignored), from the same Google OAuth
+# client as hosted, with http://127.0.0.1:55421/auth/v1/callback added as an
+# authorised redirect URI.
+enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 # Required for local sign in with Google auth.
