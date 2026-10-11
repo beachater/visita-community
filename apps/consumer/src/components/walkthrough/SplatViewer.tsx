@@ -253,10 +253,10 @@ export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, on
               ? setDetail({ received, total })
               : setProgress({ stage: "downloading", received, total }),
           );
-        } catch (err) {
+        } catch {
           // Keep the preview on screen; it's still the real room.
           if (preview) setDetail({ failed: true });
-          else fail(`The scan didn't load (${String(err)}).`);
+          else fail("The scan didn't load. Check your connection and try again.");
           return;
         }
         if (disposed) return;
@@ -351,12 +351,12 @@ export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, on
 
       setProgress({ stage: "downloading", received: 0, total: null });
       const load = splatFormat(src) === "streamed" ? loadStreamed : loadBundled;
-      load().catch((err: unknown) => fail(`The scan didn't load (${String(err)}).`));
+      load().catch(() => fail("The scan didn't load. Check your connection and try again."));
 
       statsTimer = window.setInterval(() => {
         callbacks.current.onStats?.({ fps: instance.stats.frame.fps, splats: instance.stats.frame.gsplats });
       }, 500);
-    })().catch((err: unknown) => fail(`The 3D viewer couldn't start (${String(err)}).`));
+    })().catch(() => fail("The 3D viewer couldn't start. Try again, or open this cafe on another device."));
 
     return () => {
       disposed = true;

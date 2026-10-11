@@ -6,6 +6,7 @@ dist/
 .env.*
 !.env.example
 .dev.vars*
+.claude/settings.local.json
 supabase/.branches/
 supabase/.temp/
 *.log

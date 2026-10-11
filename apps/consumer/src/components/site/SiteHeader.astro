@@ -10,13 +10,15 @@ import { PRIMARY_NAV, isCurrent, loginHref, pagePath } from "./nav";
 // The account area is a server island, so the shell stays prerendered.
 const path = Astro.url.pathname;
 const here = pagePath(path);
+interface Props { map?: boolean }
+const { map = false } = Astro.props;
 ---
 
-<header class="pointer-events-none sticky top-0 z-40 px-3" style="padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem)">
-  <div class="glass pointer-events-auto mx-auto flex h-14 max-w-6xl items-center gap-4 rounded-full pr-2 pl-5">
-    <a href="/" class="font-display text-2xl font-bold tracking-tight text-foreground" aria-label="Visita home">Visita</a>
+<header class={cn("pointer-events-none z-40", map ? "map-home-header absolute inset-x-0 top-0" : "sticky top-0 px-3")} style={`padding-top: calc(env(safe-area-inset-top, 0px) + ${map ? "1rem" : "0.75rem"})`}>
+  <div class={cn("pointer-events-auto mx-auto flex items-center gap-4", map ? "h-12 max-w-none" : "glass h-14 max-w-6xl rounded-full pr-2 pl-5")}>
+    <a href="/" class={cn("font-display text-2xl font-bold tracking-tight text-foreground", map && "glass rounded-full px-4 py-1.5 md:hidden")} aria-label="Visita home">Visita</a>
 
-    <nav aria-label="Main" class="ml-6 hidden md:block">
+    {!map && <nav aria-label="Main" class="ml-6 hidden md:block">
       <ul class="flex items-center gap-1">
         {PRIMARY_NAV.map((link) => (
           <li>
@@ -33,15 +35,15 @@ const here = pagePath(path);
           </li>
         ))}
       </ul>
-    </nav>
+    </nav>}
 
-    <div class="ml-auto flex items-center gap-2">
+    <div class={cn("ml-auto flex items-center gap-2", map && "glass rounded-full p-1")}>
       <AccountMenu server:defer next={here}>
         <a slot="fallback" href={loginHref(here)} class={buttonVariants({ variant: "default", size: "sm" })}>Sign in</a>
       </AccountMenu>
       <button
         type="button"
-        class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "md:hidden")}
+        class={cn(buttonVariants({ variant: "ghost", size: "icon" }), !map && "md:hidden")}
         aria-label="Open menu"
         aria-haspopup="dialog"
         data-menu-open
@@ -54,9 +56,10 @@ const here = pagePath(path);
   <dialog
     id="site-menu"
     aria-label="Menu"
-    class="m-0 ml-auto h-dvh max-h-none w-[min(22rem,88vw)] max-w-none rounded-l-[var(--radius-sheet)] bg-card p-0 text-foreground shadow-card [corner-shape:squircle] backdrop:bg-[rgba(4,44,83,0.32)] backdrop:backdrop-blur-[2px]"
+    class="site-menu pointer-events-auto fixed inset-y-0 right-0 left-auto m-0 ml-auto h-dvh max-h-none w-[min(22rem,88vw)] max-w-none rounded-l-[var(--radius-sheet)] bg-card p-0 text-foreground shadow-card [corner-shape:squircle] backdrop:bg-[rgba(4,44,83,0.32)] backdrop:backdrop-blur-[2px]"
   >
     <div class="flex h-full flex-col" style="padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px)">
+      <div class="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-border md:hidden" aria-hidden="true"></div>
       <div class="flex h-16 items-center justify-between px-5">
         <span class="font-display text-2xl font-bold">Visita</span>
         <button type="button" class={buttonVariants({ variant: "ghost", size: "icon" })} aria-label="Close menu" data-menu-close>
@@ -85,11 +88,20 @@ const here = pagePath(path);
 <script>
   const menu = document.getElementById("site-menu") as HTMLDialogElement | null;
   if (menu) {
+    const closeMenu = () => {
+      if (!menu.open || menu.classList.contains("closing")) return;
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        menu.close();
+        return;
+      }
+      menu.classList.add("closing");
+      window.setTimeout(() => { menu.close(); menu.classList.remove("closing"); }, 180);
+    };
     document.querySelector("[data-menu-open]")?.addEventListener("click", () => menu.showModal());
-    menu.querySelector("[data-menu-close]")?.addEventListener("click", () => menu.close());
+    menu.querySelector("[data-menu-close]")?.addEventListener("click", closeMenu);
     // Tapping the dimmed backdrop closes the menu.
     menu.addEventListener("click", (event) => {
-      if (event.target === menu) menu.close();
+      if (event.target === menu) closeMenu();
     });
   }
 </script>

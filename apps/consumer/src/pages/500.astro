@@ -1,0 +1,29 @@
+---
+// Keep this independent of account, map, and data components so it can render
+// even when one of those services caused the page failure.
+export const prerender = false;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Something went wrong · Visita</title>
+    <style>
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #eaf4fa; color: #042c53; font: 16px/1.5 Arial, sans-serif; }
+      main { width: min(100% - 3rem, 28rem); padding: 2rem; border-radius: 1.5rem; background: white; box-shadow: 0 12px 36px #042c5320; }
+      h1 { margin: 0 0 .5rem; font: 700 2rem/1.15 Georgia, serif; }
+      p { margin: 0 0 1.5rem; }
+      a { display: inline-block; min-height: 44px; padding: .65rem 1.25rem; border-radius: 999px; box-sizing: border-box; background: #1b5d9b; color: white; font-weight: 700; text-decoration: none; }
+      a:focus-visible { outline: 3px solid #efa52a; outline-offset: 3px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Something went wrong</h1>
+      <p>We couldn't open this page right now. Please try again in a moment.</p>
+      <a href="/">Back to Visita</a>
+    </main>
+  </body>
+</html>

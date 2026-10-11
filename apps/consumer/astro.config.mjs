@@ -40,6 +40,8 @@ export default defineConfig({
         "clsx",
         "tailwind-merge",
         "sonner",
+        "playcanvas",
+        "playcanvas/scripts/esm/camera-controls.mjs",
       ],
     },
   },

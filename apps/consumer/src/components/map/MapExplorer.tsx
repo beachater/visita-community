@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useStore } from "@nanostores/react";
 import { toast } from "sonner";
 import { Map, MapControls, MapMarker, MarkerContent, type MapRef } from "@visita/ui/map";
@@ -15,6 +15,7 @@ import { CDO_BOUNDS, CDO_CENTER, mapStyle } from "@/lib/discovery/map-style";
 import { pinnable, toWalkthrough, type MapVenue } from "@/lib/discovery/venues";
 import { getDeviceProfile } from "@/lib/splat/device";
 import { splatSrc } from "@/lib/splat/source";
+import { isOpenAt } from "@/lib/venue/hours";
 import { useDirections } from "../directions/useDirections";
 import { WalkthroughScreen } from "../walkthrough/WalkthroughScreen";
 import { Dock } from "./Dock";
@@ -48,6 +49,10 @@ export function MapExplorer({ mode }: Props) {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [showUnknown, setShowUnknown] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [openNow, setOpenNow] = useState(false);
+  const [threeDOnly, setThreeDOnly] = useState(false);
+  const [cardHeight, setCardHeight] = useState(0);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [here, setHere] = useState<Coords | null>(null);
   const [demandPending, setDemandPending] = useState(false);
   const savedSlugs = useStore($saved);
@@ -67,17 +72,32 @@ export function MapExplorer({ mode }: Props) {
   const style = useMemo(() => mapStyle(new URL(splatSrc(BASEMAP_KEY), location.href).href), []);
   const venues = data?.venues ?? [];
   const filterResult = useMemo(() => applyFilters(venues, filters, showUnknown), [venues, filters, showUnknown]);
-  const pins = filterResult.shown.filter(pinnable);
+  const visibleResult = useMemo(() => ({
+    ...filterResult,
+    shown: filterResult.shown.filter((v) =>
+      (!threeDOnly || v.scanned) && (!openNow || isOpenAt(v.hours, new Date()) === true)),
+  }), [filterResult, openNow, threeDOnly]);
+  const pins = visibleResult.shown.filter(pinnable);
   const lists = useMemo(() => {
-    const ranked = withDistance(sortVenues(venues, here), here);
+    const visible = openNow ? venues.filter((v) => isOpenAt(v.hours, new Date()) === true) : venues;
+    const ranked = withDistance(sortVenues(visible, here), here);
     return {
       scanned: ranked.filter((v) => v.scanned),
       topPicks: ranked.filter((v) => v.isTopPick),
       saved: savedSlugs.map((slug) => ranked.find((v) => v.slug === slug)).filter((v): v is (typeof ranked)[number] => Boolean(v)),
     };
-  }, [venues, here, savedSlugs]);
+  }, [venues, here, savedSlugs, openNow]);
   const selectedVenue = venues.find((v) => v.slug === selected) ?? null;
   const selectedDistance = selectedVenue ? (withDistance([selectedVenue], here)[0]?.distance ?? null) : null;
+  useEffect(() => {
+    if (mode !== "hero" || !selectedVenue || !cardRef.current) return;
+    const card = cardRef.current;
+    const measure = () => setCardHeight(card.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [mode, selectedVenue?.slug]);
 
   const onDemand = async (slug: string) => {
     setDemandPending(true);
@@ -104,6 +124,22 @@ export function MapExplorer({ mode }: Props) {
     track("profile_view", v.id, withFilters());
     if (pinnable(v)) mapRef.current?.easeTo({ center: [v.lng, v.lat], duration: 400 });
   }, []);
+  const browseDock = data && (
+    <Dock
+      scanned={lists.scanned}
+      topPicks={lists.topPicks}
+      saved={lists.saved}
+      activeFilters={activeFilterCount(filters)}
+      onOpenFilters={() => setFiltersOpen(true)}
+      onPick={select}
+      home={mode === "hero"}
+      openNow={openNow}
+      onToggleOpenNow={() => { setOpenNow((value) => !value); setSelected(null); }}
+      threeDOnly={threeDOnly}
+      onToggleThreeD={() => { setThreeDOnly((value) => !value); setSelected(null); }}
+      selected={Boolean(selectedVenue)}
+    />
+  );
 
   // Tapping empty map closes the card. Pins are DOM markers above the canvas,
   // so tapping one doesn't reach this handler.
@@ -153,7 +189,7 @@ export function MapExplorer({ mode }: Props) {
   }, [walkthrough]);
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-muted">
+    <div className={cn("relative h-dvh w-full overflow-hidden bg-muted", mode === "hero" && "map-home", mode === "hero" && selectedVenue && "map-home-selected")} style={{ "--map-card-h": `${cardHeight}px` } as CSSProperties}>
       <Toaster position="top-center" />
       <Map
         ref={attachMap}
@@ -168,10 +204,10 @@ export function MapExplorer({ mode }: Props) {
         loading={!data && !error}
       >
         <MapControls
-          position="top-right"
+          position={mode === "hero" ? "bottom-right" : "top-right"}
           showZoom
           showLocate
-          className={mode === "hero" ? "mt-36" : "mt-16"}
+          className={mode === "hero" ? cn("map-home-controls", selectedVenue && "map-home-controls-selected") : "mt-16"}
           onLocate={({ latitude, longitude }) => setHere({ lat: latitude, lng: longitude })}
         />
         {pins.map((v) => (
@@ -184,22 +220,24 @@ export function MapExplorer({ mode }: Props) {
       </Map>
 
       {error && (
-        <p role="alert" className="surface-raised absolute inset-x-3 top-3 rounded-card px-5 py-3 text-sm">
+        <p role="alert" className={cn("surface-raised absolute inset-x-3 z-20 rounded-card px-5 py-3 text-sm", mode === "hero" ? "top-40 sm:top-24" : "top-3")}>
           {error}
         </p>
       )}
 
-      {/* Search sits at the top; in full-screen mode it leaves room for the Visita chip. */}
+      {/* Home groups search and browse controls; /explore keeps its compact search. */}
       <div
-        className={cn("pointer-events-none absolute right-3 z-10", mode === "full" ? "left-[6.75rem] sm:left-auto sm:w-[26rem]" : "left-3 sm:left-auto sm:w-[26rem]")}
-        style={{ top: mode === "hero" ? "calc(max(0.75rem, env(safe-area-inset-top)) + 4.5rem)" : "max(0.75rem, env(safe-area-inset-top))" }}
+        className={cn("pointer-events-none absolute z-20", mode === "hero" ? "map-home-search" : "left-[6.75rem] right-3 sm:left-auto sm:w-[26rem]")}
+        style={mode === "full" ? { top: "max(0.75rem, env(safe-area-inset-top))" } : undefined}
       >
-        {data && <SearchBar venues={venues} onPick={select} />}
+        {data && <SearchBar venues={venues} onPick={select} home={mode === "hero"} onOpenFilters={() => setFiltersOpen(true)} activeFilters={activeFilterCount(filters)} />}
+        {mode === "hero" && <div className="relative z-10">{browseDock}</div>}
       </div>
 
-      {/* Bottom: the pin card above the dock, both clear of the consent notice. */}
+      {/* The selected venue stays above the consent notice. Home puts browse controls by search. */}
       <div
-        className="pointer-events-none absolute inset-x-3 grid gap-2"
+        ref={cardRef}
+        className={cn("pointer-events-none absolute z-10 grid gap-2", mode === "hero" ? "map-home-card" : "inset-x-3")}
         style={{ bottom: "calc(0.75rem + var(--consent-h, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {selectedVenue && data && (
@@ -225,16 +263,7 @@ export function MapExplorer({ mode }: Props) {
             </div>
           </div>
         )}
-        {data && (
-          <Dock
-            scanned={lists.scanned}
-            topPicks={lists.topPicks}
-            saved={lists.saved}
-            activeFilters={activeFilterCount(filters)}
-            onOpenFilters={() => setFiltersOpen(true)}
-            onPick={select}
-          />
-        )}
+        {mode === "full" && browseDock}
       </div>
 
       <FilterSheet
@@ -245,7 +274,7 @@ export function MapExplorer({ mode }: Props) {
           setFilters(f);
           if (activeFilterCount(f) === 0) setShowUnknown(false);
         }}
-        result={filterResult}
+        result={visibleResult}
         showUnknown={showUnknown}
         onShowUnknown={setShowUnknown}
       />

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Visita · MapLibre globe intro mock</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css">
+  <style>
+    :root { font-family: Arial, sans-serif; color: #092d50; background: #071e35; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #f0a633; outline-offset: 3px; }
+    #map { position: fixed; inset: 0; background: radial-gradient(circle at 50% 40%, #266083, #071e35 70%); }
+    .tint { position: fixed; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(3,26,50,.24), transparent 32%, transparent 65%, rgba(3,26,50,.18)); }
+    .header { position: fixed; z-index: 5; top: calc(18px + env(safe-area-inset-top, 0px)); left: calc(24px + env(safe-area-inset-left, 0px)); right: calc(24px + env(safe-area-inset-right, 0px)); display: flex; align-items: center; gap: 12px; }
+    .brand { padding: 8px 15px; border-radius: 999px; background: rgba(255,255,255,.95); box-shadow: 0 10px 30px #062c5040; font: bold 26px Georgia, serif; }
+    .mock-tag { padding: 7px 10px; border: 1px solid #ffffff70; border-radius: 999px; background: #062c5099; color: #e6f5fb; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .header-actions { display: flex; gap: 8px; margin-left: auto; }
+    .header-actions button { min-height: 42px; padding: 0 16px; border: 1px solid #ffffff90; border-radius: 999px; background: #062c50c7; color: #fff; font-size: 13px; font-weight: 700; backdrop-filter: blur(12px); }
+    .header-actions button:hover { background: #115a89; }
+    .header-actions button[hidden] { display: none; }
+    .header-actions button:disabled { opacity: .5; cursor: wait; }
+    .intro-copy { position: fixed; z-index: 4; left: 24px; right: 24px; bottom: calc(48px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: end; justify-content: space-between; gap: 24px; color: #fff; pointer-events: none; transition: opacity .35s ease, transform .35s ease; }
+    .intro-copy[hidden] { display: none; }
+    .intro-copy h1 { margin: 0 0 8px; font: bold clamp(30px, 5vw, 58px)/1.05 Georgia, serif; text-shadow: 0 6px 24px #031b34a8; }
+    .intro-copy p { margin: 0; color: #dfedf7; font-size: 13px; line-height: 1.5; text-shadow: 0 3px 12px #031b34; }
+    .step { padding: 9px 13px; border: 1px solid #ffffff78; border-radius: 999px; background: #062c50af; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .app-ui { position: fixed; z-index: 3; inset: 0; opacity: 0; pointer-events: none; transition: opacity .4s ease; }
+    .app-ui.visible { opacity: 1; pointer-events: auto; }
+    .search { position: absolute; top: calc(86px + env(safe-area-inset-top, 0px)); left: calc(24px + env(safe-area-inset-left, 0px)); width: min(440px, calc(100% - 48px)); min-height: 54px; display: flex; align-items: center; gap: 10px; padding: 0 17px; border-radius: 18px; background: #fff; box-shadow: 0 10px 32px #062c5040; color: #617b91; font-size: 15px; }
+    .search span:first-child { font-size: 24px; line-height: 1; }
+    .bottom { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); left: calc(24px + env(safe-area-inset-left, 0px)); padding: 11px 15px; border-radius: 999px; background: #fff; box-shadow: 0 10px 32px #062c5040; font-size: 13px; font-weight: 700; }
+    .pin { width: 30px; height: 38px; display: grid; place-items: center; border: 3px solid #082f55; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); background: #f0a633; box-shadow: 0 4px 15px #062c5060; opacity: 0; transition: opacity .3s; }
+    .pin::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #082f55; }
+    .pin.visible { opacity: 1; }
+    .error { position: fixed; z-index: 9; top: 50%; left: 50%; width: min(430px, calc(100% - 36px)); transform: translate(-50%, -50%); padding: 22px; border-radius: 20px; background: #fff; box-shadow: 0 15px 50px #0006; line-height: 1.5; }
+    .error[hidden] { display: none; }
+    .error strong { display: block; margin-bottom: 6px; font: bold 22px Georgia, serif; }
+    .error p { margin: 0; font-size: 14px; }
+    .maplibregl-ctrl-bottom-right { bottom: 2px; }
+    @media (max-width: 600px) {
+      .header { left: calc(20px + env(safe-area-inset-left, 0px)); right: calc(20px + env(safe-area-inset-right, 0px)); }
+      .brand { font-size: 23px; }
+      .mock-tag { display: none; }
+      .header-actions button { padding: 0 12px; }
+      .intro-copy { left: 20px; right: 20px; bottom: calc(42px + env(safe-area-inset-bottom, 0px)); display: block; }
+      .intro-copy h1 { font-size: 32px; }
+      .step { display: inline-block; margin-top: 14px; }
+      .search { top: calc(82px + env(safe-area-inset-top, 0px)); left: 20px; width: calc(100% - 40px); }
+      .bottom { left: 20px; bottom: calc(30px + env(safe-area-inset-bottom, 0px)); }
+    }
+    @media (prefers-reduced-motion: reduce) { .intro-copy, .app-ui, .pin { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="map" aria-label="MapLibre globe and Cagayan de Oro map"></div>
+  <div class="tint" aria-hidden="true"></div>
+  <header class="header">
+    <span class="brand">Visita</span><span class="mock-tag">MapLibre graphics mock</span>
+    <div class="header-actions"><button id="skip" type="button" hidden>Skip</button><button id="replay" type="button" disabled>Replay flight</button></div>
+  </header>
+  <section class="intro-copy" id="intro-copy" aria-live="polite"><div><h1 id="headline">Loading the globe…</h1><p>Real geographic map tiles, rendered on a MapLibre globe.</p></div><span class="step" id="step">World → Philippines → CDO</span></section>
+  <div class="app-ui" id="app-ui" aria-hidden="true"><div class="search"><span aria-hidden="true">⌕</span><span>Search cafes in CDO</span></div><div class="bottom">Explore CDO ↑</div></div>
+  <div class="error" id="error" role="alert" hidden><strong>Map could not load</strong><p id="error-message">This mock needs WebGL and internet access to MapLibre and the public demo tiles.</p></div>
+  <script type="module">
+    const CDO = [124.6465, 8.4822];
+    const START = { center: [116, 10], zoom: 1.6, pitch: 0, bearing: -12 };
+    const END = { center: CDO, zoom: 12.5, pitch: 30, bearing: 0 };
+    const headline = document.getElementById('headline');
+    const introCopy = document.getElementById('intro-copy');
+    const step = document.getElementById('step');
+    const appUi = document.getElementById('app-ui');
+    const skipButton = document.getElementById('skip');
+    const replayButton = document.getElementById('replay');
+    const errorBox = document.getElementById('error');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let map;
+    let marker;
+    let run = 0;
+    let flightTimer;
+    let timeout;
+    let loaded = false;
+    let failed = false;
+
+    function showError(message) {
+      failed = true;
+      clearTimeout(flightTimer);
+      clearTimeout(timeout);
+      skipButton.hidden = true;
+      introCopy.hidden = true;
+      document.getElementById('error-message').textContent = message;
+      errorBox.hidden = false;
+    }
+    function finish() {
+      clearTimeout(flightTimer);
+      clearTimeout(timeout);
+      skipButton.hidden = true;
+      replayButton.disabled = false;
+      introCopy.hidden = true;
+      appUi.classList.add('visible');
+      appUi.setAttribute('aria-hidden', 'false');
+      marker?.classList.add('visible');
+    }
+    function skip() {
+      if (!map || !loaded) return;
+      run++;
+      map.stop();
+      map.jumpTo(END);
+      finish();
+    }
+    function play() {
+      if (!map || !loaded) return;
+      const thisRun = ++run;
+      clearTimeout(flightTimer);
+      clearTimeout(timeout);
+      map.stop();
+      map.jumpTo(START);
+      introCopy.hidden = false;
+      appUi.classList.remove('visible');
+      appUi.setAttribute('aria-hidden', 'true');
+      marker?.classList.remove('visible');
+      replayButton.disabled = true;
+      skipButton.hidden = false;
+      headline.textContent = 'From the world to CDO';
+      step.textContent = 'Philippines \u2192 Cagayan de Oro';
+      if (reducedMotion.matches) { skip(); return; }
+      flightTimer = setTimeout(() => {
+        if (run !== thisRun) return;
+        map.once('moveend', () => { if (run === thisRun) finish(); });
+        map.flyTo({ ...END, duration: 2200, essential: false });
+        timeout = setTimeout(() => { if (run === thisRun) finish(); }, 3200);
+      }, 350);
+    }
+    skipButton.addEventListener('click', skip);
+    replayButton.addEventListener('click', play);
+
+    try {
+      const maplibregl = await import('https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs');
+      map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        ...START,
+        renderWorldCopies: false,
+        attributionControl: { compact: true },
+      });
+      // The public global tiles are for this design mock; the app currently hosts CDO-only tiles.
+      map.on('style.load', () => {
+        try {
+          map.setProjection({ type: 'globe' });
+          map.setSky({
+            'sky-color': '#071e35',
+            'horizon-color': '#246a91',
+            'fog-color': '#9dcddd',
+            'sky-horizon-blend': 0.55,
+            'horizon-fog-blend': 0.22,
+            'fog-ground-blend': 0.12,
+            'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 6, 0],
+          });
+        } catch (error) {
+          showError(error instanceof Error ? error.message : 'Globe projection could not start.');
+        }
+      });
+      const pin = document.createElement('div');
+      pin.className = 'pin';
+      marker = pin;
+      new maplibregl.Marker({ element: pin, anchor: 'bottom' }).setLngLat(CDO).addTo(map);
+      map.once('load', () => { if (failed) return; loaded = true; play(); });
+      map.on('error', (event) => { if (!loaded) console.warn('MapLibre mock:', event.error); });
+      setTimeout(() => { if (!loaded && !failed) showError('The global demo tiles did not load. Check your connection, then reload this mock.'); }, 15000);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'MapLibre could not start.');
+    }
+  </script>
+</body>
+</html>

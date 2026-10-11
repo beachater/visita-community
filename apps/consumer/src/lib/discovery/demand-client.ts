@@ -1,5 +1,6 @@
 import { getDeviceId } from "../visitor/device";
 import { markDemanded } from "../visitor/stores";
+import { publicApiMessage } from "../errors/public-message";
 
 export type DemandOutcome = { ok: true } | { ok: false; message: string };
 
@@ -16,7 +17,7 @@ export async function requestScan(slug: string): Promise<DemandOutcome> {
       return { ok: true };
     }
     const body = (await res.json().catch(() => ({}))) as { error?: string };
-    return { ok: false, message: body.error ?? "Couldn't send your request. Try again later." };
+    return { ok: false, message: publicApiMessage(body.error, "Couldn't send your request. Try again later.") };
   } catch {
     return { ok: false, message: "You seem to be offline. Try again when you're connected." };
   }

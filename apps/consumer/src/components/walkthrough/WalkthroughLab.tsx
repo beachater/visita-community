@@ -58,8 +58,12 @@ export function WalkthroughLab() {
   // freeze. Record errors so "Copy results" carries the cause.
   useEffect(() => {
     const add = (message: string) => setErrors((e) => (e.length >= 5 ? e : [...e, message.slice(0, 300)]));
-    const onError = (event: ErrorEvent) => add(`${event.message} @ ${event.filename?.split("/").pop()}:${event.lineno}`);
-    const onRejection = (event: PromiseRejectionEvent) => add(`unhandled: ${String(event.reason?.stack ?? event.reason)}`);
+    const onError = (event: ErrorEvent) => add(import.meta.env.DEV
+      ? `${event.message} @ ${event.filename?.split("/").pop()}:${event.lineno}`
+      : "The viewer stopped unexpectedly.");
+    const onRejection = (event: PromiseRejectionEvent) => add(import.meta.env.DEV
+      ? `unhandled: ${String(event.reason?.stack ?? event.reason)}`
+      : "The viewer stopped unexpectedly.");
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
     return () => {

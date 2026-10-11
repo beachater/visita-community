@@ -8,6 +8,7 @@ import { cn } from "@visita/ui/utils";
 import { MAX_REVIEW_CHARS } from "@/lib/reviews/input";
 import { WRITE_REVIEW_EVENT } from "@/lib/reviews/open";
 import { PHOTO_UPLOAD_TIMEOUT_MS, photoFailureMessage } from "@/lib/reviews/photo-errors";
+import { publicApiMessage } from "@/lib/errors/public-message";
 import { resizeToJpeg } from "@visita/uploads/resize";
 
 // PRD 4.3: write or edit your review of a cafe: 1–5 stars, text and an
@@ -154,7 +155,7 @@ export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: P
       const method = existing || savedId ? "PATCH" : "POST";
       const { ok, data } = await send(method, { slug, rating, body, removePhoto: removePhoto && !photo });
       if (!ok || !data.id) {
-        setError(data.error ?? "Couldn't save your review. Try again.");
+        setError(publicApiMessage(data.error, "Couldn't save your review. Try again."));
         return;
       }
       setSavedId(data.id);
@@ -176,7 +177,7 @@ export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: P
     try {
       const { ok, data } = await send("DELETE", { slug });
       if (ok) finish();
-      else setError(data.error ?? "Couldn't delete your review. Try again.");
+      else setError(publicApiMessage(data.error, "Couldn't delete your review. Try again."));
     } catch {
       setError("You're offline. Try again when you're connected.");
     } finally {

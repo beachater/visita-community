@@ -6,7 +6,8 @@ describe("photoFailureMessage", () => {
     expect(photoFailureMessage({ kind: "decode" })).toMatch(/can't be read.*JPEG or PNG/));
   it("says it timed out, and how to retry", () => expect(photoFailureMessage({ kind: "timeout" })).toMatch(/timed out.*Try the photo again/));
   it("points at the connection for a network failure", () => expect(photoFailureMessage({ kind: "network" })).toMatch(/connection/));
-  it("passes the server's reason through", () => expect(photoFailureMessage({ kind: "server", message: "Photos can be up to 8 MB." })).toMatch(/up to 8 MB/));
+  it("shows an approved server reason", () => expect(photoFailureMessage({ kind: "server", message: "Photos can be up to 8 MB." })).toMatch(/up to 8 MB/));
+  it("hides a technical server error", () => expect(photoFailureMessage({ kind: "server", message: "TypeError: failed at /internal/path" })).not.toMatch(/TypeError|internal/));
   it("always says the review itself is saved", () =>
     (["decode", "timeout", "network"] as const).forEach((kind) => expect(photoFailureMessage({ kind })).toMatch(/^Your review is saved/)));
 });

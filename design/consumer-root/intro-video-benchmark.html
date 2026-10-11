@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Visita intro video performance sample</title>
+  <link rel="preload" as="image" href="./intro-flight-mobile-poster.jpg">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; overflow: hidden; background: radial-gradient(circle at 50% 42%, #265674, #062947 57%, #031b32); color: white; font-family: Arial, sans-serif; }
+    .poster, video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .poster { background: url('./intro-flight-mobile-poster.jpg') center / cover no-repeat; }
+    video { opacity: 0; mix-blend-mode: screen; }
+    video.playing { opacity: 1; }
+    .poster.playing { display: none; }
+    .brand { position: fixed; top: calc(24px + env(safe-area-inset-top)); left: 24px; font: bold 28px Georgia, serif; text-shadow: 0 3px 16px #031b32; }
+    .tag { position: fixed; top: calc(30px + env(safe-area-inset-top)); right: 24px; font: bold 11px Arial, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+    .copy { position: fixed; bottom: calc(48px + env(safe-area-inset-bottom)); left: 24px; right: 24px; font: bold clamp(28px, 6vw, 54px)/1.1 Georgia, serif; text-shadow: 0 4px 20px #031b32; }
+    .attribution { position: fixed; right: 8px; bottom: 8px; padding: 3px 6px; border-radius: 6px; background: #fff; color: #234; font: 10px Arial, sans-serif; }
+    .attribution a { color: inherit; }
+  </style>
+</head>
+<body>
+  <div class="poster" aria-hidden="true"></div>
+  <video autoplay muted playsinline preload="auto" aria-hidden="true" src="./intro-flight-mobile-sample.mp4"></video>
+  <span class="brand">Visita</span><span class="tag">Video sample</span>
+  <div class="copy">From the world to CDO</div>
+  <div class="attribution">Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://openmaptiles.org/">OpenMapTiles</a> · <a href="https://openfreemap.org/">OpenFreeMap</a></div>
+  <script>
+    const video = document.querySelector('video');
+    video.addEventListener('playing', () => {
+      video.classList.add('playing');
+      document.querySelector('.poster').classList.add('playing');
+    });
+  </script>
+</body>
+</html>

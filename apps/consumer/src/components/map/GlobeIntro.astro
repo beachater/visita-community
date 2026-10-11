@@ -1,0 +1,205 @@
+<!-- First-visit illustrated globe. Geographic outlines rotate toward CDO, with no map tiles. -->
+<section id="globe-intro" class="intro" aria-label="Arriving in Cagayan de Oro" hidden>
+  <div class="intro-top">
+    <span class="wordmark">Visita</span>
+    <button id="skip-globe-intro" type="button">Skip intro</button>
+  </div>
+
+  <div id="intro-scene" class="scene" aria-hidden="true">
+    <div class="orbit orbit-one"></div>
+    <div class="orbit orbit-two"></div>
+    <div class="globe-glow"></div>
+    <img id="intro-globe-poster" class="globe-poster" alt="" fetchpriority="high" />
+    <canvas id="intro-globe-canvas" class="globe-canvas" width="400" height="400"></canvas>
+  </div>
+  <span id="intro-arrival-dot" class="arrival-dot" aria-hidden="true"></span>
+  <span id="intro-arrival-label" class="arrival-label" aria-hidden="true">Cagayan de Oro</span>
+
+  <div class="intro-copy">
+    <span class="eyebrow">A place worth exploring</span>
+    <h2>From the world to CDO</h2>
+    <p>Step inside Cagayan de Oro</p>
+  </div>
+</section>
+
+<style>
+  .intro { position: fixed; inset: 0; z-index: 60; overflow: hidden; color: white; background: radial-gradient(circle at 50% 44%, #184d70, #072f50 54%, #041c34); isolation: isolate; }
+  .intro[hidden] { display: none; }
+  .intro::before { content: ""; position: absolute; inset: 0; opacity: .45; background-image: radial-gradient(circle, #bcf4ff 1px, transparent 1.5px), radial-gradient(circle, #bcf4ff 1px, transparent 1.5px); background-size: 170px 170px, 230px 230px; background-position: 14px 25px, 83px 92px; mask-image: linear-gradient(90deg, black, transparent 68%, black); }
+  .intro::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 55%, rgba(3, 21, 41, .78)); }
+  .intro-top { position: absolute; z-index: 4; top: calc(env(safe-area-inset-top, 0px) + 1.5rem); left: calc(env(safe-area-inset-left, 0px) + 1.5rem); right: calc(env(safe-area-inset-right, 0px) + 1.5rem); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .wordmark { font: 700 1.6rem "Playfair Display", Georgia, serif; text-shadow: 0 3px 18px rgba(3, 27, 50, .6); }
+  button { min-height: 44px; border: 1px solid rgba(255,255,255,.6); border-radius: 999px; background: rgba(6, 44, 80, .8); color: white; padding: 0 1.1rem; font: 700 .85rem "DM Sans", sans-serif; cursor: pointer; }
+  button:hover { background: #115a89; }
+  button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+  .scene { position: absolute; top: 0; left: 0; width: min(56vmin, 520px); aspect-ratio: 1; transform-origin: top left; }
+  .globe-poster, .globe-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; filter: drop-shadow(0 30px 70px rgba(0, 12, 31, .45)); transition: opacity .15s ease; }
+  .globe-canvas { opacity: 0; transition: opacity .15s ease; }
+  .intro.live .globe-canvas { opacity: 1; }
+  .intro.live .globe-poster { opacity: 0; }
+  .globe-glow { position: absolute; inset: -5%; border-radius: 50%; background: #6acde2; filter: blur(68px); opacity: .22; }
+  .orbit { position: absolute; inset: -14%; border: 1px solid rgba(168, 229, 241, .24); border-radius: 50%; transform: rotate(-25deg) scaleY(.47); }
+  .orbit-two { inset: -23%; transform: rotate(37deg) scaleY(.56); opacity: .65; }
+  /* Orthographic projection of 124.6465 E, 8.4822 N in globe.svg. */
+  .arrival-dot { position: absolute; z-index: 2; width: 12px; height: 12px; transform: translate(-50%, -50%); border: 3px solid white; border-radius: 50%; background: #eda633; box-shadow: 0 0 0 7px rgba(237,166,51,.22), 0 0 22px #eda633; }
+  .arrival-label { position: absolute; z-index: 2; transform: translateY(-50%); white-space: nowrap; color: #e8faff; font: 700 .72rem "DM Sans", sans-serif; letter-spacing: .05em; text-shadow: 0 2px 8px #031b32; }
+  .intro-copy { position: absolute; z-index: 3; left: calc(env(safe-area-inset-left, 0px) + 3rem); right: calc(env(safe-area-inset-right, 0px) + 3rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 3rem); text-shadow: 0 4px 20px #031b32; }
+  .eyebrow { display: block; margin-bottom: .75rem; color: #a8ddeb; font: 700 .72rem "DM Sans", sans-serif; letter-spacing: .18em; text-transform: uppercase; }
+  .intro-copy h2 { margin: 0 0 .5rem; font: 700 clamp(2rem, 5vw, 3.6rem)/1.05 "Playfair Display", Georgia, serif; }
+  .intro-copy p { margin: 0; color: #d8eaf3; font: 700 .85rem "DM Sans", sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+  .intro.playing .orbit-one { animation: orbit 2.7s ease-in-out both; }
+  .intro.playing .orbit-two { animation: orbit 2.7s ease-in-out reverse both; }
+  .intro.playing { animation: reveal-map 2.9s ease both; }
+  @keyframes orbit { to { transform: rotate(85deg) scaleY(.48); opacity: 0; } }
+  @keyframes reveal-map { 0%, 82% { opacity: 1; } 100% { opacity: 0; } }
+  @media (max-width: 640px) {
+    .scene { width: min(78vw, 360px); }
+    .intro-copy { left: calc(env(safe-area-inset-left, 0px) + 1.5rem); right: calc(env(safe-area-inset-right, 0px) + 1.5rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 3rem); }
+    .arrival-label { font-size: .62rem; }
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const intro = document.getElementById("globe-intro");
+    const scene = document.getElementById("intro-scene");
+    const dot = document.getElementById("intro-arrival-dot");
+    const label = document.getElementById("intro-arrival-label");
+    const canvas = document.getElementById("intro-globe-canvas");
+    const poster = document.getElementById("intro-globe-poster");
+    if (!intro || !scene || !dot || !label || !canvas || !poster || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const key = "visita-globe-intro-seen-v1";
+    const replay = new URLSearchParams(location.search).get("intro") === "1";
+    let seen = false;
+    try { seen = sessionStorage.getItem(key) === "1"; } catch {}
+    if (seen && !replay) return;
+
+    poster.src = "/intro/globe.svg";
+    intro.hidden = false;
+    const width = scene.offsetWidth;
+    const screenX = window.innerWidth / 2;
+    const cdo = [124.6465, 8.4822];
+    const duration = 2900;
+    let frame = 0;
+    let completionTimer = 0;
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(safetyTimer);
+      clearTimeout(completionTimer);
+      cancelAnimationFrame(frame);
+      intro.hidden = true;
+      try { sessionStorage.setItem(key, "1"); } catch {}
+    };
+    const safetyTimer = setTimeout(finish, 5500);
+    document.getElementById("skip-globe-intro")?.addEventListener("click", finish, { once: true });
+
+    const place = (point, scale, progress) => {
+      const centerY = window.innerHeight * (.45 + .05 * progress);
+      const left = screenX - width * scale / 2;
+      const top = centerY - width * scale / 2;
+      scene.style.transform = `translate(${left}px, ${top}px) scale(${scale})`;
+      const x = left + point[0] / 400 * width * scale;
+      const y = top + point[1] / 400 * width * scale;
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+      dot.style.opacity = String(Math.min(1, (1 - progress) * 6));
+      label.style.left = `${x + 15}px`;
+      label.style.top = `${y}px`;
+      label.style.opacity = String(Math.max(0, 1 - progress * 4));
+    };
+    place([319.9, 202.7], .78, 0);
+
+    const loadScript = (src) => new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+    const geography = fetch("/intro/land.json").then((response) => {
+      if (!response.ok) throw new Error("Globe outline unavailable");
+      return response.json();
+    });
+    const library = loadScript("/intro/d3-array.min.js")
+      .then(() => loadScript("/intro/d3-geo.min.js"));
+
+    Promise.all([geography, library]).then(([land]) => {
+      if (finished || !window.d3?.geoOrthographic) return;
+      const d3 = window.d3;
+      const context = canvas.getContext("2d");
+      if (!context) { finish(); return; }
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = 400 * ratio;
+      canvas.height = 400 * ratio;
+      context.scale(ratio, ratio);
+      const projection = d3.geoOrthographic()
+        .rotate([-85, -12]).translate([200, 200]).scale(190).clipAngle(90).precision(.4);
+      const path = d3.geoPath(projection, context);
+      const grid = d3.geoGraticule().step([30, 30])();
+      const ocean = context.createRadialGradient(125, 95, 5, 200, 200, 205);
+      ocean.addColorStop(0, "#86d9e1");
+      ocean.addColorStop(.5, "#278fb0");
+      ocean.addColorStop(1, "#074d78");
+      const landColor = context.createLinearGradient(0, 0, 400, 400);
+      landColor.addColorStop(0, "#d6ecd3");
+      landColor.addColorStop(1, "#83bcaa");
+      const shade = context.createRadialGradient(140, 104, 25, 200, 200, 195);
+      shade.addColorStop(.4, "rgba(3,27,50,0)");
+      shade.addColorStop(1, "rgba(3,27,50,.65)");
+
+      const draw = (longitude, latitude) => {
+        projection.rotate([-longitude, -latitude]);
+        context.clearRect(0, 0, 400, 400);
+        context.save();
+        context.beginPath();
+        context.arc(200, 200, 190, 0, Math.PI * 2);
+        context.clip();
+        context.fillStyle = ocean;
+        context.fillRect(0, 0, 400, 400);
+        context.beginPath();
+        path(grid);
+        context.strokeStyle = "rgba(220,250,255,.2)";
+        context.lineWidth = .7;
+        context.stroke();
+        context.beginPath();
+        path(land);
+        context.fillStyle = landColor;
+        context.fill("evenodd");
+        context.strokeStyle = "rgba(225,242,220,.45)";
+        context.lineWidth = .45;
+        context.stroke();
+        context.fillStyle = shade;
+        context.fillRect(0, 0, 400, 400);
+        context.restore();
+        context.beginPath();
+        context.arc(200, 200, 190, 0, Math.PI * 2);
+        context.strokeStyle = "rgba(213,251,255,.65)";
+        context.lineWidth = 2;
+        context.stroke();
+      };
+      const ease = (value) => value < .5
+        ? 4 * value * value * value
+        : 1 - Math.pow(-2 * value + 2, 3) / 2;
+      const clamp = (value) => Math.max(0, Math.min(1, value));
+      draw(85, 12);
+      intro.classList.add("live", "playing");
+      const started = performance.now();
+      const tick = (now) => {
+        if (finished) return;
+        const progress = clamp((now - started) / duration);
+        const turn = ease(clamp(progress / .64));
+        const longitude = 85 + (cdo[0] - 85) * turn;
+        const latitude = 12 + (cdo[1] - 12) * turn;
+        if (progress < .65) draw(longitude, latitude);
+        const zoom = progress < .64 ? .78 + .22 * turn
+          : 1 + 3.3 * ease(clamp((progress - .64) / .36));
+        place(projection(cdo), zoom, progress);
+        if (progress < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+      completionTimer = setTimeout(finish, duration + 100);
+    }).catch(finish);
+  })();
+</script>

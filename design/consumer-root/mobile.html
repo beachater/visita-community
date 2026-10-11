@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Visita · Mobile map mock</title>
+  <style>
+    :root { font-family: Arial, sans-serif; color: #082f55; background: #dceaf1; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #2884c6; outline-offset: 2px; }
+    .note { max-width: 850px; margin: 18px auto 12px; padding: 0 20px; font-size: 14px; line-height: 1.5; }
+    .note strong { display: block; font-size: 18px; margin-bottom: 3px; }
+    .phone { position: relative; width: min(390px, 100%); height: min(844px, calc(100dvh - 108px)); min-height: 600px; margin: 0 auto 20px; overflow: hidden; isolation: isolate; border: 8px solid #102b40; border-radius: 42px; box-shadow: 0 25px 70px #082f5540; background: #e9ece9; }
+    .map { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform .3s ease; transform-origin: 50% 55%; }
+    .map text { fill: #697a84; font: 600 15px Arial, sans-serif; }
+    .map .city { font-size: 21px; fill: #50636f; }
+    .map .road { fill: none; stroke: #fff; stroke-width: 7; stroke-linecap: round; }
+    .map .minor { fill: none; stroke: #fff; stroke-width: 2; opacity: .7; }
+    .top { position: absolute; z-index: 5; top: calc(14px + env(safe-area-inset-top)); left: 14px; right: 14px; }
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { background: #fff; border-radius: 999px; padding: 7px 14px; box-shadow: 0 8px 22px #082f5528; font: bold 25px Georgia, serif; }
+    .account { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: #d9f8fc; box-shadow: 0 8px 22px #082f5528; }
+    .account button { min-height: 42px; border: 0; border-radius: 999px; color: #082f55; background: transparent; padding: 0 10px; font-weight: 700; }
+    .account .sign { background: #1762a6; color: #fff; padding: 0 15px; }
+    .search { display: flex; align-items: center; gap: 10px; margin-top: 12px; height: 50px; padding: 0 15px; border-radius: 17px; background: #fff; box-shadow: 0 8px 22px #082f5528; }
+    .search span { font-size: 23px; color: #48708a; }
+    .search input { width: 100%; min-width: 0; border: 0; outline: 0; background: none; color: #082f55; font-size: 14px; }
+    .search input::placeholder { color: #5b7289; }
+    .chips { display: flex; gap: 7px; margin-top: 10px; }
+    .chips button { flex: 1; min-width: 0; min-height: 40px; padding: 0 5px; border: 1px solid #e5eef2; border-radius: 999px; background: #fff; color: #082f55; box-shadow: 0 6px 15px #082f5522; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .chips button[aria-pressed="true"] { background: #0b578f; border-color: #0b578f; color: #fff; }
+    .pins { position: absolute; inset: 0; z-index: 2; }
+    .pin { position: absolute; width: 34px; height: 42px; border: 3px solid #082f55; border-radius: 50% 50% 50% 5px; transform: rotate(-45deg); background: #fff; box-shadow: 0 5px 15px #082f5540; }
+    .pin::after { content: ""; position: absolute; width: 10px; height: 10px; top: 10px; left: 10px; border-radius: 50%; background: #082f55; }
+    .pin.scanned { background: #f4ad37; }
+    .pin[hidden] { display: none; }
+    .pin.one { left: 24%; top: 47%; } .pin.two { left: 68%; top: 44%; } .pin.three { left: 48%; top: 61%; }
+    .map-tools { position: absolute; z-index: 4; right: 14px; bottom: calc(102px + env(safe-area-inset-bottom)); display: grid; gap: 9px; transition: bottom .25s; }
+    .map-tools button { width: 44px; height: 44px; border: 1px solid #e4edf3; background: #fff; color: #082f55; box-shadow: 0 6px 15px #082f5527; font-size: 22px; }
+    .map-tools button:first-child { border-radius: 15px 15px 0 0; }
+    .map-tools button:nth-child(2) { margin-top: -9px; border-top: 0; border-radius: 0 0 15px 15px; }
+    .map-tools button:last-child { border-radius: 15px; font-size: 19px; }
+    .browse-peek { position: absolute; z-index: 5; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); width: calc(100% - 20px); min-height: 70px; display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 15px; border: 1px solid #e0ebf0; border-radius: 20px; background: #fff; color: #082f55; box-shadow: 0 -8px 28px #082f5530; }
+    .browse-peek .badge { display: grid; place-items: center; width: 42px; height: 42px; flex: none; border-radius: 13px; background: #dcf5f6; font-size: 22px; }
+    .browse-peek strong, .browse-peek small { display: block; }
+    .browse-peek strong { font-size: 15px; } .browse-peek small { margin-top: 3px; color: #63798d; font-size: 12px; }
+    .browse-peek .arrow { margin-left: auto; font-size: 22px; }
+    .browse-peek[hidden] { display: none; }
+    .scrim { position: absolute; z-index: 9; inset: 0; border: 0; background: #062b4a66; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .scrim.visible { opacity: 1; pointer-events: auto; }
+    .sheet { position: absolute; z-index: 10; left: 0; right: 0; bottom: 0; max-height: 77%; overflow: auto; padding: 10px 18px calc(22px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; background: #fff; box-shadow: 0 -10px 35px #082f5530; transform: translateY(105%); transition: transform .25s ease; }
+    .sheet.visible { transform: translateY(0); }
+    .handle { width: 42px; height: 5px; margin: 0 auto 20px; border-radius: 99px; background: #cad9e3; }
+    .sheet-head { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .sheet h2 { margin: 0 0 5px; font: bold 24px Georgia, serif; }
+    .sheet p { margin: 0 0 19px; color: #5a7083; font-size: 13px; line-height: 1.45; }
+    .close { width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; background: #ecf4f8; color: #082f55; font-size: 22px; }
+    .sheet-row { display: flex; align-items: center; width: 100%; min-height: 62px; gap: 12px; padding: 10px; margin: 8px 0; border: 1px solid #dfebf2; border-radius: 16px; background: #f8fbfd; color: #082f55; text-align: left; }
+    .sheet-row .thumb { display: grid; place-items: center; width: 42px; height: 42px; flex: none; border-radius: 12px; background: #d9f2f4; font-size: 20px; }
+    .sheet-row strong, .sheet-row small { display: block; }
+    .sheet-row small { margin-top: 3px; color: #63798d; }
+    .sheet-row .arrow { margin-left: auto; }
+    .venue { position: absolute; z-index: 7; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); display: none; padding: 18px; border-radius: 21px; background: #fff; box-shadow: 0 -8px 28px #082f5530; }
+    .venue.visible { display: block; }
+    .venue h2 { margin: 3px 0 8px; font: bold 22px Georgia, serif; }
+    .venue p { margin: 0 0 14px; color: #5a7083; font-size: 13px; }
+    .venue .action { width: 100%; min-height: 44px; border: 0; border-radius: 999px; background: #1762a6; color: #fff; font-weight: 700; }
+    .phone.has-venue .chips { display: none; }
+    .phone.has-venue .map-tools { bottom: calc(206px + env(safe-area-inset-bottom)); }
+    .toast { position: absolute; z-index: 20; left: 20px; right: 20px; bottom: calc(92px + env(safe-area-inset-bottom)); padding: 12px; border-radius: 12px; background: #082f55; color: #fff; text-align: center; font-size: 13px; box-shadow: 0 8px 20px #082f5540; }
+    .toast[hidden] { display: none; }
+    .search-list { position: absolute; z-index: 6; top: calc(131px + env(safe-area-inset-top)); left: 14px; right: 14px; display: none; padding: 8px; border-radius: 16px; background: #fff; box-shadow: 0 12px 30px #082f5530; }
+    .search-list.visible { display: block; }
+    .search-list button { width: 100%; min-height: 44px; border: 0; border-radius: 10px; background: transparent; color: #082f55; text-align: left; padding: 0 10px; }
+    @media (max-width: 500px) { :root { background: #e9ece9; } .note { display: none; } .phone { width: 100%; height: 100dvh; min-height: 0; margin: 0; border: 0; border-radius: 0; box-shadow: none; } }
+    @media (prefers-reduced-motion: reduce) { .map, .scrim, .sheet, .map-tools { transition: none; } }
+  </style>
+</head>
+<body>
+  <div class="note"><strong>Visita mobile map concept</strong>Mock only. Try the quick filters, Browse sheet, map pins, search, and menu. No app data or account is used.</div>
+  <main class="phone" id="phone" aria-label="Visita mobile map mock">
+    <svg class="map" id="map" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="390" height="844" fill="#e6e5e1"/>
+      <path d="M0 0h390v120c-95-10-160 13-220 4C100 115 50 94 0 111Z" fill="#86dae3"/>
+      <path d="M-35 640c95-90 173-73 184-179 11-91-68-114-38-199 22-63 122-63 153-137" fill="none" stroke="#8ee0e7" stroke-width="38"/>
+      <path d="M-35 640c95-90 173-73 184-179 11-91-68-114-38-199 22-63 122-63 153-137" fill="none" stroke="#65d0dc" stroke-width="25"/>
+      <path class="road" d="M-30 249 402 572M-20 434 405 362M40 844 310 0M-20 700 390 174M101 844 368 80"/>
+      <path class="minor" d="M0 320 390 505M-20 555 390 270M0 760 390 440M43 0l90 844M220 0l108 844M0 178l390 120M0 505l390 114M0 394l390 28"/>
+      <path d="M238 685c38-17 62-4 91 18l-21 50-77-20Z" fill="#b3d6b5"/>
+      <text x="97" y="476" class="city">Cagayan de Oro</text><text x="242" y="330">BARANGAY 22</text><text x="26" y="586">CARMEN</text><text x="211" y="675">MACASANDIG</text>
+    </svg>
+    <div class="top">
+      <div class="topline"><span class="brand">Visita</span><div class="account"><button class="sign" id="signin" type="button">Sign in</button><button id="menu-button" type="button" aria-label="Open menu">☰</button></div></div>
+      <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search cafes in Cagayan de Oro" aria-label="Search cafes"></label>
+      <nav class="chips" aria-label="Quick filters"><button id="three-d" type="button" aria-pressed="false">◇ 3D</button><button id="open-now" type="button" aria-pressed="false">Open now</button><button id="filter" type="button">☷ Filter</button></nav>
+    </div>
+    <div class="search-list" id="search-list"><button type="button" data-venue="1">Sample cafe · 3D tour</button><button type="button" data-venue="2">Another sample cafe · Details</button></div>
+    <div class="pins"><button class="pin scanned one" data-venue="1" type="button" aria-label="Open sample 3D cafe"></button><button class="pin two" data-venue="2" type="button" aria-label="Open another sample cafe"></button><button class="pin scanned three" data-venue="3" type="button" aria-label="Open third sample cafe"></button></div>
+    <div class="map-tools" aria-label="Map controls"><button id="zoom-in" type="button" aria-label="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out">−</button><button id="locate" type="button" aria-label="Current location">◎</button></div>
+    <button class="browse-peek" id="browse" type="button"><span class="badge" aria-hidden="true">⌖</span><span><strong>Explore CDO</strong><small>Browse cafes and top picks</small></span><span class="arrow" aria-hidden="true">⌃</span></button>
+    <section class="venue" id="venue" aria-label="Selected sample cafe"><div class="sheet-head"><span style="font-size:12px;font-weight:700;color:#1762a6">SAMPLE CAFE · CONCEPT</span><button class="close" id="close-venue" type="button" aria-label="Close cafe card">×</button></div><h2 id="venue-title">Sample cafe</h2><p>Preview of the selected cafe card. Venue details here are illustrative.</p><button class="action" id="venue-action" type="button">View cafe details</button></section>
+    <button class="scrim" id="scrim" type="button" aria-label="Close panel"></button>
+    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" aria-hidden="true"><div class="handle"></div><div class="sheet-head"><div><h2 id="sheet-title">Explore CDO</h2><p id="sheet-description">Find a cafe worth stepping into.</p></div><button class="close" id="close-sheet" type="button" aria-label="Close panel">×</button></div><div id="sheet-content"></div></section>
+    <div class="toast" id="toast" hidden></div>
+  </main>
+  <script>
+    const phone = document.getElementById('phone');
+    const sheet = document.getElementById('sheet');
+    const scrim = document.getElementById('scrim');
+    const content = document.getElementById('sheet-content');
+    const venue = document.getElementById('venue');
+    const peek = document.getElementById('browse');
+    const search = document.getElementById('search');
+    const searchList = document.getElementById('search-list');
+    let zoom = 1;
+    let toastTimer;
+    function toast(message) { const el = document.getElementById('toast'); el.textContent = message; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => el.hidden = true, 2300); }
+    function closeSheet() { sheet.classList.remove('visible'); scrim.classList.remove('visible'); sheet.setAttribute('aria-hidden', 'true'); }
+    function openSheet(title, description, html) { document.getElementById('sheet-title').textContent = title; document.getElementById('sheet-description').textContent = description; content.innerHTML = html; sheet.setAttribute('aria-hidden', 'false'); sheet.classList.add('visible'); scrim.classList.add('visible'); searchList.classList.remove('visible'); }
+    const row = (icon, title, detail, action) => `<button class="sheet-row" type="button" data-action="${action}"><span class="thumb" aria-hidden="true">${icon}</span><span><strong>${title}</strong><small>${detail}</small></span><span class="arrow" aria-hidden="true">›</span></button>`;
+    peek.addEventListener('click', () => openSheet('Explore CDO', 'Browse places while the map stays in view.', row('◇', '3D cafes', 'See places you can step inside', 'three-d') + row('★', 'Top picks', 'A curated starting point', 'top') + row('♡', 'Saved cafes', 'Places you want to revisit', 'saved')));
+    document.getElementById('filter').addEventListener('click', () => openSheet('Filters', 'Fine-tune your map results.', row('◇', '3D available', 'Show cafes with walkthroughs', 'three-d') + row('◷', 'Open now', 'Show cafes currently open', 'open-now')));
+    document.getElementById('menu-button').addEventListener('click', () => openSheet('Visita', 'Explore more of Visita.', row('⌖', 'Explore', 'Browse the full map', 'explore') + row('♡', 'Saved', 'Your saved cafes', 'saved') + row('☕', 'For cafes', 'Information for owners', 'cafes') + row('ⓘ', 'About', 'Learn about Visita', 'about')));
+    document.getElementById('close-sheet').addEventListener('click', closeSheet);
+    scrim.addEventListener('click', closeSheet);
+    content.addEventListener('click', event => { const action = event.target.closest('[data-action]')?.dataset.action; if (!action) return; closeSheet(); if (action === 'three-d' || action === 'open-now') { document.getElementById(action).click(); } else toast(`${action === 'top' ? 'Top picks' : action === 'saved' ? 'Saved cafes' : action === 'cafes' ? 'For cafes' : action === 'about' ? 'About' : 'Explore'} screen preview`); });
+    document.getElementById('signin').addEventListener('click', () => toast('Sign-in flow is outside this mock'));
+    document.getElementById('three-d').addEventListener('click', event => { const active = event.currentTarget.getAttribute('aria-pressed') !== 'true'; event.currentTarget.setAttribute('aria-pressed', String(active)); document.querySelector('.pin.two').hidden = active; });
+    document.getElementById('open-now').addEventListener('click', event => { const active = event.currentTarget.getAttribute('aria-pressed') !== 'true'; event.currentTarget.setAttribute('aria-pressed', String(active)); toast(active ? 'Showing sample open cafes' : 'Showing all sample cafes'); });
+    function openVenue(index) { closeSheet(); searchList.classList.remove('visible'); venue.classList.add('visible'); phone.classList.add('has-venue'); peek.hidden = true; document.getElementById('venue-title').textContent = index === '2' ? 'Another sample cafe' : 'Sample 3D cafe'; }
+    document.querySelectorAll('[data-venue]').forEach(button => button.addEventListener('click', () => openVenue(button.dataset.venue)));
+    document.getElementById('close-venue').addEventListener('click', () => { venue.classList.remove('visible'); phone.classList.remove('has-venue'); peek.hidden = false; });
+    document.getElementById('venue-action').addEventListener('click', () => toast('Cafe details are outside this mock'));
+    search.addEventListener('input', () => searchList.classList.toggle('visible', search.value.trim().length > 0));
+    search.addEventListener('keydown', event => { if (event.key === 'Escape') searchList.classList.remove('visible'); });
+    document.getElementById('zoom-in').addEventListener('click', () => { zoom = Math.min(1.4, zoom + .1); document.getElementById('map').style.transform = `scale(${zoom})`; });
+    document.getElementById('zoom-out').addEventListener('click', () => { zoom = Math.max(1, zoom - .1); document.getElementById('map').style.transform = `scale(${zoom})`; });
+    document.getElementById('locate').addEventListener('click', () => toast('Location control · mock only'));
+  </script>
+</body>
+</html>
