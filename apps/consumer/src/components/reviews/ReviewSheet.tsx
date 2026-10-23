@@ -27,6 +27,7 @@ interface Props {
   signedIn: boolean;
   loginHref: string;
   existing: Existing | null;
+  onSaved?: () => void;
 }
 
 interface Draft {
@@ -60,7 +61,7 @@ async function send(method: "POST" | "PATCH" | "DELETE", body: unknown): Promise
   return { ok: res.ok, data };
 }
 
-export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: Props) {
+export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing, onSaved }: Props) {
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(existing?.rating ?? 0);
   const [body, setBody] = useState(existing?.body ?? "");
@@ -73,6 +74,14 @@ export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: P
   const [confirmDelete, setConfirmDelete] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const textId = useId();
+
+  useEffect(() => {
+    setRating(existing?.rating ?? 0);
+    setBody(existing?.body ?? "");
+    setPhoto(null);
+    setRemovePhoto(false);
+    setSavedId(null);
+  }, [existing?.rating, existing?.body, existing?.photoUrl]);
 
   // Reopen with the draft after sign-in, or when asked to (?review=1, the walkthrough panel).
   useEffect(() => {
@@ -134,7 +143,10 @@ export function ReviewSheet({ slug, cafeName, signedIn, loginHref, existing }: P
 
   const finish = () => {
     writeDraft(slug, null);
-    window.location.reload();
+    if (onSaved) {
+      setOpen(false);
+      onSaved();
+    } else window.location.reload();
   };
 
   const submit = async () => {

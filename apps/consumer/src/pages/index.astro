@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SiteHeader from "../components/site/SiteHeader.astro";
-import GlobeIntro from "../components/map/GlobeIntro.astro";
 import { MapExplorer } from "../components/map/MapExplorer";
 
 export const prerender = true;
@@ -15,5 +14,4 @@ export const prerender = true;
   <h1 class="sr-only">Visita: step inside with confidence</h1>
   <SiteHeader map />
   <MapExplorer client:only="react" mode="hero" />
-  <GlobeIntro />
 </BaseLayout>

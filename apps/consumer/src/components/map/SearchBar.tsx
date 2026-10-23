@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { cn } from "@visita/ui/utils";
 import { useStore } from "@nanostores/react";
 import { track } from "@/lib/analytics/track";
@@ -18,11 +18,9 @@ interface Props {
   venues: MapVenue[];
   onPick: (v: MapVenue) => void;
   home?: boolean;
-  onOpenFilters?: () => void;
-  activeFilters?: number;
 }
 
-export function SearchBar({ venues, onPick, home = false, onOpenFilters, activeFilters = 0 }: Props) {
+export function SearchBar({ venues, onPick, home = false }: Props) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const recentSlugs = useStore($recent);
@@ -97,10 +95,6 @@ export function SearchBar({ venues, onPick, home = false, onOpenFilters, activeF
           </button>
         )}
       </label>
-      {home && <button type="button" aria-label={activeFilters > 0 ? `Filter cafes, ${activeFilters} active` : "Filter cafes"} onClick={onOpenFilters} className={cn("glass pointer-events-auto relative grid size-13 shrink-0 place-items-center rounded-[1.25rem] md:hidden", activeFilters > 0 && "text-primary ring-2 ring-primary/50")}>
-        <SlidersHorizontal className="size-5" aria-hidden="true" />
-        {activeFilters > 0 && <span className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-primary text-[0.65rem] text-primary-foreground">{activeFilters}</span>}
-      </button>}
       </div>
 
       {open && (list.length > 0 || !showingRecent) && (

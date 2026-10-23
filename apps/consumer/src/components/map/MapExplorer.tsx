@@ -87,6 +87,7 @@ export function MapExplorer({ mode }: Props) {
       saved: savedSlugs.map((slug) => ranked.find((v) => v.slug === slug)).filter((v): v is (typeof ranked)[number] => Boolean(v)),
     };
   }, [venues, here, savedSlugs, openNow]);
+  const matches = useMemo(() => withDistance(sortVenues(visibleResult.shown, here), here), [visibleResult.shown, here]);
   const selectedVenue = venues.find((v) => v.slug === selected) ?? null;
   const selectedDistance = selectedVenue ? (withDistance([selectedVenue], here)[0]?.distance ?? null) : null;
   useEffect(() => {
@@ -129,6 +130,12 @@ export function MapExplorer({ mode }: Props) {
       scanned={lists.scanned}
       topPicks={lists.topPicks}
       saved={lists.saved}
+      matches={matches}
+      filters={filters}
+      onChangeFilters={(f) => { setFilters(f); if (activeFilterCount(f) === 0) setShowUnknown(false); }}
+      showUnknown={showUnknown}
+      onShowUnknown={setShowUnknown}
+      hiddenForMissingData={filterResult.hiddenForMissingData}
       activeFilters={activeFilterCount(filters)}
       onOpenFilters={() => setFiltersOpen(true)}
       onPick={select}
@@ -230,7 +237,7 @@ export function MapExplorer({ mode }: Props) {
         className={cn("pointer-events-none absolute z-20", mode === "hero" ? "map-home-search" : "left-[6.75rem] right-3 sm:left-auto sm:w-[26rem]")}
         style={mode === "full" ? { top: "max(0.75rem, env(safe-area-inset-top))" } : undefined}
       >
-        {data && <SearchBar venues={venues} onPick={select} home={mode === "hero"} onOpenFilters={() => setFiltersOpen(true)} activeFilters={activeFilterCount(filters)} />}
+        {data && <SearchBar venues={venues} onPick={select} home={mode === "hero"} />}
         {mode === "hero" && <div className="relative z-10">{browseDock}</div>}
       </div>
 

@@ -2,6 +2,12 @@
 
 Status: **for review**, 11 October 2026. These are working dimensions for mockups, not final branding or approval to change the production UI.
 
+## Client feedback implemented 18 October 2026
+
+The home page now opens directly on the CDO map without the globe flight. Search remains available, while one **Find a cafe** entry opens a sheet with quick filters, further filters, a live match count, and the matching cafe list. This supports the target of choosing a cafe in five actions or fewer without a prescribed wizard. Inside a 3D cafe, **Reviews** opens a review list over the walkthrough; writing a review is available from that list. The visitor can close it and continue exploring the same cafe.
+
+The earlier globe implementation notes below describe the previous design and remain as historical context.
+
 ## Decision recorded 11 October 2026
 
 The Map-first layout (A) was selected for the consumer root page. Its search and browse controls sit together at the top left, account/menu at the top right, map controls at the bottom right, and a selected cafe card at the bottom left or as a mobile bottom card. This has been implemented locally for review; the final appearance and intro motion remain open to feedback.

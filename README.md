@@ -46,6 +46,13 @@ pnpm build
 
 Run `pnpm db:types` after every migration and commit the result.
 
+## CI and deployment
+
+Pull requests to `main` run app checks and local Supabase migration/RLS checks.
+Pushing to `main` then applies hosted migrations and deploys both Cloudflare
+Workers. One-time GitHub secrets, variables, and existing resource requirements
+are listed in [docs/deployment.md](docs/deployment.md).
+
 ## Data rules worth knowing
 
 - **Supabase is the backend; RLS is the access control.** Client-side guards are UX only.

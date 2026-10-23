@@ -20,6 +20,37 @@ async function readBody(request: Request): Promise<unknown> {
   return request.json().catch(() => null);
 }
 
+// The walkthrough reads reviews without leaving the cafe. RLS also returns a
+// signed-in visitor's own hidden review, which the client labels separately.
+export const GET: APIRoute = async ({ locals, url }) => {
+  if (!locals.supabase) return json(503, { error: "Reviews aren't available right now." });
+  const slug = url.searchParams.get("slug") ?? "";
+  if (!slug) return json(400, { error: "Choose a cafe." });
+  try {
+    const venueId = await publishedVenueId(locals.supabase, slug);
+    if (!venueId) return json(404, { error: "Unknown cafe." });
+    const { data, error } = await locals.supabase.from("reviews")
+      .select("id, author_id, rating, body, photo_url, status, created_at, profiles(display_name, avatar_url), review_replies(body, created_at)")
+      .eq("venue_id", venueId).order("created_at", { ascending: false }).limit(100);
+    if (error) return json(502, { error: "Couldn't load reviews. Try again." });
+    const rows = data ?? [];
+    const own = locals.user ? rows.find((row) => row.author_id === locals.user?.id) : null;
+    return json(200, {
+      signedIn: Boolean(locals.user),
+      own: own ? { rating: own.rating, body: own.body, photoUrl: own.photo_url } : null,
+      reviews: rows.filter((row) => row.status === "visible" || row.author_id === locals.user?.id)
+        .map((row) => ({
+          id: row.id, name: row.profiles?.display_name ?? (row.author_id === locals.user?.id ? "You" : "Visita member"),
+          rating: row.rating, body: row.body, photoUrl: row.photo_url,
+          createdAt: row.created_at, own: row.author_id === locals.user?.id,
+          hidden: row.status === "hidden", reply: row.review_replies,
+        })),
+    });
+  } catch {
+    return json(502, { error: "Couldn't load reviews. Try again." });
+  }
+};
+
 export const POST: APIRoute = async (context) => {
   const s = requireSession(context, SIGN_IN);
   if (!s.ok) return s.response;

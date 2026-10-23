@@ -1,5 +1,6 @@
 import { checkPhoto, eventPhotoKey, MAX_PHOTO_BYTES, ownerProofKey, type PhotoType } from "@visita/uploads/photo";
 import { bearerToken, eventPhotoId, proofClaimId, reviewPhotoId, SCAN_ROUTES } from "../src/lib/proof-route";
+import { MENU_SCAN_PROMPT, MENU_SCAN_SCHEMA, menuScanVenueId, rowsFromScan } from "../src/lib/menu-scan";
 import { removeReviewPhoto, scanRoute } from "./admin";
 
 // The owner and admin app's Worker. It serves the SPA's static files, plus
@@ -10,10 +11,12 @@ import { removeReviewPhoto, scanRoute } from "./admin";
 //   DELETE /api/events/<id>/photo  and removes it
 //   /api/scans/*                   admins upload scans (see admin.ts)
 //   DELETE /api/reviews/<id>/photo moderators remove a review photo
+//   POST   /api/venues/<id>/menu-scan  an owner sends a menu photo; Workers AI reads it (nothing stored)
 // Every Supabase call runs as the caller (their access token), so RLS decides
 // what they can read and write. No service key lives here.
 
 interface Env {
+  AI: Ai;
   ASSETS: Fetcher;
   ASSETS_BUCKET: R2Bucket;
   SUPABASE_URL: string;
@@ -144,6 +147,55 @@ async function eventPhoto(request: Request, env: Env, token: string, eventId: st
   return json(request.method === "POST" ? 201 : 200, { photoUrl: key });
 }
 
+const MENU_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
+
+function dataUri(bytes: Uint8Array, type: string) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return `data:${type};base64,${btoa(binary)}`;
+}
+
+// The photo goes to the model and is then dropped. The owner reviews the
+// items in the editor; nothing reaches the listing until they save.
+async function menuScan(request: Request, env: Env, token: string, venueId: string): Promise<Response> {
+  const sb = supabase(env, token);
+  const [owner, admin] = await Promise.all([
+    sb("/rest/v1/rpc/is_venue_owner", { method: "POST", body: JSON.stringify({ p_venue_id: venueId }) }),
+    sb("/rest/v1/rpc/is_admin", { method: "POST", body: "{}" }),
+  ]);
+  const allowed = (owner.ok && (await owner.json()) === true) || (admin.ok && (await admin.json()) === true);
+  if (!allowed) return json(404, { error: "Venue not found." });
+
+  const photo = await readPhoto(request);
+  if (!photo.ok) return photo.response;
+
+  let answer: unknown;
+  try {
+    const result = (await env.AI.run(MENU_MODEL as Parameters<Ai["run"]>[0], {
+      messages: [
+        { role: "system", content: "You read cafe menus from photos and answer only with JSON." },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: MENU_SCAN_PROMPT },
+            { type: "image_url", image_url: { url: dataUri(photo.bytes, photo.type) } },
+          ],
+        },
+      ],
+      guided_json: MENU_SCAN_SCHEMA,
+      temperature: 0,
+      max_tokens: 4096,
+    } as never)) as { response?: unknown };
+    answer = result.response;
+  } catch (e) {
+    console.error("[menu-scan]", e);
+    return json(502, { error: "Couldn't read the photo right now. Try again in a minute." });
+  }
+  const rows = rowsFromScan(answer);
+  if (!rows.length) return json(422, { error: "Couldn't find menu items in that photo. Try a closer, brighter shot of the menu." });
+  return json(200, { rows });
+}
+
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
@@ -152,12 +204,17 @@ export default {
     const claimId = proofClaimId(url.pathname);
     const eventId = eventPhotoId(url.pathname);
     const reviewId = reviewPhotoId(url.pathname);
+    const menuVenueId = menuScanVenueId(url.pathname);
     const scan = (SCAN_ROUTES as readonly string[]).includes(url.pathname);
-    if (!claimId && !eventId && !reviewId && !scan) return json(404, { error: "Not found." });
+    if (!claimId && !eventId && !reviewId && !menuVenueId && !scan) return json(404, { error: "Not found." });
     if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return json(503, { error: "Not configured." });
     const token = bearerToken(request.headers.get("authorization"));
     if (!token) return json(401, { error: "Sign in to continue." });
 
+    if (menuVenueId) {
+      if (request.method === "POST") return menuScan(request, env, token, menuVenueId);
+      return json(405, { error: "Method not allowed." });
+    }
     if (scan) return scanRoute(request, env, supabase(env, token), json, url.pathname);
     if (reviewId) {
       if (request.method === "DELETE") return removeReviewPhoto(env, supabase(env, token), json, reviewId);

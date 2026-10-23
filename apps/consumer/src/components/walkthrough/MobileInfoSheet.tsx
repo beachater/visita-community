@@ -8,7 +8,6 @@ import { amenityRows, summaryRows } from "@/lib/venue/amenities";
 import { isOpenAt, venueClock, weeklyRows } from "@/lib/venue/hours";
 import { formatPhp, scanDate } from "@/lib/venue/scan";
 import type { WalkthroughCafe } from "@/lib/venue/types";
-import { openReviewSheet } from "@/lib/reviews/open";
 import { AmenityList } from "../venue/AmenityList";
 import { EventList } from "../venue/EventList";
 import { OccupancyPill } from "../venue/OccupancyPill";
@@ -22,9 +21,10 @@ interface Props {
   onRequestDistance: (() => void) | null;
   onDirections: () => void;
   onOpenMenu: () => void;
+  onOpenReviews: () => void;
 }
 
-export function MobileInfoSheet({ cafe, definitions, open, onOpenChange, distance, onRequestDistance, onDirections, onOpenMenu }: Props) {
+export function MobileInfoSheet({ cafe, definitions, open, onOpenChange, distance, onRequestDistance, onDirections, onOpenMenu, onOpenReviews }: Props) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
@@ -70,7 +70,7 @@ export function MobileInfoSheet({ cafe, definitions, open, onOpenChange, distanc
           )}
           <div className="grid grid-cols-2 gap-2">
             <Button className="min-h-11" onClick={onDirections}><Navigation /> Directions</Button>
-            <Button className="min-h-11" variant="secondary" onClick={() => { onOpenChange(false); openReviewSheet(cafe.slug); }}><MessageSquare /> Reviews</Button>
+            <Button className="min-h-11" variant="secondary" onClick={() => { onOpenChange(false); onOpenReviews(); }}><MessageSquare /> Reviews</Button>
           </div>
         </section>
 

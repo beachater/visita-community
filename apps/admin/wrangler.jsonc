@@ -15,6 +15,8 @@
     "SUPABASE_URL": "https://zgbvtnoticzhlyuavwdc.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable__LuJPCWzTVyuqNRLnzxo9A_pubSq5lL"
   },
+  // Workers AI reads menu photos (menu photo capture). Always runs remotely, even in dev.
+  "ai": { "binding": "AI" },
   "r2_buckets": [
     {
       // Owner proofs live under owner-proofs/, which the consumer site never serves.

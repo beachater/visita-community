@@ -18,6 +18,7 @@ import { $saved, recordRecent, toggleSaved } from "@/lib/visitor/stores";
 import { useDirections } from "../directions/useDirections";
 import { InfoPanel } from "./InfoPanel";
 import { MobileInfoSheet } from "./MobileInfoSheet";
+import { WalkthroughReviews } from "../reviews/WalkthroughReviews";
 import { SplatViewer } from "./SplatViewer";
 
 // PRD 4.2 in one screen: the 3D walkthrough full-screen, a glass info panel
@@ -38,6 +39,7 @@ const glassButton =
 export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props) {
   const saved = useStore($saved).includes(cafe.slug);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches && new URLSearchParams(window.location.search).get("walkthrough") === "1",
   );
@@ -120,7 +122,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
       aria-label={`Walkthrough of ${cafe.name}`}
       className="fixed inset-0 z-50 bg-scan"
       onKeyDown={(e) => {
-        if (e.key === "Escape" && !infoOpen && !menuOpen && !directions.isOpen) onClose();
+        if (e.key === "Escape" && !infoOpen && !menuOpen && !reviewsOpen && !directions.isOpen) onClose();
       }}
     >
       <Toaster position="top-center" />
@@ -153,6 +155,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
             onRequestDistance={hasCoords ? () => void measure(true) : null}
             onDirections={onDirections}
             onOpenMenu={() => setMenuOpen(true)}
+            onOpenReviews={() => setReviewsOpen(true)}
           />
         </div>
       </div>
@@ -184,7 +187,10 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
         onRequestDistance={hasCoords ? () => void measure(true) : null}
         onDirections={() => { setInfoOpen(false); onDirections(); }}
         onOpenMenu={() => { setInfoOpen(false); setMenuOpen(true); }}
+        onOpenReviews={() => setReviewsOpen(true)}
       />
+
+      <WalkthroughReviews slug={cafe.slug} cafeName={cafe.name} open={reviewsOpen} onOpenChange={setReviewsOpen} />
 
       <BottomSheet open={menuOpen} onOpenChange={setMenuOpen} title="Menu" description={cafe.name}>
         {sections.map((section) => (

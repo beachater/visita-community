@@ -1,4 +1,7 @@
 import { resizeToJpeg } from "@visita/uploads/resize";
+import { MAX_PHOTO_BYTES } from "@visita/uploads/photo";
+import { menuScanPath, rowsFromScan } from "./menu-scan";
+import type { MenuRow } from "../pages/venue/menu-form";
 import { eventPhotoPath, proofPath, reviewPhotoPath } from "./proof-route";
 import { PART_SIZE, type ScanKind } from "./scan-keys";
 import { supabase } from "./supabase";
@@ -54,6 +57,45 @@ export async function setEventPhoto(eventId: string, file: Blob | null): Promise
     const data = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(data.error ?? "The photo didn't save. Try again.");
   }
+}
+
+/** Reads a menu photo into editable rows; neither the photo nor rows are saved. */
+export async function scanMenuPhoto(venueId: string, file: Blob): Promise<MenuRow[]> {
+  let jpeg: Blob;
+  try {
+    jpeg = await resizeToJpeg(file);
+  } catch {
+    throw new Error("Couldn't prepare that photo. Try a JPEG or PNG image.");
+  }
+  if (jpeg.size > MAX_PHOTO_BYTES) throw new Error("That photo is too large. Try a closer photo of one menu page.");
+
+  let res: Response;
+  try {
+    res = await fetch(menuScanPath(venueId), {
+      method: "POST",
+      headers: { authorization: `Bearer ${await token()}`, "content-type": "image/jpeg" },
+      body: jpeg,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Your session ended. Sign in again.") throw error;
+    throw new Error("Couldn't reach Visita. Check your connection and try again.");
+  }
+  if (!res.ok) {
+    const message: Record<number, string> = {
+      401: "Your session ended. Sign in again.",
+      404: "This cafe isn't available to your account.",
+      413: "That photo is too large. Try a closer photo of one menu page.",
+      415: "Try a JPEG or PNG image of the menu.",
+      422: "We couldn't find menu items in that photo. Try a closer, brighter shot.",
+      429: "Menu scanning is busy right now. Try again later.",
+      502: "Couldn't read the photo right now. Try again in a minute.",
+    };
+    throw new Error(message[res.status] ?? "Couldn't read the menu photo. Try again.");
+  }
+  const data = (await res.json().catch(() => null)) as { rows?: unknown } | null;
+  const rows = rowsFromScan({ items: data?.rows });
+  if (!rows.length) throw new Error("Couldn't read the menu photo. Try another image.");
+  return rows;
 }
 
 async function adminCall<T>(path: string, init: RequestInit): Promise<T> {

@@ -5,7 +5,6 @@ import { Button } from "@visita/ui/button";
 import { cn } from "@visita/ui/utils";
 import { amenityRows, summaryRows } from "@/lib/venue/amenities";
 import { isOpenAt, venueClock, weeklyRows } from "@/lib/venue/hours";
-import { openReviewSheet } from "@/lib/reviews/open";
 import { EventList } from "../venue/EventList";
 import { OccupancyPill } from "../venue/OccupancyPill";
 import { formatPhp, scanDate } from "@/lib/venue/scan";
@@ -24,11 +23,12 @@ interface Props {
   onRequestDistance: (() => void) | null;
   onDirections: () => void;
   onOpenMenu: () => void;
+  onOpenReviews: () => void;
 }
 
 const MENU_PREVIEW = 4;
 
-export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDirections, onOpenMenu }: Props) {
+export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDirections, onOpenMenu, onOpenReviews }: Props) {
   const [expanded, setExpanded] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("walkthrough") === "1");
   const [now, setNow] = useState(() => new Date());
   const bodyId = useId();
@@ -118,7 +118,7 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
             <Button onClick={onDirections} className="mt-1 w-full">
               <Navigation /> Get directions
             </Button>
-            <Button variant="secondary" onClick={() => openReviewSheet(cafe.slug)} className="w-full">
+            <Button variant="secondary" onClick={onOpenReviews} className="w-full">
               <MessageSquare /> Reviews
             </Button>
           </section>
