@@ -166,6 +166,40 @@ select pg_temp.pass('admin sees all balances');
 do $$ begin assert (select count(*) from public.demand_requests) = 1; end $$;
 select pg_temp.pass('admin reads the demand queue');
 
+-- Scan draft stays off the listing until one atomic publish.
+insert into public.venue_scans (id, venue_id, version, splat_key, experience) values (
+  'dddddddd-0000-4000-8000-000000000001',
+  'aaaaaaaa-0000-0000-0000-000000000001', 1, 'splats/pub-cafe/v1.sog',
+  '{"rotation":[180,0,0],"start":{"position":[1,1.6,1],"rotation":[0,0,0]},"walkable":[[0,0],[2,0],[2,2],[0,2]],"stops":[]}'
+);
+do $$ begin assert (select splat_url from public.venues where slug = 'pub-cafe') is null; end $$;
+select pg_temp.pass('uploading a scan draft leaves the live venue unchanged');
+select public.publish_venue_scan('dddddddd-0000-4000-8000-000000000001');
+do $$ begin
+  assert (select splat_url from public.venues where slug = 'pub-cafe') = 'splats/pub-cafe/v1.sog';
+  assert (select scan_experience->'start' is not null from public.venues where slug = 'pub-cafe');
+  assert (select status from public.venue_scans where id = 'dddddddd-0000-4000-8000-000000000001') = 'published';
+end $$;
+select pg_temp.pass('publishing switches the scan and its experience together');
+
+insert into public.venue_scans (id, venue_id, version, splat_key, experience) values (
+  'dddddddd-0000-4000-8000-000000000002',
+  'aaaaaaaa-0000-0000-0000-000000000001', 2, 'splats/pub-cafe/v2.sog',
+  '{"rotation":[180,0,0],"start":{"position":[1,1.6,1],"rotation":[0,0,0]},"walkable":[[0,0],[2,0],[2,2],[0,2]],"stops":[]}'
+);
+select public.publish_venue_scan('dddddddd-0000-4000-8000-000000000002');
+do $$ begin
+  assert (select splat_url from public.venues where slug = 'pub-cafe') = 'splats/pub-cafe/v2.sog';
+  assert (select status from public.venue_scans where id = 'dddddddd-0000-4000-8000-000000000001') = 'archived';
+end $$;
+select pg_temp.pass('replacement scan archives the prior published version');
+
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+do $$ begin assert (select count(*) from public.venue_scans) = 0; end $$;
+select pg_temp.pass('regular visitors cannot read scan drafts');
+select pg_temp.expect_error($q$select public.publish_venue_scan('dddddddd-0000-4000-8000-000000000001')$q$, 'regular visitors cannot publish scans');
 reset role;
 set local role anon;
 set local request.jwt.claims = '{"role":"anon"}';

@@ -44,9 +44,12 @@ npx @playcanvas/splat-transform <slug>-preview.sog null
 Optional clean-up before the output name: `-N` drops NaN/broken gaussians, `-F`
 removes floaters. `-w` overwrites an existing output.
 
-The easiest upload is the owner app: **Venues → the cafe → 3D scan** (full scan,
-preview and scan date). It stores the next version (`v<n+1>`) and points the
-cafe at it. The CLI route below still works.
+The admin app handles publication: **Venues → the cafe → 3D scan**. Upload a
+full `.sog` (and optionally a small preview) as a draft. In **Set up scan**,
+orient the room, save the entrance view, add walkable-area corners and optional
+tour stops, test the boundary, then publish. The existing live scan stays in
+place until publication. The CLI route below is still useful for importing
+assets, but does not create the admin draft or visitor setup.
 
 ## Uploading a scan
 

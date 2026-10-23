@@ -9,7 +9,6 @@ import { Label } from "@visita/ui/label";
 import { Switch } from "@visita/ui/switch";
 import { CONSUMER_URL, supabase } from "@/lib/supabase";
 import { describeEntry, toEntry } from "../venue/amenity-form";
-import { ScanUpload } from "./ScanUpload";
 import { slugify, toVenueRow, type VenueFormState } from "./venue-form";
 
 // PRD 4.5: create and edit any venue. Admins edit amenities directly (the
@@ -83,11 +82,10 @@ function AmenityEditor({ venue, onSaved }: { venue: AdminVenue; onSaved: () => v
 
   return (
     <section aria-labelledby="amen-h" className="grid gap-3 rounded-card border bg-card shadow-card p-5">
-      <div>
-        <h2 id="amen-h" className="text-lg font-semibold">
-          Amenities
-        </h2>
-        <p className="text-sm text-muted-foreground">Leave both fields empty to leave an amenity off the listing. "Shown as" is optional wording.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div><h2 id="amen-h" className="text-lg font-semibold">Amenities</h2>
+          <p className="text-sm text-muted-foreground">Leave both fields empty to leave an amenity off the listing. "Shown as" is optional wording.</p></div>
+        <Button onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : "Save amenities"}</Button>
       </div>
       <div className="grid gap-3">
         {defs.map((def) => {
@@ -112,11 +110,6 @@ function AmenityEditor({ venue, onSaved }: { venue: AdminVenue; onSaved: () => v
             </div>
           );
         })}
-      </div>
-      <div>
-        <Button onClick={() => void save()} disabled={saving}>
-          {saving ? "Saving…" : "Save amenities"}
-        </Button>
       </div>
     </section>
   );
@@ -200,21 +193,23 @@ export function VenueForm() {
   );
 
   return (
-    <div className="grid max-w-3xl gap-6">
+    <div className="grid min-w-0 gap-6">
       <Link to="/admin/venues" className="inline-flex w-fit items-center gap-1 text-sm underline-offset-2 hover:underline">
         <ArrowLeft className="size-4" aria-hidden="true" /> All venues
       </Link>
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3 lg:sticky lg:top-0 lg:z-20 lg:rounded-card lg:bg-background/95 lg:py-2 lg:backdrop-blur">
         <h1 className="font-display text-3xl font-bold">{isNew ? "New venue" : form.name || "Venue"}</h1>
+        <div className="flex flex-wrap gap-2"><Button onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : isNew ? "Create venue" : "Save details"}</Button>
+        {!isNew && <Button asChild variant="outline"><Link to={`/admin/venues/${venueId}/scan`}>Set up 3D scan</Link></Button>}
         {!isNew && venue?.is_published && (
           <Button asChild variant="outline">
             <a href={`${CONSUMER_URL}/cafe/${venue.slug}`} target="_blank" rel="noopener">
               <ExternalLink /> View on Visita
             </a>
           </Button>
-        )}
+        )}</div>
       </header>
-
+      <div className={venue ? "grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,1fr)]" : "grid max-w-3xl gap-6"}>
       <section aria-label="Details" className="grid gap-4 rounded-card border bg-card shadow-card p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           {field("name", "Name")}
@@ -251,12 +246,8 @@ export function VenueForm() {
         </div>
       </section>
 
-      {venue && (
-        <>
-          <ScanUpload venue={venue} onDone={() => void load()} />
-          <AmenityEditor venue={venue} onSaved={() => void load()} />
-        </>
-      )}
+      {venue && <AmenityEditor venue={venue} onSaved={() => void load()} />}
+      </div>
     </div>
   );
 }

@@ -14,6 +14,7 @@ const row = (over: Partial<CafeRow> = {}): CafeRow => ({
   splat_url: "splats/sonnys/v1.sog",
   splat_preview_url: "splats/sonnys/v1-preview.sog",
   scanned_at: null,
+  scan_experience: null,
   amenities: { wifi: { value: true } },
   hours: { fri: ["10:00", "22:00"] },
   menu: [{ name: "Latte", price_php: 120 }],
@@ -27,6 +28,15 @@ describe("toMapVenue", () => {
   it("passes the id on to the walkthrough", () => expect(toWalkthrough(toMapVenue(row()))?.id).toBe("aaaaaaaa-0000-0000-0000-000000000001"));
   it("marks a venue with a walkthrough as scanned", () => expect(toMapVenue(row()).scanned).toBe(true));
   it("marks a venue without one as not scanned", () => expect(toMapVenue(row({ splat_url: null, splat_preview_url: null })).scanned).toBe(false));
+  it("passes a published scan setup through to the walkthrough", () => {
+    const setup = {
+      rotation: [180, 0, 0],
+      start: { position: [1, 1.6, 1], rotation: [0, 90, 0] },
+      walkable: [[0, 0], [2, 0], [2, 2], [0, 2]],
+      stops: [{ id: "entrance", label: "Entrance", pose: { position: [1, 1.6, 1], rotation: [0, 90, 0] } }],
+    };
+    expect(toWalkthrough(toMapVenue(row({ scan_experience: setup })))?.scanExperience).toEqual(setup);
+  });
   it("keeps top pick and search terms", () => {
     const v = toMapVenue(row());
     expect(v.isTopPick).toBe(true);
