@@ -44,6 +44,13 @@ pnpm typecheck
 pnpm build
 ```
 
+For a local end-to-end scan test, both apps must use the same local Supabase
+project. Vite loads `apps/*/.env.development.local` over `apps/*/.env`; put the
+local API URL and publishable key there when `.env` contains hosted values.
+The consumer Worker's `apps/consumer/.dev.vars` must also use the local API URL
+and the local secret key from `supabase status`. Restart both dev servers after
+changing environment files. Publishing a scan does not publish its cafe listing.
+
 Run `pnpm db:types` after every migration and commit the result.
 
 ## CI and deployment

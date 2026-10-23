@@ -6,25 +6,29 @@ import { Label } from "@visita/ui/label";
 import { uploadScanFile } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { ScanSetup, type ScanDraft } from "./ScanSetup";
+import { PublishedScan } from "./PublishedScan";
 
 const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
-export function ScanUpload({ venue, onDone }: { venue: { id: string; splat_url: string | null; scanned_at: string | null }; onDone: () => void }) {
+export function ScanUpload({ venue, onDone }: { venue: { id: string; is_published: boolean; splat_url: string | null; scanned_at: string | null }; onDone: () => void }) {
   const [full, setFull] = useState<File | null>(null);
   const [preview, setPreview] = useState<File | null>(null);
   const [scannedOn, setScannedOn] = useState(() => new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10));
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<ScanDraft[]>([]);
+  const [published, setPublished] = useState<ScanDraft | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const loadDrafts = async () => {
     const { data, error: issue } = await supabase.from("venue_scans")
       .select("id,version,splat_key,preview_key,experience,status")
-      .eq("venue_id", venue.id).eq("status", "draft").order("version", { ascending: false });
+      .eq("venue_id", venue.id).order("version", { ascending: false });
     if (issue) { setError(issue.message); return; }
-    setDrafts(data ?? []);
-    setSelectedId((id) => id && data?.some((row) => row.id === id) ? id : data?.[0]?.id ?? null);
+    const nextDrafts = (data ?? []).filter((row) => row.status === "draft");
+    setDrafts(nextDrafts);
+    setPublished((data ?? []).find((row) => row.status === "published") ?? null);
+    setSelectedId((id) => id && nextDrafts.some((row) => row.id === id) ? id : nextDrafts[0]?.id ?? null);
   };
   useEffect(() => { void loadDrafts(); }, [venue.id]);
 
@@ -56,13 +60,14 @@ export function ScanUpload({ venue, onDone }: { venue: { id: string; splat_url: 
   };
 
   return <div className="grid min-w-0 gap-5">
-    <details open={drafts.length === 0} className="rounded-card border bg-card shadow-card">
-      <summary className="cursor-pointer p-4 text-sm font-semibold">{drafts.length ? "Upload another scan" : "Upload a scan to get started"}</summary>
+    {venue.splat_url && !venue.is_published && <p role="status" className="rounded-card border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">The scan is published, but this cafe listing is still unpublished. Visitors will see it after you publish the cafe in Venue details.</p>}
+    <details open={drafts.length === 0 && !published} className="rounded-card border bg-card shadow-card">
+      <summary className="cursor-pointer p-4 text-sm font-semibold">{published ? "Upload a replacement scan" : drafts.length ? "Upload another scan" : "Upload a scan to get started"}</summary>
     <section aria-labelledby="scan-h" className="grid gap-4 border-t p-5">
       <div>
         <h2 id="scan-h" className="text-lg font-semibold">3D scan</h2>
         <p className="text-sm text-muted-foreground">
-          {venue.splat_url ? <>Live: <code>{venue.splat_url}</code>{venue.scanned_at && `, scanned ${new Date(venue.scanned_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" })}`}.</> : "No live scan yet."}
+          {venue.splat_url ? <>Published scan: <code>{venue.splat_url}</code>{venue.scanned_at && `, scanned ${new Date(venue.scanned_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" })}`}.</> : "No published scan yet."}
           {" "}New uploads stay as drafts until you set up and publish the walkthrough.
         </p>
       </div>
@@ -79,5 +84,6 @@ export function ScanUpload({ venue, onDone }: { venue: { id: string; splat_url: 
       <div className="flex flex-wrap gap-2">{drafts.map((draft) => <Button key={draft.id} variant={selectedId === draft.id ? "default" : "outline"} onClick={() => setSelectedId(draft.id)}>Draft v{draft.version}</Button>)}</div>
       {drafts.filter((draft) => draft.id === selectedId).map((draft) => <ScanSetup key={draft.id} scan={draft} onPublished={() => { void loadDrafts(); onDone(); }} />)}
     </div>}
+    {published && <PublishedScan scan={published} />}
   </div>;
 }
