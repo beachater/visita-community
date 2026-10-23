@@ -998,6 +998,53 @@ export type Database = {
           },
         ]
       }
+      venue_scans: {
+        Row: {
+          created_at: string
+          experience: Json
+          id: string
+          preview_key: string | null
+          scanned_at: string | null
+          splat_key: string
+          status: string
+          updated_at: string
+          venue_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          experience?: Json
+          id?: string
+          preview_key?: string | null
+          scanned_at?: string | null
+          splat_key: string
+          status?: string
+          updated_at?: string
+          venue_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          experience?: Json
+          id?: string
+          preview_key?: string | null
+          scanned_at?: string | null
+          splat_key?: string
+          status?: string
+          updated_at?: string
+          venue_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_scans_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           address: string | null
@@ -1014,6 +1061,7 @@ export type Database = {
           menu: Json
           name: string
           scanned_at: string | null
+          scan_experience: Json | null
           search_terms: string[]
           slug: string
           splat_preview_url: string | null
@@ -1036,6 +1084,7 @@ export type Database = {
           menu?: Json
           name: string
           scanned_at?: string | null
+          scan_experience?: Json | null
           search_terms?: string[]
           slug: string
           splat_preview_url?: string | null
@@ -1058,6 +1107,7 @@ export type Database = {
           menu?: Json
           name?: string
           scanned_at?: string | null
+          scan_experience?: Json | null
           search_terms?: string[]
           slug?: string
           splat_preview_url?: string | null
@@ -1086,6 +1136,7 @@ export type Database = {
       }
     }
     Functions: {
+      publish_venue_scan: { Args: { p_scan_id: string }; Returns: undefined }
       admin_billing_overview: {
         Args: never
         Returns: {

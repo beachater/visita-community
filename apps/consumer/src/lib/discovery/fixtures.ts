@@ -14,6 +14,7 @@ export const venue = (over: Partial<MapVenue> = {}): MapVenue => ({
   splatKey: "splats/sonnys/v1.sog",
   previewKey: null,
   scannedAt: null,
+  scanExperience: null,
   amenities: {},
   hours: null,
   menu: [],

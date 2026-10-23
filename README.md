@@ -53,6 +53,9 @@ Pushing to `main` then applies hosted migrations and deploys both Cloudflare
 Workers. One-time GitHub secrets, variables, and existing resource requirements
 are listed in [docs/deployment.md](docs/deployment.md).
 
+Cafe walkthrough drafts, entrance views, safe walking areas and tour stops are
+set up in the admin app. See [docs/scan-setup.md](docs/scan-setup.md).
+
 ## Data rules worth knowing
 
 - **Supabase is the backend; RLS is the access control.** Client-side guards are UX only.

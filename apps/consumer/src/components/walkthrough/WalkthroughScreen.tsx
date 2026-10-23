@@ -2,7 +2,7 @@ import { track } from "@/lib/analytics/track";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { toast } from "sonner";
-import { BadgeCheck, ChevronUp, Heart, Share2, X } from "lucide-react";
+import { BadgeCheck, ChevronLeft, ChevronRight, ChevronUp, Heart, Share2, X } from "lucide-react";
 import type { AmenityDefinition } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
 import { Toaster } from "@visita/ui/sonner";
@@ -19,7 +19,7 @@ import { useDirections } from "../directions/useDirections";
 import { InfoPanel } from "./InfoPanel";
 import { MobileInfoSheet } from "./MobileInfoSheet";
 import { WalkthroughReviews } from "../reviews/WalkthroughReviews";
-import { SplatViewer } from "./SplatViewer";
+import { SplatViewer, type SplatViewerHandle } from "./SplatViewer";
 
 // PRD 4.2 in one screen: the 3D walkthrough full-screen, a glass info panel
 // on the left, save and share at the top, the menu in a sheet, and
@@ -46,6 +46,24 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
   const [now, setNow] = useState(() => new Date());
   const [distance, setDistance] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const viewerRef = useRef<SplatViewerHandle>(null);
+  const [stopIndex, setStopIndex] = useState(-1);
+  const [jumping, setJumping] = useState(false);
+  const jumpTimers = useRef<number[]>([]);
+  const stops = cafe.scanExperience?.stops ?? [];
+
+  useEffect(() => () => { jumpTimers.current.forEach(window.clearTimeout); }, []);
+  useEffect(() => setStopIndex(-1), [cafe.id]);
+  const goToStop = (index: number) => {
+    const stop = stops[index];
+    if (!stop || jumping) return;
+    setJumping(true);
+    jumpTimers.current.push(window.setTimeout(() => {
+      viewerRef.current?.goTo(stop.pose);
+      setStopIndex(index);
+    }, 120));
+    jumpTimers.current.push(window.setTimeout(() => setJumping(false), 300));
+  };
 
   const hasCoords = cafe.lat !== null && cafe.lng !== null;
   const shareUrl = `${location.origin}/cafe/${cafe.slug}`;
@@ -127,7 +145,13 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
     >
       <Toaster position="top-center" />
 
-      <SplatViewer src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} />
+      <SplatViewer ref={viewerRef} src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} experience={cafe.scanExperience} />
+      {jumping && <div className="pointer-events-none absolute inset-0 z-10 bg-scan/80" aria-hidden="true" />}
+      {stops.length > 0 && <nav aria-label="Cafe tour stops" className="absolute bottom-[max(5rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#042c53]/80 p-1 text-white shadow-lg backdrop-blur-md">
+        <Button variant="ghost" size="icon-sm" className="text-white hover:text-white" aria-label="Previous stop" disabled={jumping || stopIndex <= 0} onClick={() => goToStop(stopIndex - 1)}><ChevronLeft /></Button>
+        <span className="max-w-28 truncate text-center text-xs sm:max-w-48">{stopIndex < 0 ? "Explore or start tour" : `${stopIndex + 1}/${stops.length} · ${stops[stopIndex]?.label}`}</span>
+        <Button variant="ghost" size="icon-sm" className="text-white hover:text-white" aria-label="Next stop" disabled={jumping || stopIndex >= stops.length - 1} onClick={() => goToStop(stopIndex + 1)}><ChevronRight /></Button>
+      </nav>}
 
       {/* Controls float above the scan; the gaps between them stay touchable for looking around. */}
       <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-4 md:p-3" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>

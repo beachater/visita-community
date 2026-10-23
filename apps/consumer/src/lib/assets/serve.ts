@@ -5,7 +5,8 @@
 
 /**
  * Public prefixes. Review and event photos are public like what they belong to; their keys
- * carry random ids. Everything else in the bucket (owner proofs, drafts) stays private.
+ * carry random ids. Scan drafts are unlisted but their versioned URLs are
+ * publicly fetchable; owner proofs and other private prefixes are not.
  */
 const PUBLIC_PREFIXES = ["splats/", "basemaps/", "reviews/", "events/"];
 
