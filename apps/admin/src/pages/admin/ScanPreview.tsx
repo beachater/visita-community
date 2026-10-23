@@ -5,6 +5,7 @@ import { constrainWalkStep } from "@visita/shared-types";
 export interface ScanPreviewHandle {
   pose(): ScanPose | null;
   goTo(pose: ScanPose): void;
+  focus(): void;
 }
 
 interface Props {
@@ -28,6 +29,7 @@ export const ScanPreview = forwardRef<ScanPreviewHandle, Props>(function ScanPre
   useImperativeHandle(ref, () => ({
     pose: () => state.current ? { position: [...state.current.pose.position] as Vec3, rotation: [...state.current.pose.rotation] as Vec3 } : null,
     goTo: (pose) => state.current?.setPose(pose),
+    focus: () => canvasRef.current?.focus(),
   }), []);
 
   useEffect(() => {
@@ -99,18 +101,25 @@ export const ScanPreview = forwardRef<ScanPreviewHandle, Props>(function ScanPre
       };
 
       let lastReport = 0;
+      const heading = new pc.Quat();
+      const forwardDirection = new pc.Vec3();
+      const rightDirection = new pc.Vec3();
       instance.on("update", (dt: number) => {
         if (disposed) return;
-        const yaw = pose.rotation[1] * Math.PI / 180;
         const forward = Number(keys.has("w") || keys.has("arrowup")) - Number(keys.has("s") || keys.has("arrowdown"));
         const strafe = Number(keys.has("d") || keys.has("arrowright")) - Number(keys.has("a") || keys.has("arrowleft"));
         const vertical = Number(keys.has("e")) - Number(keys.has("q"));
         if (forward || strafe || vertical) {
-          const speed = (keys.has("shift") ? 4 : 1.5) * Math.min(dt, 0.05);
+          // Use the same yaw-only PlayCanvas basis as the public walkthrough.
+          // The old hand-written sine/cosine signs made W and A feel rotated.
+          heading.setFromEulerAngles(0, pose.rotation[1], 0);
+          heading.transformVector(pc.Vec3.FORWARD, forwardDirection);
+          heading.transformVector(pc.Vec3.RIGHT, rightDirection);
+          const speed = (keys.has("shift") ? 4 : 1.5) * Math.min(dt, 0.05) / Math.hypot(forward, strafe, vertical);
           const next: ScanPose = { position: [
-            pose.position[0] + (Math.sin(yaw) * forward + Math.cos(yaw) * strafe) * speed,
+            pose.position[0] + (forwardDirection.x * forward + rightDirection.x * strafe) * speed,
             pose.position[1] + vertical * speed,
-            pose.position[2] + (-Math.cos(yaw) * forward + Math.sin(yaw) * strafe) * speed,
+            pose.position[2] + (forwardDirection.z * forward + rightDirection.z * strafe) * speed,
           ], rotation: [...pose.rotation] };
           const { walkable: area, testBoundary } = options.current;
           if (testBoundary && area.length >= 3) {
@@ -147,7 +156,7 @@ export const ScanPreview = forwardRef<ScanPreviewHandle, Props>(function ScanPre
     return () => { disposed = true; removeInput(); observer?.disconnect(); state.current = null; app?.destroy(); };
   }, [src]);
 
-  return <div className="relative h-[min(55vh,34rem)] min-h-80 overflow-hidden rounded-card bg-[#042c53]">
+  return <div className="relative h-[min(62vh,48rem)] min-h-80 overflow-hidden rounded-card bg-[#042c53] xl:h-full">
     <canvas ref={canvasRef} tabIndex={0} aria-label="Scan setup preview. Click and drag to look; W A S D move; Q and E change height." className="h-full w-full touch-none outline-none focus-visible:ring-2 focus-visible:ring-primary" />
     {!ready && !error && <p className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-white">Loading scan…</p>}
     {error && <p role="alert" className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-white">{error}</p>}

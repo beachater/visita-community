@@ -18,6 +18,7 @@ import { BillingList } from "@/pages/admin/billing/BillingList";
 import { VenueBilling } from "@/pages/admin/billing/VenueBilling";
 import { Moderation } from "@/pages/admin/Moderation";
 import { VenueForm } from "@/pages/admin/VenueForm";
+import { ScanWorkspace } from "@/pages/admin/ScanWorkspace";
 import { Venues } from "@/pages/admin/Venues";
 import { Analytics } from "@/pages/venue/Analytics";
 import { Billing } from "@/pages/venue/Billing";
@@ -69,7 +70,7 @@ function Shell() {
         </SheetContent>
       </Sheet>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 pb-16 sm:px-6 lg:px-10 lg:py-10">
+      <main className="mx-auto w-full min-w-0 max-w-[112rem] px-4 py-6 pb-16 sm:px-6 lg:px-8 lg:py-8">
         <Outlet />
       </main>
     </div>
@@ -130,6 +131,7 @@ export function App() {
             <Route path="admin/venues" element={<RequireAdmin><Venues /></RequireAdmin>} />
             <Route path="admin/venues/new" element={<RequireAdmin><VenueForm /></RequireAdmin>} />
             <Route path="admin/venues/:venueId" element={<RequireAdmin><VenueForm /></RequireAdmin>} />
+            <Route path="admin/venues/:venueId/scan" element={<RequireAdmin><ScanWorkspace /></RequireAdmin>} />
             <Route path="admin/demand" element={<RequireAdmin><DemandQueue /></RequireAdmin>} />
             <Route path="admin/billing" element={<RequireAdmin><BillingList /></RequireAdmin>} />
             <Route path="admin/billing/:venueId" element={<RequireAdmin><VenueBilling /></RequireAdmin>} />

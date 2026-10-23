@@ -5,12 +5,11 @@ import { Input } from "@visita/ui/input";
 import { Label } from "@visita/ui/label";
 import { uploadScanFile } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import type { AdminVenue } from "./VenueForm";
 import { ScanSetup, type ScanDraft } from "./ScanSetup";
 
 const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
-export function ScanUpload({ venue, onDone }: { venue: AdminVenue; onDone: () => void }) {
+export function ScanUpload({ venue, onDone }: { venue: { id: string; splat_url: string | null; scanned_at: string | null }; onDone: () => void }) {
   const [full, setFull] = useState<File | null>(null);
   const [preview, setPreview] = useState<File | null>(null);
   const [scannedOn, setScannedOn] = useState(() => new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10));
@@ -56,8 +55,10 @@ export function ScanUpload({ venue, onDone }: { venue: AdminVenue; onDone: () =>
     } finally { setProgress(null); }
   };
 
-  return <div className="grid gap-5">
-    <section aria-labelledby="scan-h" className="grid gap-4 rounded-card border bg-card p-5 shadow-card">
+  return <div className="grid min-w-0 gap-5">
+    <details open={drafts.length === 0} className="rounded-card border bg-card shadow-card">
+      <summary className="cursor-pointer p-4 text-sm font-semibold">{drafts.length ? "Upload another scan" : "Upload a scan to get started"}</summary>
+    <section aria-labelledby="scan-h" className="grid gap-4 border-t p-5">
       <div>
         <h2 id="scan-h" className="text-lg font-semibold">3D scan</h2>
         <p className="text-sm text-muted-foreground">
@@ -73,7 +74,7 @@ export function ScanUpload({ venue, onDone }: { venue: AdminVenue; onDone: () =>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {progress && <p role="status" className="text-sm">{progress}</p>}
       <Button className="w-fit" onClick={() => void upload()} disabled={progress !== null || !full}>{progress ? "Uploading…" : "Upload draft scan"}</Button>
-    </section>
+    </section></details>
     {drafts.length > 0 && <div className="grid gap-3">
       <div className="flex flex-wrap gap-2">{drafts.map((draft) => <Button key={draft.id} variant={selectedId === draft.id ? "default" : "outline"} onClick={() => setSelectedId(draft.id)}>Draft v{draft.version}</Button>)}</div>
       {drafts.filter((draft) => draft.id === selectedId).map((draft) => <ScanSetup key={draft.id} scan={draft} onPublished={() => { void loadDrafts(); onDone(); }} />)}
