@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type * as PC from "playcanvas";
 import type { CameraControls } from "playcanvas/scripts/esm/camera-controls.mjs";
-import type { ScanExperience, ScanPose } from "@visita/shared-types";
+import { normalizeScanPose, type ScanExperience, type ScanPose } from "@visita/shared-types";
 import type { DeviceProfile } from "../../lib/splat/device";
 import { splatFormat } from "../../lib/splat/source";
 import { createWalkController } from "../../lib/splat/walk-controller";
@@ -152,14 +152,15 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
       controls.moveSlowSpeed = 1;
       controls.mobileInputLayout = "joystick-touch";
       const setPose = (pose: ScanPose) => {
+        const normalized = normalizeScanPose(pose);
         const controlPose = (controls as unknown as { _pose: PC.Pose })._pose;
         const fly = (controls as unknown as { _flyController: { _pose: PC.Pose; _targetPose: PC.Pose } })._flyController;
         for (const item of [controlPose, fly._pose, fly._targetPose]) {
-          item.position.set(...pose.position);
-          item.angles.set(...pose.rotation);
+          item.position.set(...normalized.position);
+          item.angles.set(...normalized.rotation);
         }
-        camera.setPosition(...pose.position);
-        camera.setEulerAngles(...pose.rotation);
+        camera.setPosition(...normalized.position);
+        camera.setEulerAngles(...normalized.rotation);
         instance.renderNextFrame = true;
       };
       goToRef.current = setPose;

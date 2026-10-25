@@ -25,10 +25,13 @@ screens, the viewer appears above the controls.
 6. Optionally name stops and capture each view. Reorder them to define the
    visitor's Previous / Next sequence. Stops use the entrance eye height.
 7. Save the draft while working. After testing, publish. Publication switches
-   the scan URL and its viewing setup together. The published scan remains
-   available on the admin scan page for a walkthrough review; only drafts have
-   editing controls. Existing live scans without a setup keep their previous
-   starting view and free movement.
+   the scan URL and its viewing setup together. On a published scan, choose
+   **Edit walkthrough** to change its orientation, entrance, walking area, or
+   stops without uploading the `.sog` again. **Save live changes** updates the
+   public walkthrough immediately; **Cancel editing** discards local changes.
+   Changing orientation clears the saved positions and boundary, which must be
+   captured again before saving. Existing live scans without a setup keep their
+   previous starting view and free movement.
 
 The current walkable area is a **single, flat polygon**. It prevents visitors
 from leaving its outline; it does not model tables, walls inside the outline,

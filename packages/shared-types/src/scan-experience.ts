@@ -26,6 +26,15 @@ export const emptyScanExperience = (): ScanExperience => ({
   stops: [],
 });
 
+/** Keep saved camera yaw within one turn for PlayCanvas pose interpolation. */
+export function normalizeScanPose(value: ScanPose): ScanPose {
+  const yaw = ((value.rotation[1] % 360) + 360) % 360;
+  return {
+    position: [...value.position],
+    rotation: [value.rotation[0], yaw > 180 ? yaw - 360 : yaw, value.rotation[2]],
+  };
+}
+
 const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n);
 const vec = (v: unknown, n: number): v is number[] => Array.isArray(v) && v.length === n && v.every(finite);
 const pose = (v: unknown): v is ScanPose => Boolean(v && typeof v === "object" && vec((v as ScanPose).position, 3) && vec((v as ScanPose).rotation, 3));
@@ -60,19 +69,35 @@ export function constrainWalkStep(from: Point2, to: Point2, polygon: Point2[]): 
     return true;
   };
   if (clear(to)) return to;
-  const xOnly: Point2 = [to[0], from[1]];
-  const zOnly: Point2 = [from[0], to[1]];
-  if (clear(xOnly)) return xOnly;
-  if (clear(zOnly)) return zOnly;
   let low = 0;
   let high = 1;
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 20; i++) {
     const mid = (low + high) / 2;
     const candidate: Point2 = [from[0] + (to[0] - from[0]) * mid, from[1] + (to[1] - from[1]) * mid];
     if (clear(candidate)) low = mid;
     else high = mid;
   }
-  return [from[0] + (to[0] - from[0]) * low, from[1] + (to[1] - from[1]) * low];
+  const hit: Point2 = [from[0] + (to[0] - from[0]) * low, from[1] + (to[1] - from[1]) * low];
+  // Project the remaining motion onto the wall actually reached. World-axis
+  // fallbacks make diagonal walking veer toward X or Z at angled walls.
+  let best = hit;
+  let bestDistance = 0;
+  for (let i = 0; i < polygon.length; i++) {
+    const a = polygon[i]!;
+    const b = polygon[(i + 1) % polygon.length]!;
+    const dx = b[0] - a[0], dz = b[1] - a[1];
+    const lengthSq = dx * dx + dz * dz;
+    if (lengthSq < 1e-10) continue;
+    const t = Math.max(0, Math.min(1, ((hit[0] - a[0]) * dx + (hit[1] - a[1]) * dz) / lengthSq));
+    const edgePoint: Point2 = [a[0] + t * dx, a[1] + t * dz];
+    if (Math.hypot(hit[0] - edgePoint[0], hit[1] - edgePoint[1]) > 0.001) continue;
+    const remaining = ((to[0] - hit[0]) * dx + (to[1] - hit[1]) * dz) / lengthSq;
+    const endT = Math.max(0, Math.min(1, t + remaining));
+    const end: Point2 = [a[0] + endT * dx, a[1] + endT * dz];
+    const distance = Math.hypot(end[0] - hit[0], end[1] - hit[1]);
+    if (distance > bestDistance && clear(end)) { best = end; bestDistance = distance; }
+  }
+  return best;
 }
 
 export function scanExperienceError(value: ScanExperience): string | null {

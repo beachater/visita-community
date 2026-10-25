@@ -476,7 +476,8 @@ select public.purge_old_analytics();
 do $$ begin
   assert (select count(*) from public.analytics_events where occurred_at < now() - interval '24 months') = 0;
   assert (select count from public.analytics_daily where venue_id = 'aaaaaaaa-0000-0000-0000-000000000003' and day = '2024-01-10' and type = 'profile_view') = 1;
-  assert (select count(*) from public.analytics_events) = 9 - 1;
+  assert (select count(*) from public.analytics_events
+          where venue_id in ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000003')) = 9 - 1;
 end $$;
 select pg_temp.pass('events older than 24 months are kept only as daily totals');
 set local role authenticated;
@@ -758,6 +759,26 @@ reset role;
 set local role anon;
 set local request.jwt.claims = '{"role":"anon"}';
 select pg_temp.expect_error($q$select public.admin_resolve_amenity_reports('aaaaaaaa-0000-0000-0000-000000000001', 'wifi', 'resolved', null)$q$, 'signed-out visitors cannot close amenity reports');
+reset role;
+
+-- Editing published setup updates the public view atomically without
+-- replacing the immutable scan asset.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+select pg_temp.expect_error($q$select public.update_published_scan_experience('dddddddd-0000-4000-8000-000000000002', '{}'::jsonb)$q$, 'visitors cannot edit a published scan');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+select pg_temp.expect_error($q$select public.update_published_scan_experience('dddddddd-0000-4000-8000-000000000002', '{}'::jsonb)$q$, 'invalid live setup is rejected');
+select public.update_published_scan_experience('dddddddd-0000-4000-8000-000000000002',
+  '{"rotation":[187,0,-5],"start":{"position":[0.2,1,0],"rotation":[0,15,0]},"walkable":[[0,0],[2,0],[0,2]],"stops":[]}'::jsonb);
+do $$ begin
+  assert (select experience from public.venue_scans where id = 'dddddddd-0000-4000-8000-000000000002') =
+    (select scan_experience from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000001');
+  assert (select splat_url from public.venues where id = 'aaaaaaaa-0000-0000-0000-000000000001') = 'splats/pub-cafe/v2.sog';
+  assert (select status from public.venue_scans where id = 'dddddddd-0000-4000-8000-000000000002') = 'published';
+end $$;
+select pg_temp.pass('admin edits live setup without replacing scan file');
 reset role;
 
 rollback;

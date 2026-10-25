@@ -45,7 +45,8 @@ function BoundaryPlan({ points, position }: { points: Point2[]; position: Point2
   </svg>;
 }
 
-export function ScanSetup({ scan, onPublished }: { scan: ScanDraft; onPublished: () => void }) {
+export function ScanSetup({ scan, onPublished, onCancel }: { scan: ScanDraft; onPublished: () => void; onCancel?: () => void }) {
+  const editingPublished = scan.status === "published";
   const viewer = useRef<ScanPreviewHandle>(null);
   const [experience, setExperience] = useState(() => readDraft(scan.experience));
   const [current, setCurrent] = useState<ScanPose | null>(null);
@@ -70,6 +71,23 @@ export function ScanSetup({ scan, onPublished }: { scan: ScanDraft; onPublished:
     setBusy(true);
     try { await save(); toast.success("Walkthrough draft saved"); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Couldn't save the draft."); }
+    finally { setBusy(false); }
+  };
+  const savePublished = async () => {
+    if (!previewReady) { setError("Wait for the scan preview to load before saving."); return; }
+    const issue = scanExperienceError(experience);
+    if (issue) { setError(issue); return; }
+    setBusy(true);
+    try {
+      const { error: saveError } = await supabase.rpc("update_published_scan_experience", {
+        p_scan_id: scan.id,
+        p_experience: experience as unknown as Json,
+      });
+      if (saveError) throw saveError;
+      setDirty(false);
+      toast.success("Published walkthrough updated");
+      onPublished();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Couldn't update the walkthrough."); }
     finally { setBusy(false); }
   };
   const publish = async () => {
@@ -116,7 +134,7 @@ export function ScanSetup({ scan, onPublished }: { scan: ScanDraft; onPublished:
 
   return <section className="grid min-w-0 gap-4" aria-labelledby="setup-h">
     <header className="flex flex-wrap items-start justify-between gap-3">
-      <div><h3 id="setup-h" className="text-xl font-semibold">Set up scan v{scan.version}</h3><p className="text-sm text-muted-foreground">Prepare the entrance, safe walking area, and optional guided stops before this scan goes live.</p></div>
+      <div><h3 id="setup-h" className="text-xl font-semibold">{editingPublished ? "Edit published" : "Set up"} scan v{scan.version}</h3><p className="text-sm text-muted-foreground">{editingPublished ? "Adjust the walkthrough for this scan. Visitors keep seeing the current setup until you save." : "Prepare the entrance, safe walking area, and optional guided stops before this scan goes live."}</p></div>
       <Dialog><DialogTrigger asChild><Button variant="outline"><CircleHelp /> How to set up a scan</Button></DialogTrigger>
         <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>Walkthrough setup guide</DialogTitle><DialogDescription>Use the large preview as if you were walking through the cafe. Your changes stay in a draft until you publish.</DialogDescription></DialogHeader>
           <ol className="grid gap-3 text-sm leading-relaxed">
@@ -124,7 +142,7 @@ export function ScanSetup({ scan, onPublished }: { scan: ScanDraft; onPublished:
             <li><strong>2. Choose the entrance.</strong> Click inside the preview, drag to look, and use W/A/S/D to walk. W moves in the direction you face, A moves left. Q/E changes camera height; Shift walks faster. Press “Set start here” when the view feels right.</li>
             <li><strong>3. Draw the safe area.</strong> Walk to each corner of a safe path and add them in order around its edge. Keep corners inside walls and away from empty space. Turn on the walking limit and try crossing every edge. This outline covers one flat floor and does not stop visitors at tables or walls inside it.</li>
             <li><strong>4. Add stops if useful.</strong> Face a feature such as the counter, name it, then add the stop. The visitor will see these in the order shown. You can reorder or remove them.</li>
-            <li><strong>5. Save, test, and publish.</strong> Save as often as you like. Publishing switches the cafe to this scan and setup together.</li>
+            <li><strong>5. Save and test.</strong> {editingPublished ? "Saving updates the visitor walkthrough immediately. The scan file stays the same." : "Save as often as you like. Publishing switches the cafe to this scan and setup together."}</li>
           </ol>
         </DialogContent></Dialog>
     </header>
@@ -179,13 +197,13 @@ export function ScanSetup({ scan, onPublished }: { scan: ScanDraft; onPublished:
       <h4 className="text-lg font-semibold">Make a guided tour</h4>
       <p className="text-sm leading-relaxed text-muted-foreground">Stops are optional. Walk to a useful spot, face what visitors should notice, and give it a simple name such as “Counter” or “Window seating.” Visitors can use Previous and Next to jump between stops and can still explore freely.</p>
       <div className="grid gap-2"><Label htmlFor="stop-name">Name this view</Label><div className="flex flex-wrap gap-2"><Input id="stop-name" className="min-w-40 flex-1" placeholder="Counter, seating, entrance…" maxLength={80} value={label} onChange={(e) => setLabel(e.target.value)} /><Button onClick={addStop} disabled={!previewReady}>Add stop here</Button></div></div>
-      {experience.stops.length === 0 && <p className="text-sm text-muted-foreground">No tour stops yet. You can publish without them.</p>}
+      {experience.stops.length === 0 && <p className="text-sm text-muted-foreground">No tour stops yet. They are optional.</p>}
       <ol className="grid gap-2">{experience.stops.map((stop, index) => <li key={stop.id} className="flex flex-wrap items-center gap-2 rounded-lg border p-2"><span className="min-w-0 flex-1 text-sm">{index + 1}. {stop.label}</span><Button variant="ghost" size="icon-sm" aria-label={`Go to ${stop.label}`} onClick={() => viewer.current?.goTo(stop.pose)}><RotateCcw /></Button><Button variant="ghost" size="icon-sm" aria-label={`Move ${stop.label} up`} disabled={index === 0} onClick={() => moveStop(index, -1)}><ArrowUp /></Button><Button variant="ghost" size="icon-sm" aria-label={`Move ${stop.label} down`} disabled={index === experience.stops.length - 1} onClick={() => moveStop(index, 1)}><ArrowDown /></Button><Button variant="ghost" size="icon-sm" aria-label={`Remove ${stop.label}`} onClick={() => update({ ...experience, stops: experience.stops.filter((item) => item.id !== stop.id) })}><Trash2 /></Button></li>)}</ol>
     </div>}
       </div>
       <footer className="grid gap-2 border-t bg-card p-3">
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <div className="flex flex-wrap items-center gap-2"><Button variant="outline" disabled={busy || !dirty} onClick={() => void saveDraft()}>{busy ? "Working…" : "Save draft"}</Button><Button disabled={busy || !previewReady} onClick={() => void publish()}>Publish scan</Button><span className="text-xs text-muted-foreground">{dirty ? "Unsaved changes" : "Draft saved"}</span></div>
+        <div className="flex flex-wrap items-center gap-2">{editingPublished ? <><Button disabled={busy || !dirty || !previewReady} onClick={() => void savePublished()}>{busy ? "Saving…" : "Save live changes"}</Button>{onCancel && <Button variant="outline" disabled={busy} onClick={onCancel}>Cancel editing</Button>}</> : <><Button variant="outline" disabled={busy || !dirty} onClick={() => void saveDraft()}>{busy ? "Working…" : "Save draft"}</Button><Button disabled={busy || !previewReady} onClick={() => void publish()}>Publish scan</Button></>}<span className="text-xs text-muted-foreground">{dirty ? "Unsaved changes" : editingPublished ? "Live setup loaded" : "Draft saved"}</span></div>
       </footer>
     </div>
     </div>

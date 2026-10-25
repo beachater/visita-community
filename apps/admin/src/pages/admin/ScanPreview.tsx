@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { ScanPose, Point2, Vec3 } from "@visita/shared-types";
-import { constrainWalkStep } from "@visita/shared-types";
+import { constrainWalkStep, normalizeScanPose } from "@visita/shared-types";
 
 export interface ScanPreviewHandle {
   pose(): ScanPose | null;
@@ -55,8 +55,9 @@ export const ScanPreview = forwardRef<ScanPreviewHandle, Props>(function ScanPre
       instance.root.addChild(camera);
       const pose: ScanPose = { position: [0, 0.8, 2.4], rotation: [0, 0, 0] };
       const setPose = (next: ScanPose) => {
-        pose.position = [...next.position];
-        pose.rotation = [...next.rotation];
+        const normalized = normalizeScanPose(next);
+        pose.position = normalized.position;
+        pose.rotation = normalized.rotation;
         camera.setPosition(...pose.position);
         camera.setEulerAngles(...pose.rotation);
         instance.renderNextFrame = true;

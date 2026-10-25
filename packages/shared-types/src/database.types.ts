@@ -1137,6 +1137,7 @@ export type Database = {
     }
     Functions: {
       publish_venue_scan: { Args: { p_scan_id: string }; Returns: undefined }
+      update_published_scan_experience: { Args: { p_scan_id: string; p_experience: Json }; Returns: undefined }
       admin_billing_overview: {
         Args: never
         Returns: {

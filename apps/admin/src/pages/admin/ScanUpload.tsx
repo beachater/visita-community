@@ -84,6 +84,6 @@ export function ScanUpload({ venue, onDone }: { venue: { id: string; is_publishe
       <div className="flex flex-wrap gap-2">{drafts.map((draft) => <Button key={draft.id} variant={selectedId === draft.id ? "default" : "outline"} onClick={() => setSelectedId(draft.id)}>Draft v{draft.version}</Button>)}</div>
       {drafts.filter((draft) => draft.id === selectedId).map((draft) => <ScanSetup key={draft.id} scan={draft} onPublished={() => { void loadDrafts(); onDone(); }} />)}
     </div>}
-    {published && <PublishedScan scan={published} />}
+    {published && <PublishedScan scan={published} onUpdated={() => { void loadDrafts(); onDone(); }} />}
   </div>;
 }
