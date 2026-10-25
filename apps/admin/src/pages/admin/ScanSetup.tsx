@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp, CircleHelp, RotateCcw, Trash2 } from "lucide-react";
 import type { Json, Point2, ScanExperience, ScanPose, ScanStop } from "@visita/shared-types";
-import { emptyScanExperience, insideWalkable, scanExperienceError } from "@visita/shared-types";
+import { emptyScanExperience, insideWalkable, parseScanExperience, scanExperienceError } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@visita/ui/dialog";
 import { Input } from "@visita/ui/input";
@@ -47,6 +47,7 @@ function BoundaryPlan({ points, position }: { points: Point2[]; position: Point2
 
 export function ScanSetup({ scan, onPublished, onCancel }: { scan: ScanDraft; onPublished: () => void; onCancel?: () => void }) {
   const editingPublished = scan.status === "published";
+  const hasSavedSetup = parseScanExperience(scan.experience) !== null;
   const viewer = useRef<ScanPreviewHandle>(null);
   const [experience, setExperience] = useState(() => readDraft(scan.experience));
   const [current, setCurrent] = useState<ScanPose | null>(null);
@@ -134,7 +135,7 @@ export function ScanSetup({ scan, onPublished, onCancel }: { scan: ScanDraft; on
 
   return <section className="grid min-w-0 gap-4" aria-labelledby="setup-h">
     <header className="flex flex-wrap items-start justify-between gap-3">
-      <div><h3 id="setup-h" className="text-xl font-semibold">{editingPublished ? "Edit published" : "Set up"} scan v{scan.version}</h3><p className="text-sm text-muted-foreground">{editingPublished ? "Adjust the walkthrough for this scan. Visitors keep seeing the current setup until you save." : "Prepare the entrance, safe walking area, and optional guided stops before this scan goes live."}</p></div>
+      <div><h3 id="setup-h" className="text-xl font-semibold">{editingPublished ? hasSavedSetup ? "Edit published" : "Set up existing" : "Set up"} scan v{scan.version}</h3><p className="text-sm text-muted-foreground">{editingPublished ? "Adjust the walkthrough for this scan. Visitors keep seeing the current setup until you save." : "Prepare the entrance, safe walking area, and optional guided stops before this scan goes live."}</p></div>
       <Dialog><DialogTrigger asChild><Button variant="outline"><CircleHelp /> How to set up a scan</Button></DialogTrigger>
         <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>Walkthrough setup guide</DialogTitle><DialogDescription>Use the large preview as if you were walking through the cafe. Your changes stay in a draft until you publish.</DialogDescription></DialogHeader>
           <ol className="grid gap-3 text-sm leading-relaxed">
@@ -203,7 +204,7 @@ export function ScanSetup({ scan, onPublished, onCancel }: { scan: ScanDraft; on
       </div>
       <footer className="grid gap-2 border-t bg-card p-3">
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <div className="flex flex-wrap items-center gap-2">{editingPublished ? <><Button disabled={busy || !dirty || !previewReady} onClick={() => void savePublished()}>{busy ? "Saving…" : "Save live changes"}</Button>{onCancel && <Button variant="outline" disabled={busy} onClick={onCancel}>Cancel editing</Button>}</> : <><Button variant="outline" disabled={busy || !dirty} onClick={() => void saveDraft()}>{busy ? "Working…" : "Save draft"}</Button><Button disabled={busy || !previewReady} onClick={() => void publish()}>Publish scan</Button></>}<span className="text-xs text-muted-foreground">{dirty ? "Unsaved changes" : editingPublished ? "Live setup loaded" : "Draft saved"}</span></div>
+        <div className="flex flex-wrap items-center gap-2">{editingPublished ? <><Button disabled={busy || !dirty || !previewReady} onClick={() => void savePublished()}>{busy ? "Saving…" : "Save live changes"}</Button>{onCancel && <Button variant="outline" disabled={busy} onClick={onCancel}>Cancel editing</Button>}</> : <><Button variant="outline" disabled={busy || !dirty} onClick={() => void saveDraft()}>{busy ? "Working…" : "Save draft"}</Button><Button disabled={busy || !previewReady} onClick={() => void publish()}>Publish scan</Button></>}<span className="text-xs text-muted-foreground">{dirty ? "Unsaved changes" : editingPublished ? hasSavedSetup ? "Live setup loaded" : "Existing scan loaded" : "Draft saved"}</span></div>
       </footer>
     </div>
     </div>
