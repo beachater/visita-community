@@ -4,6 +4,12 @@ Admins prepare a walkthrough from an uploaded `.sog` in **Venues → cafe → Se
 An upload creates a draft; the current cafe scan stays live. The `.sog` is not
 modified by setup. The optional smaller preview `.sog` uses the same coordinates.
 
+Scans that were already live before the admin setup feature are registered from
+their existing venue scan URL. Open the cafe's 3D scan page and choose **Set up
+walkthrough**; the original `.sog` appears in the viewer without another upload.
+These older scans have no saved entrance, walking boundary, or tour stops until
+an admin captures them. Saving the setup updates the live walkthrough.
+
 The setup workspace keeps the scan viewer visible beside the controls on a wide
 screen. Choose a step in the right panel; **Save draft** and **Publish scan** stay
 at its bottom. Open **How to set up a scan** for plain-language help. On smaller

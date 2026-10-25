@@ -10,7 +10,7 @@ import { PublishedScan } from "./PublishedScan";
 
 const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
-export function ScanUpload({ venue, onDone }: { venue: { id: string; is_published: boolean; splat_url: string | null; scanned_at: string | null }; onDone: () => void }) {
+export function ScanUpload({ venue, refreshToken, onDone }: { venue: { id: string; is_published: boolean; splat_url: string | null; scanned_at: string | null }; refreshToken: number; onDone: () => void }) {
   const [full, setFull] = useState<File | null>(null);
   const [preview, setPreview] = useState<File | null>(null);
   const [scannedOn, setScannedOn] = useState(() => new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10));
@@ -30,7 +30,7 @@ export function ScanUpload({ venue, onDone }: { venue: { id: string; is_publishe
     setPublished((data ?? []).find((row) => row.status === "published") ?? null);
     setSelectedId((id) => id && nextDrafts.some((row) => row.id === id) ? id : nextDrafts[0]?.id ?? null);
   };
-  useEffect(() => { void loadDrafts(); }, [venue.id]);
+  useEffect(() => { void loadDrafts(); }, [venue.id, refreshToken]);
 
   const upload = async () => {
     if (!full) return setError("Choose the full .sog file.");

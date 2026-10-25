@@ -8,10 +8,12 @@ import { ScanUpload } from "./ScanUpload";
 export function ScanWorkspace() {
   const { venueId = "" } = useParams();
   const [venue, setVenue] = useState<{ id: string; name: string; is_published: boolean; splat_url: string | null; scanned_at: string | null } | null | undefined>(undefined);
+  const [scanRefresh, setScanRefresh] = useState(0);
 
   const load = useCallback(async () => {
     const { data } = await supabase.from("venues").select("id,name,is_published,splat_url,scanned_at").eq("id", venueId).maybeSingle();
     setVenue(data);
+    setScanRefresh((value) => value + 1);
   }, [venueId]);
   useEffect(() => {
     void load();
@@ -24,8 +26,8 @@ export function ScanWorkspace() {
   return <div className="grid min-w-0 gap-5">
     <Link to={`/admin/venues/${venueId}`} className="inline-flex w-fit items-center gap-1 text-sm underline-offset-2 hover:underline"><ArrowLeft className="size-4" /> Venue details</Link>
     {venue === undefined ? <p className="text-muted-foreground">Loading cafe…</p> : venue === null ? <p role="alert">Cafe not found.</p> : <>
-      <header className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-3xl font-bold">{venue.name} · 3D scan</h1><p className="text-sm text-muted-foreground">Set up and preview a draft here. A published scan appears to visitors when the cafe listing is also published.</p></div><Button variant="outline" onClick={() => void load()}><RefreshCw /> Refresh status</Button></header>
-      <ScanUpload venue={venue} onDone={() => void load()} />
+      <header className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-3xl font-bold">{venue.name} · 3D scan</h1><p className="text-sm text-muted-foreground">Set up a new scan or edit the current walkthrough here. A published scan appears to visitors when the cafe listing is also published.</p></div><Button variant="outline" onClick={() => void load()}><RefreshCw /> Refresh status</Button></header>
+      <ScanUpload venue={venue} refreshToken={scanRefresh} onDone={() => void load()} />
     </>}
   </div>;
 }
