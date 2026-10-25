@@ -1,4 +1,5 @@
 import type * as PC from "playcanvas";
+import { constrainWalkStep, type Point2 } from "@visita/shared-types";
 
 // Walking, not flying: look anywhere, but movement stays on the level plane,
 // so eye height never drifts toward the floor or ceiling. Identical to the
@@ -13,7 +14,7 @@ interface PoseInternals {
 
 const damp = (damping: number, dt: number) => 1 - Math.pow(damping, dt * 1000);
 
-export function createWalkController(pc: typeof PC): PC.FlyController {
+export function createWalkController(pc: typeof PC, walkable: Point2[] = []): PC.FlyController {
   const offset = new pc.Vec3();
   const angles = new pc.Vec3();
   const forward = new pc.Vec3();
@@ -33,6 +34,14 @@ export function createWalkController(pc: typeof PC): PC.FlyController {
       offset.add(forward.mulScalar(move[2]));
       offset.add(right.mulScalar(move[0]));
       self._targetPose.move(offset);
+
+      if (walkable.length >= 3) {
+        const current: Point2 = [self._pose.position.x, self._pose.position.z];
+        const target: Point2 = [self._targetPose.position.x, self._targetPose.position.z];
+        const limited = constrainWalkStep(current, target, walkable);
+        self._targetPose.position.x = limited[0];
+        self._targetPose.position.z = limited[1];
+      }
 
       return self._pose.lerp(self._pose, self._targetPose, damp(this.moveDamping, dt), damp(this.rotateDamping, dt));
     }

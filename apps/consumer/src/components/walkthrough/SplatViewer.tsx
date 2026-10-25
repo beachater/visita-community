@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type * as PC from "playcanvas";
 import type { CameraControls } from "playcanvas/scripts/esm/camera-controls.mjs";
+import { normalizeScanPose, type ScanExperience, type ScanPose } from "@visita/shared-types";
 import type { DeviceProfile } from "../../lib/splat/device";
 import { splatFormat } from "../../lib/splat/source";
 import { createWalkController } from "../../lib/splat/walk-controller";
@@ -28,7 +29,10 @@ export interface SplatViewerProps {
   onPhase?: (phase: ViewerPhase, ms: number) => void;
   /** Sampled twice a second while mounted. */
   onStats?: (stats: ViewerStats) => void;
+  experience?: ScanExperience | null;
 }
+
+export interface SplatViewerHandle { goTo(pose: ScanPose): void }
 
 // Brand navy (#042C53) behind the scan.
 const CLEAR_COLOR: [number, number, number] = [0.016, 0.173, 0.325];
@@ -45,13 +49,17 @@ type DetailState = { received: number; total: number | null } | { failed: true }
  * the engine's "fast first frame" pattern. Once the scene settles it renders
  * on demand, so an idle view leaves the GPU (and the phone's battery) alone.
  */
-export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, onStats }: SplatViewerProps) {
+export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, onStats, experience }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [progress, setProgress] = useState<LoadProgress>({ stage: "engine" });
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<DetailState>(null);
   const [joystick, setJoystick] = useState<[number, number, number, number] | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const experienceRef = useRef(experience);
+  experienceRef.current = experience;
+  const goToRef = useRef<(pose: ScanPose) => void>(() => {});
+  useImperativeHandle(ref, () => ({ goTo: (pose) => goToRef.current(pose) }), []);
 
   // Callbacks change identity every render; read them through a ref so they
   // don't restart the engine.
@@ -126,14 +134,16 @@ export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, on
         nearClip: 0.05,
         farClip: 200,
       });
-      camera.setPosition(0, 0.8, 2.4);
+      const start = experienceRef.current?.start;
+      camera.setPosition(...(start?.position ?? [0, 0.8, 2.4]));
+      if (start) camera.setEulerAngles(...start.rotation);
       instance.root.addChild(camera);
       camera.addComponent("script");
       const controls = camera.script!.create(Controls) as unknown as CameraControls;
       // Walk the room at eye height: virtual joystick on the left half of the
       // screen, drag to look on the right half. The walk controller replaces
       // the fly controller before fly mode attaches it.
-      (controls as unknown as { _flyController: PC.FlyController })._flyController = createWalkController(pc);
+      (controls as unknown as { _flyController: PC.FlyController })._flyController = createWalkController(pc, experienceRef.current?.walkable);
       controls.enableOrbit = false;
       controls.enableFly = true;
       controls.enablePan = false;
@@ -141,6 +151,20 @@ export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, on
       controls.moveFastSpeed = 5;
       controls.moveSlowSpeed = 1;
       controls.mobileInputLayout = "joystick-touch";
+      const setPose = (pose: ScanPose) => {
+        const normalized = normalizeScanPose(pose);
+        const controlPose = (controls as unknown as { _pose: PC.Pose })._pose;
+        const fly = (controls as unknown as { _flyController: { _pose: PC.Pose; _targetPose: PC.Pose } })._flyController;
+        for (const item of [controlPose, fly._pose, fly._targetPose]) {
+          item.position.set(...normalized.position);
+          item.angles.set(...normalized.rotation);
+        }
+        camera.setPosition(...normalized.position);
+        camera.setEulerAngles(...normalized.rotation);
+        instance.renderNextFrame = true;
+      };
+      goToRef.current = setPose;
+      if (start) setPose(start);
       instance.on("joystick:left", (bx: number, by: number, sx: number, sy: number) => {
         setJoystick(bx < 0 ? null : [bx, by, sx, sy]);
       });
@@ -177,7 +201,7 @@ export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, on
         const scan = new pc.Entity("scan");
         scan.addComponent("gsplat", { asset });
         // Scans are exported Y-down.
-        scan.setLocalEulerAngles(180, 0, 0);
+        scan.setLocalEulerAngles(...(experienceRef.current?.rotation ?? [180, 0, 0]));
         instance.root.addChild(scan);
         return scan;
       };
@@ -365,6 +389,7 @@ export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, on
       canvas.removeEventListener("webglcontextlost", onContextLost);
       app?.destroy();
       app = null;
+      goToRef.current = () => {};
     };
   }, [src, previewSrc, profile, splatBudget, attempt]);
 
@@ -388,7 +413,7 @@ export function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, on
       )}
     </div>
   );
-}
+});
 
 const MB = 1024 * 1024;
 

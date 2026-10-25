@@ -1,4 +1,4 @@
-import type { MenuItem, VenueAmenities, WeeklyHours } from "@visita/shared-types";
+import { parseScanExperience, type MenuItem, type ScanExperience, type VenueAmenities, type WeeklyHours } from "@visita/shared-types";
 import type { CafeRow } from "../venue/load";
 import type { WalkthroughCafe } from "../venue/types";
 
@@ -18,6 +18,7 @@ export interface MapVenue {
   splatKey: string | null;
   previewKey: string | null;
   scannedAt: string | null;
+  scanExperience: ScanExperience | null;
   amenities: VenueAmenities;
   hours: WeeklyHours | null;
   menu: MenuItem[];
@@ -41,6 +42,7 @@ export function toMapVenue(row: CafeRow): MapVenue {
     splatKey: row.splat_url,
     previewKey: row.splat_preview_url,
     scannedAt: row.scanned_at,
+    scanExperience: parseScanExperience(row.scan_experience),
     amenities: (row.amenities ?? {}) as VenueAmenities,
     hours: (row.hours ?? null) as WeeklyHours | null,
     menu: (row.menu ?? []) as unknown as MenuItem[],
@@ -73,6 +75,7 @@ export function toWalkthrough(v: MapVenue): WalkthroughCafe | null {
     splatKey: v.splatKey,
     previewKey: v.previewKey,
     scannedAt: v.scannedAt,
+    scanExperience: v.scanExperience,
     amenities: v.amenities,
     hours: v.hours,
     menu: v.menu,

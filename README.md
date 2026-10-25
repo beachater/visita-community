@@ -44,6 +44,13 @@ pnpm typecheck
 pnpm build
 ```
 
+For a local end-to-end scan test, both apps must use the same local Supabase
+project. Vite loads `apps/*/.env.development.local` over `apps/*/.env`; put the
+local API URL and publishable key there when `.env` contains hosted values.
+The consumer Worker's `apps/consumer/.dev.vars` must also use the local API URL
+and the local secret key from `supabase status`. Restart both dev servers after
+changing environment files. Publishing a scan does not publish its cafe listing.
+
 Run `pnpm db:types` after every migration and commit the result.
 
 ## CI and deployment
@@ -52,6 +59,9 @@ Pull requests to `main` run app checks and local Supabase migration/RLS checks.
 Pushing to `main` then applies hosted migrations and deploys both Cloudflare
 Workers. One-time GitHub secrets, variables, and existing resource requirements
 are listed in [docs/deployment.md](docs/deployment.md).
+
+Cafe walkthrough drafts, entrance views, safe walking areas and tour stops are
+set up in the admin app. See [docs/scan-setup.md](docs/scan-setup.md).
 
 ## Data rules worth knowing
 

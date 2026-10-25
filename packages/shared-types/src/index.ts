@@ -23,3 +23,4 @@ export type Tables<T extends keyof PublicSchema["Tables"]> =
 export type Enums<T extends keyof PublicSchema["Enums"]> = PublicSchema["Enums"][T];
 
 export { OCCUPANCY_LABEL, currentOccupancy, setAgo, type OccupancyLevel, type OccupancyRow } from "./occupancy";
+export { constrainWalkStep, emptyScanExperience, insideWalkable, normalizeScanPose, parseScanExperience, scanExperienceError, type Point2, type ScanExperience, type ScanPose, type ScanStop, type Vec3 } from "./scan-experience";

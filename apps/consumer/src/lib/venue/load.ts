@@ -19,6 +19,7 @@ export type CafeRow = Pick<
   | "splat_url"
   | "splat_preview_url"
   | "scanned_at"
+  | "scan_experience"
   | "amenities"
   | "hours"
   | "menu"
@@ -27,7 +28,7 @@ export type CafeRow = Pick<
 >;
 
 const CAFE_COLUMNS =
-  "id,slug,name,address,city,lat,lng,google_place_id,splat_url,splat_preview_url,scanned_at,amenities,hours,menu,is_top_pick,search_terms";
+  "id,slug,name,address,city,lat,lng,google_place_id,splat_url,splat_preview_url,scanned_at,scan_experience,amenities,hours,menu,is_top_pick,search_terms";
 
 export async function loadPublishedCafes(): Promise<{ cafes: CafeRow[]; definitions: AmenityDefinition[] }> {
   const [cafes, definitions] = await Promise.all([
