@@ -39,10 +39,11 @@ the single release sequence.
 
 1. `pnpm test` and `pnpm typecheck` run on the full workspace.
 2. A fresh local Supabase instance applies migrations and runs the RLS smoke test.
-3. On `main` only, the consumer and admin apps build with the hosted public
-   Supabase values. Both builds must pass before the hosted database changes.
-4. `supabase db push --dry-run` previews pending migrations, then
-   `supabase db push` applies them. Seed data is never pushed.
+3. On `main` only, `supabase db push --dry-run` previews pending migrations,
+   then `supabase db push` applies them. Seed data is never pushed.
+4. The consumer and admin apps build with the hosted public Supabase values.
+   Astro prerenders cafe data during the consumer build, so the hosted schema
+   must already include any columns the new code reads.
 5. Wrangler deploys the consumer Worker, then the admin Worker.
 
 If any step fails, later steps do not run. A Worker deploy failure after the
