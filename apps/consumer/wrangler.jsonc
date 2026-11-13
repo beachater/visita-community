@@ -5,6 +5,10 @@
   "compatibility_flags": ["nodejs_compat"],
   // Worker vars (non-secret). The service key is a secret:
   //   npx wrangler secret put SUPABASE_SECRET_KEY
+  // Production domain. Cloudflare creates the DNS record and certificate on
+  // deploy; the zone must be active on the same account. The Cache API
+  // (edge-cache.ts) only works on a custom domain, not on *.workers.dev.
+  "routes": [{ "pattern": "visita.ph", "custom_domain": true }],
   "vars": {
     "SUPABASE_URL": "https://zgbvtnoticzhlyuavwdc.supabase.co"
   },
@@ -20,8 +24,10 @@
     {
       // Public scans and the basemap, served same-origin at /assets/<key>.
       "binding": "ASSETS_BUCKET",
-      "bucket_name": "visita-assets-dev",
-      // Local dev reads the real bucket instead of an empty simulated one.
+      // Deploys use the production bucket; local dev (preview) uses the dev one.
+      "bucket_name": "visita-assets",
+      "preview_bucket_name": "visita-assets-dev",
+      // Local dev reads the real dev bucket instead of an empty simulated one.
       "remote": true
     }
   ]

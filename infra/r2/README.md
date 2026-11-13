@@ -1,7 +1,17 @@
 # R2 assets
 
-Bucket: `visita-assets-dev` (development, APAC). Production gets its own bucket
-behind a custom domain; `r2.dev` URLs are rate-limited and dev-only.
+| Bucket | Used by |
+| --- | --- |
+| `visita-assets` (production, APAC) | Deployed Workers (`bucket_name` in both `wrangler.jsonc` files) |
+| `visita-assets-dev` (development, APAC) | Local dev (`preview_bucket_name`), so test uploads never reach production |
+
+Both Workers serve the bucket through their own domain (`/assets/<key>` on the
+consumer site), so neither bucket needs a public `r2.dev` URL.
+
+The commands below use `<bucket>`. Use `visita-assets` for anything visitors
+should see, and `visita-assets-dev` to try something out first. A new
+production bucket also needs the CORS rule below and a copy of the existing
+objects (scans, basemap, and `owner-proofs/`).
 
 ## Layout
 
@@ -19,7 +29,7 @@ with `PUBLIC_ASSETS_BASE_URL` / `VITE_ASSETS_BASE_URL`.
 third-party sites (PRD 5.4). Apply changes with:
 
 ```sh
-npx wrangler r2 bucket cors set visita-assets-dev --file infra/r2/cors.json
+npx wrangler r2 bucket cors set <bucket> --file infra/r2/cors.json
 ```
 
 ## Making a scan (.ply → .sog)
@@ -59,7 +69,7 @@ re-quantize the splats), check the result, then upload:
 
 ```sh
 npx @playcanvas/splat-transform <slug>.sog null      # must report the gaussian count
-npx wrangler r2 object put visita-assets-dev/splats/<slug>/v1.sog \
+npx wrangler r2 object put <bucket>/splats/<slug>/v1.sog \
   --file <slug>.sog --remote \
   --content-type application/octet-stream \
   --cache-control "public, max-age=31536000, immutable"
@@ -85,7 +95,7 @@ verify the download against the release asset's SHA-256):
 # The newest build name is listed at https://build-metadata.protomaps.dev/builds.json
 pmtiles extract https://build.protomaps.com/<build>.pmtiles cdo.pmtiles \
   --bbox=124.38,8.22,124.88,8.65 --maxzoom=15
-npx wrangler r2 object put visita-assets-dev/basemaps/cdo-<build>.pmtiles \
+npx wrangler r2 object put <bucket>/basemaps/cdo-<build>.pmtiles \
   --file cdo.pmtiles --remote --content-type application/vnd.pmtiles \
   --cache-control "public, max-age=31536000, immutable"
 ```
