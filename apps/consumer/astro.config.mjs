@@ -4,6 +4,9 @@ import cloudflare from "@astrojs/cloudflare";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 
+// `astro build` vs `astro dev`. The cast is because this app has no Node types.
+const isBuild = /** @type {{ process: { argv: string[] } }} */ (/** @type {unknown} */ (globalThis)).process.argv.includes("build");
+
 // Server output by default; pages that are the same for every visitor opt in
 // with `export const prerender = true` (PRD 5.2). Every page declares its mode
 // explicitly so it can be grepped.
@@ -17,7 +20,14 @@ export default defineConfig({
   // they'd need) are off. Images are optimized at build time, so there's no
   // runtime Cloudflare Images binding to pay for ($0 budget, PRD 5.8).
   session: false,
-  adapter: cloudflare({ imageService: "compile" }),
+  //
+  // Remote bindings (the real ASSETS_BUCKET, see wrangler.jsonc) are for `astro
+  // dev` only. No prerendered page reads R2, so `astro build` doesn't need them,
+  // and leaving them on makes every local build require a Cloudflare login.
+  adapter: cloudflare({
+    imageService: "compile",
+    remoteBindings: !isBuild,
+  }),
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
