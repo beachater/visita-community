@@ -1,7 +1,10 @@
 # Phone walkthrough test (BEA-8)
 
-One iPhone (Safari) and one mid-range Android (Chrome), every published scan,
-on 4G. About 20 minutes per phone. Agents have no phones, so a person runs this.
+**This pass: iPhone 17e (Safari) only**, every published scan, on 4G. About
+20 minutes. Agents have no phones, so a person runs this.
+
+Android is **not covered this pass** (no device available). Rerun this
+checklist on a mid-range Android phone (Chrome) when there is one.
 
 ## Before you start
 
@@ -19,7 +22,7 @@ readout on the clipboard; paste it into your results.
 |---|---|---|
 | 1 | Sonny's Coffee + Diner | `/cafe/sonnys?walkthrough=1&debug=splat` |
 | 2 | Lito's Meals and Cafe | `/cafe/litos?walkthrough=1&debug=splat` |
-| 3 | Test (only if still published) | `/cafe/test?walkthrough=1&debug=splat` |
+| 3 | Test | `/cafe/test?walkthrough=1&debug=splat` |
 
 For each one:
 
@@ -34,19 +37,19 @@ For each one:
    - **Stopped**: "The 3D view stopped…" message. Tap **Reopen in preview
      mode** (when offered) and note whether that works.
    - **Page reloaded / crashed**: Safari showed "A problem repeatedly
-     occurred" or the page reloaded by itself. Open the same link again: it
-     should start in **Preview mode**. Note whether it did.
+     occurred" or the page reloaded by itself. Open the same link again.
+     Sonny's and Test should start in **Preview mode**. Lito's has no preview
+     yet, so it should show "The 3D view closed last time…" with an **Open
+     the 3D view** button instead of loading straight away. Note what you saw.
 5. Note anything else: very slow, choppy movement, phone got hot, blank or
    black screen.
 6. Close the walkthrough (X), then go on to the next scan in the **same tab**.
 
 ## Results to send back
 
-For each phone:
-
-- Phone model, OS version, browser, signal (bars or speed test).
+- Phone model, iOS version, browser, signal (bars or speed test).
 - For each scan: the outcome (Opened / Preview only / Stopped / Crashed), the
   pasted readout, and any notes.
 
-**Pass:** every published scan reaches **Opened** on both phones, and nothing
-crashes during the one-minute walk.
+**Pass:** every published scan reaches **Opened** on the iPhone, and nothing
+crashes during the one-minute walk. (Android: not covered this pass.)
