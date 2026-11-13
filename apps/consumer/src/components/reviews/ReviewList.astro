@@ -1,13 +1,16 @@
 ---
 import { Star } from "lucide-react";
-import { ratingSummary } from "../../lib/reviews/summary";
+import { loadFirstReviewPage, toClientReview, type FirstReviewPage } from "../../lib/reviews/page";
 import { loginHref } from "../site/nav";
-import ReviewCard from "./ReviewCard.astro";
+import { MoreReviews } from "./MoreReviews";
+import { ReviewCard } from "./ReviewCard";
 import { ReviewSheet } from "./ReviewSheet";
 
 // Reviews on a cafe page (PRD 4.3), as a server island so the page itself
-// stays cached: visible reviews newest first with the average, plus your own
-// review even when a moderator hid it. RLS decides what each visitor sees.
+// stays cached: your own review first (even when a moderator hid it), then
+// visible reviews newest first, a page at a time (BEA-18). The count and
+// average come from the database, not from the rows shown. RLS decides what
+// each visitor sees.
 interface Props {
   venueId: string;
   slug: string;
@@ -16,36 +19,13 @@ interface Props {
 const { venueId, slug, cafeName } = Astro.props;
 const { user, supabase } = Astro.locals;
 
-type Row = {
-  id: string;
-  author_id: string;
-  rating: number;
-  body: string | null;
-  photo_url: string | null;
-  status: "visible" | "hidden";
-  created_at: string;
-  profiles: { display_name: string | null; avatar_url: string | null } | null;
-  review_replies: { body: string; created_at: string } | null;
-};
-
-let rows: Row[] = [];
-let failed = false;
+let first: FirstReviewPage | null = null;
 if (supabase) {
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("id, author_id, rating, body, photo_url, status, created_at, profiles(display_name, avatar_url), review_replies(body, created_at)")
-    .eq("venue_id", venueId)
-    .order("created_at", { ascending: false })
-    .limit(100);
-  failed = Boolean(error);
-  rows = (data ?? []) as Row[];
-} else {
-  failed = true;
+  first = await loadFirstReviewPage(supabase, venueId, user?.id ?? null).catch(() => null);
 }
-
-const own = user ? (rows.find((r) => r.author_id === user.id) ?? null) : null;
-const others = rows.filter((r) => r !== own && r.status === "visible");
-const { average, count } = ratingSummary(rows.filter((r) => r.status === "visible").map((r) => r.rating));
+const failed = first === null;
+const own = first?.own ?? null;
+const { average, count } = first?.summary ?? { average: null, count: 0 };
 const next = `/cafe/${slug}?review=1`;
 ---
 
@@ -83,32 +63,11 @@ const next = `/cafe/${slug}?review=1`;
 
   {
     own && (
-      <ReviewCard
-        name={own.profiles?.display_name ?? "You"}
-        avatarUrl={own.profiles?.avatar_url ?? null}
-        rating={own.rating}
-        body={own.body}
-        photoUrl={own.photo_url}
-        createdAt={own.created_at}
-        own
-        hidden={own.status === "hidden"}
-        reply={own.review_replies}
-      />
+      <ReviewCard review={toClientReview(own, true)} />
     )
   }
   {
-    others.map((r) => (
-      <ReviewCard
-        name={r.profiles?.display_name ?? "Visita member"}
-        avatarUrl={r.profiles?.avatar_url ?? null}
-        rating={r.rating}
-        body={r.body}
-        photoUrl={r.photo_url}
-        createdAt={r.created_at}
-        own={false}
-        hidden={false}
-        reply={r.review_replies}
-      />
-    ))
+    first?.reviews.map((r) => <ReviewCard review={toClientReview(r, false)} />)
   }
+  {first?.nextCursor && <MoreReviews client:visible slug={slug} cursor={first.nextCursor} />}
 </section>

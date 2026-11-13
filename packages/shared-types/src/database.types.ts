@@ -1248,6 +1248,10 @@ export type Database = {
         }
       }
       review_venue_id: { Args: { p_review_id: string }; Returns: string }
+      venue_review_summary: {
+        Args: { p_venue_id: string }
+        Returns: { average: number | null; review_count: number }[]
+      }
       set_occupancy: {
         Args: {
           p_level: Database["public"]["Enums"]["occupancy_level"]
