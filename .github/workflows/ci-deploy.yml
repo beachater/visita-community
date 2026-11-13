@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v3.0.1
         with:
-          version: latest
+          version: 3.1.0
       - name: Apply migrations to a local database
         run: supabase start
       - name: Run RLS smoke tests
@@ -89,7 +89,7 @@ jobs:
           grep -Fq "$expected" apps/admin/wrangler.jsonc || { echo 'Admin Worker publishable key differs from the GitHub variable'; exit 1; }
       - uses: supabase/setup-cli@v3.0.1
         with:
-          version: latest
+          version: 3.1.0
       - name: Link hosted project
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
       - name: Preview pending migrations
