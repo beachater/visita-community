@@ -1,0 +1,41 @@
+<!doctype html>
+<!--
+  A stand-in for a cafe's own website, to check the widget inside a
+  third-party page. Serve it from a different origin than the embed, e.g.:
+    pnpm dev:embed                                           # http://localhost:4323
+    python3 -m http.server 8090 -b 127.0.0.1 -d apps/embed/test
+  then open http://127.0.0.1:8090/host.html?venue=sonnys
+  (add &embed=<url> to point at another embed host).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sonny's Coffee + Diner — Visit us</title>
+    <style>
+      body { margin: 0; font-family: Georgia, serif; background: #f6efe6; color: #3b2a1a; }
+      header { padding: 24px 32px; background: #3b2a1a; color: #f6efe6; }
+      header h1 { margin: 0; font-size: 28px; }
+      main { max-width: 960px; margin: 0 auto; padding: 24px 32px 48px; }
+      .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.5); }
+      .frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+      code { background: #ece1d3; padding: 2px 6px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <header><h1>Sonny's Coffee + Diner</h1><p>Open daily, 8am–9pm · Cagayan de Oro</p></header>
+    <main>
+      <h2>Take a look inside</h2>
+      <p>Walk around our cafe before you visit.</p>
+      <div class="frame"><iframe id="visita" title="3D walkthrough" allow="fullscreen" loading="lazy"></iframe></div>
+      <p>Embedded from <code id="src"></code></p>
+    </main>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const base = params.get("embed") || "http://localhost:4323/";
+      const src = `${base}?venue=${encodeURIComponent(params.get("venue") || "sonnys")}`;
+      document.getElementById("visita").src = src;
+      document.getElementById("src").textContent = src;
+    </script>
+  </body>
+</html>

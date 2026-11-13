@@ -4,21 +4,55 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>Visita walkthrough</title>
     <style>
-      html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
-      #viewer { position: absolute; inset: 0; background: #042c53; }
-      #badge {
-        position: absolute; right: 12px; bottom: 12px;
-        padding: 6px 10px; border-radius: 6px;
-        background: #ffffff; color: #042c53;
-        font-size: 13px; text-decoration: none;
+      :root { --navy: #042c53; --mist: #b5d4f4; --cloud: #e6f1fb; --amber: #ef9f27; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: var(--navy); color: var(--cloud); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      [hidden] { display: none !important; }
+      #viewer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+      #status {
+        position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 0.5rem; padding: 1rem; text-align: center; background: var(--navy);
       }
+      #status-mark { font: 700 3.5rem/1 Georgia, "Playfair Display", serif; color: var(--amber); }
+      #status-text { margin: 0; font-size: 1rem; max-width: 22rem; }
+      #status-detail { margin: 0; min-height: 1.4em; color: var(--mist); font-variant-numeric: tabular-nums; }
+      #retry {
+        font: inherit; padding: 0.5rem 1.1rem; border-radius: 999px; border: 1px solid var(--mist);
+        background: transparent; color: var(--cloud); cursor: pointer;
+      }
+      #pill {
+        position: absolute; left: 12px; bottom: 12px; max-width: calc(100% - 190px);
+        padding: 6px 10px; border-radius: 999px; background: rgba(4, 44, 83, 0.72); color: var(--cloud);
+        font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        pointer-events: none;
+      }
+      #badge {
+        position: absolute; right: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 10px; border-radius: 999px; background: #ffffff; color: var(--navy);
+        font-size: 13px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.5);
+      }
+      #badge:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+      #badge b { color: var(--amber); }
+      .joy { position: fixed; left: 0; top: 0; border-radius: 50%; pointer-events: none; }
+      #joy-base { width: 104px; height: 104px; background: rgba(230, 241, 251, 0.16); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.5); }
+      #joy-stick { width: 44px; height: 44px; background: rgba(230, 241, 251, 0.9); }
     </style>
   </head>
   <body>
-    <div id="viewer"></div>
-    <a id="badge" href="https://visita.ph" target="_blank" rel="noopener">Powered by Visita</a>
-    <script src="./embed.js" type="module"></script>
+    <canvas id="viewer" aria-label="3D walkthrough"></canvas>
+    <div id="joy-base" class="joy" hidden></div>
+    <div id="joy-stick" class="joy" hidden></div>
+    <div id="status" role="status" aria-live="polite">
+      <div id="status-mark" aria-hidden="true">V</div>
+      <p id="status-text">Starting the viewer</p>
+      <p id="status-detail"></p>
+      <button id="retry" type="button" hidden>Try again</button>
+    </div>
+    <div id="pill" role="status" aria-live="polite" hidden></div>
+    <!-- The growth loop: always visible, always links to the full listing. -->
+    <a id="badge" href="https://visita.ph" target="_blank" rel="noopener">Powered by <b>Visita</b></a>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
