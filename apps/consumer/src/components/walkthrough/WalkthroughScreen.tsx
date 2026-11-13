@@ -9,6 +9,7 @@ import { Toaster } from "@visita/ui/sonner";
 import { BottomSheet } from "@visita/ui/bottom-sheet";
 import { cn } from "@visita/ui/utils";
 import type { DeviceProfile } from "@/lib/splat/device";
+import { splatDebugEnabled } from "@/lib/splat/diagnostics";
 import { splatSrc } from "@/lib/splat/source";
 import { currentPosition, formatDistance, haversineMeters, locationAlreadyAllowed } from "@/lib/venue/distance";
 import { formatPhp } from "@/lib/venue/scan";
@@ -44,6 +45,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
     typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches && new URLSearchParams(window.location.search).get("walkthrough") === "1",
   );
   const [now, setNow] = useState(() => new Date());
+  const [splatDebug] = useState(() => typeof window !== "undefined" && splatDebugEnabled(window.location.search));
   const [distance, setDistance] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const viewerRef = useRef<SplatViewerHandle>(null);
@@ -145,7 +147,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
     >
       <Toaster position="top-center" />
 
-      <SplatViewer ref={viewerRef} src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} experience={cafe.scanExperience} />
+      <SplatViewer ref={viewerRef} src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} experience={cafe.scanExperience} debug={splatDebug} />
       {jumping && <div className="pointer-events-none absolute inset-0 z-10 bg-scan/80" aria-hidden="true" />}
       {stops.length > 0 && <nav aria-label="Cafe tour stops" className="absolute bottom-[max(5rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#042c53]/80 p-1 text-white shadow-lg backdrop-blur-md">
         <Button variant="ghost" size="icon-sm" className="text-white hover:text-white" aria-label="Previous stop" disabled={jumping || stopIndex <= 0} onClick={() => goToStop(stopIndex - 1)}><ChevronLeft /></Button>

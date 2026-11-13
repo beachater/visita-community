@@ -3,7 +3,17 @@ import type * as PC from "playcanvas";
 import type { CameraControls } from "playcanvas/scripts/esm/camera-controls.mjs";
 import { normalizeScanPose, type ScanExperience, type ScanPose } from "@visita/shared-types";
 import type { DeviceProfile } from "../../lib/splat/device";
+import {
+  consumeCrashMarker,
+  lastFullOpenCrashed,
+  markFullScanClosed,
+  markFullScanOpen,
+  readCounts,
+  recordContextLoss,
+  type DiagnosticsSnapshot,
+} from "../../lib/splat/diagnostics";
 import { splatFormat } from "../../lib/splat/source";
+import { SplatDebugPanel } from "./SplatDebugPanel";
 import { createWalkController } from "../../lib/splat/walk-controller";
 import { SplatLoader, type LoadProgress } from "./SplatLoader";
 
@@ -30,6 +40,8 @@ export interface SplatViewerProps {
   /** Sampled twice a second while mounted. */
   onStats?: (stats: ViewerStats) => void;
   experience?: ScanExperience | null;
+  /** Show the phone-test readout (`?debug=splat`). */
+  debug?: boolean;
 }
 
 export interface SplatViewerHandle { goTo(pose: ScanPose): void }
@@ -41,6 +53,31 @@ const CLEAR_COLOR: [number, number, number] = [0.016, 0.173, 0.325];
 type DetailState = { received: number; total: number | null } | { failed: true } | null;
 
 /**
+ * "preview-only" shows just the small preview file. Offered after the phone
+ * ran out of memory, and used straight away when the last full open crashed.
+ */
+type ViewerMode = "full" | "preview-only";
+
+interface ViewerError {
+  message: string;
+  /** The GPU context was lost (usually low memory), as opposed to a failed download. */
+  contextLost: boolean;
+}
+
+/** Mutable numbers for the debug readout; read on a timer, never rendered from directly. */
+type Diagnostics = Omit<DiagnosticsSnapshot, "counts" | "device" | "jsHeapMB" | "bytes" | "src" | "previewSrc" | "mode"> & {
+  bytesByUrl: Record<string, { received: number; total: number | null }>;
+};
+
+const emptyDiagnostics = (): Diagnostics => ({
+  phases: {},
+  bytesByUrl: {},
+  gaussians: { preview: null, full: null, drawn: 0 },
+  fps: 0,
+  contextLostThisView: false,
+});
+
+/**
  * The walkthrough: a PlayCanvas Gaussian splat viewer. The engine is
  * dynamically imported, so it only downloads when a walkthrough mounts.
  *
@@ -49,10 +86,13 @@ type DetailState = { received: number; total: number | null } | { failed: true }
  * the engine's "fast first frame" pattern. Once the scene settles it renders
  * on demand, so an idle view leaves the GPU (and the phone's battery) alone.
  */
-export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, onStats, experience }, ref) {
+export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, onStats, experience, debug = false }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [progress, setProgress] = useState<LoadProgress>({ stage: "engine" });
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ViewerError | null>(null);
+  // If the last full open of this scan crashed the tab, start with the preview.
+  const [mode, setMode] = useState<ViewerMode>(() => (previewSrc && lastFullOpenCrashed(src) ? "preview-only" : "full"));
+  const diagnostics = useRef<Diagnostics>(emptyDiagnostics());
   const [detail, setDetail] = useState<DetailState>(null);
   const [joystick, setJoystick] = useState<[number, number, number, number] | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -70,24 +110,72 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // In preview-only mode the preview file is the whole scan.
+    const previewOnly = mode === "preview-only" && !!previewSrc;
+    const fullSrc = previewOnly ? previewSrc : src;
+    const previewUrl = previewOnly ? undefined : previewSrc;
+
+    const diag = emptyDiagnostics();
+    diagnostics.current = diag;
     const started = performance.now();
-    const phase = (p: ViewerPhase) => callbacks.current.onPhase?.(p, performance.now() - started);
+    const phase = (p: ViewerPhase) => {
+      const ms = performance.now() - started;
+      diag.phases[p] ??= ms;
+      callbacks.current.onPhase?.(p, ms);
+    };
 
     let disposed = false;
     let app: PC.Application | null = null;
     let resizeObserver: ResizeObserver | null = null;
     let statsTimer = 0;
 
+    // Crash bookkeeping: a marker stays set while a full scan is open, so a
+    // tab that dies (iOS reloads it, often with no context-loss event) is
+    // spotted on the next open. Leaving the page normally clears it.
+    consumeCrashMarker(src);
+    const trackOpen = !previewOnly;
+    const onPageHide = () => markFullScanClosed(src);
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && !disposed) markFullScanOpen(src);
+    };
+    if (trackOpen) {
+      markFullScanOpen(src);
+      window.addEventListener("pagehide", onPageHide);
+      window.addEventListener("pageshow", onPageShow);
+    }
+
+    const teardown = () => {
+      disposed = true;
+      window.clearInterval(statsTimer);
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+      try {
+        app?.destroy();
+      } catch {
+        // Destroying after a context loss can trip over dead GL objects.
+      }
+      app = null;
+      goToRef.current = () => {};
+    };
+
     const fail = (message: string) => {
       if (disposed) return;
-      setError(message);
+      setError({ message, contextLost: false });
       phase("error");
     };
 
     // iOS Safari drops WebGL contexts under memory pressure (PRD 5.6 step 8).
+    // Stop everything to give memory back, then offer the lighter preview.
     const onContextLost = (event: Event) => {
       event.preventDefault();
-      fail("The 3D view stopped, usually because the device ran low on memory.");
+      if (disposed) return;
+      diag.contextLostThisView = true;
+      recordContextLoss();
+      phase("error");
+      setError({ message: "The 3D view stopped, usually because this device ran low on memory.", contextLost: true });
+      // Handled, so it isn't a crash.
+      if (trackOpen) markFullScanClosed(src);
+      teardown();
     };
     canvas.addEventListener("webglcontextlost", onContextLost);
 
@@ -190,7 +278,11 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
       const loadAsset = (url: string, onBytes?: (received: number, total: number | null) => void) =>
         new Promise<PC.Asset>((resolve, reject) => {
           const asset = new pc.Asset(url, "gsplat", { url });
-          if (onBytes) asset.on("progress", (r: number, t: number) => onBytes(r, t > 0 ? t : null));
+          asset.on("progress", (r: number, t: number) => {
+            const total = t > 0 ? t : null;
+            diag.bytesByUrl[url] = { received: r, total };
+            onBytes?.(r, total);
+          });
           asset.once("load", () => resolve(asset));
           asset.once("error", (err: unknown) => reject(err));
           instance.assets.add(asset);
@@ -244,10 +336,10 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
         let preview: PC.Entity | null = null;
         let previewAsset: PC.Asset | null = null;
 
-        if (previewSrc) {
+        if (previewUrl) {
           phase("downloading");
           try {
-            previewAsset = await loadAsset(previewSrc, (received, total) =>
+            previewAsset = await loadAsset(previewUrl, (received, total) =>
               setProgress({ stage: "downloading", received, total, label: "Loading a preview of the room" }),
             );
           } catch {
@@ -258,6 +350,7 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
         }
 
         if (previewAsset) {
+          diag.gaussians.preview = splatCount(previewAsset);
           phase("preparing");
           setProgress({ stage: "preparing", fraction: null });
           preview = addScan(previewAsset);
@@ -272,7 +365,7 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
 
         let fullAsset: PC.Asset;
         try {
-          fullAsset = await loadAsset(src, (received, total) =>
+          fullAsset = await loadAsset(fullSrc, (received, total) =>
             preview
               ? setDetail({ received, total })
               : setProgress({ stage: "downloading", received, total }),
@@ -284,6 +377,8 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
           return;
         }
         if (disposed) return;
+        if (previewOnly) diag.gaussians.preview = splatCount(fullAsset);
+        else diag.gaussians.full = splatCount(fullAsset);
 
         if (!preview) {
           phase("preparing");
@@ -327,7 +422,7 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
       // ── Streamed SOG (lab comparison) ───────────────────────────────────
       const loadStreamed = async () => {
         phase("downloading");
-        const asset = await loadAsset(src);
+        const asset = await loadAsset(fullSrc);
         if (disposed) return;
         phase("preparing");
         setProgress({ stage: "preparing", fraction: null });
@@ -374,28 +469,73 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
       };
 
       setProgress({ stage: "downloading", received: 0, total: null });
-      const load = splatFormat(src) === "streamed" ? loadStreamed : loadBundled;
+      const load = splatFormat(fullSrc) === "streamed" ? loadStreamed : loadBundled;
       load().catch(() => fail("The scan didn't load. Check your connection and try again."));
 
       statsTimer = window.setInterval(() => {
-        callbacks.current.onStats?.({ fps: instance.stats.frame.fps, splats: instance.stats.frame.gsplats });
+        diag.fps = instance.stats.frame.fps;
+        diag.gaussians.drawn = instance.stats.frame.gsplats;
+        callbacks.current.onStats?.({ fps: diag.fps, splats: diag.gaussians.drawn });
       }, 500);
     })().catch(() => fail("The 3D viewer couldn't start. Try again, or open this cafe on another device."));
 
     return () => {
-      disposed = true;
-      window.clearInterval(statsTimer);
-      resizeObserver?.disconnect();
+      teardown();
       canvas.removeEventListener("webglcontextlost", onContextLost);
-      app?.destroy();
-      app = null;
-      goToRef.current = () => {};
+      if (trackOpen) {
+        markFullScanClosed(src);
+        window.removeEventListener("pagehide", onPageHide);
+        window.removeEventListener("pageshow", onPageShow);
+      }
     };
-  }, [src, previewSrc, profile, splatBudget, attempt]);
+  }, [src, previewSrc, profile, splatBudget, attempt, mode]);
+
+  const reopen = (next: ViewerMode) => {
+    setMode(next);
+    setAttempt((n) => n + 1);
+  };
+
+  const snapshot = (): DiagnosticsSnapshot => {
+    const d = diagnostics.current;
+    const files = Object.values(d.bytesByUrl);
+    const memory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory;
+    return {
+      src,
+      previewSrc: previewSrc ?? null,
+      mode,
+      phases: d.phases,
+      bytes: files.length
+        ? {
+            received: files.reduce((sum, f) => sum + f.received, 0),
+            total: files.every((f) => f.total) ? files.reduce((sum, f) => sum + (f.total ?? 0), 0) : null,
+          }
+        : null,
+      gaussians: d.gaussians,
+      fps: d.fps,
+      contextLostThisView: d.contextLostThisView,
+      counts: readCounts(),
+      device: {
+        ua: navigator.userAgent,
+        deviceMemory: profile.deviceMemory,
+        cores: profile.cores,
+        devicePixelRatio: window.devicePixelRatio || 1,
+        maxPixelRatio: Math.min(window.devicePixelRatio || 1, profile.maxPixelRatio),
+        gpu: profile.gpu,
+        splatBudget: splatBudget ?? profile.splatBudget,
+        lowEnd: profile.lowEnd,
+      },
+      jsHeapMB: memory ? memory.usedJSHeapSize / (1024 * 1024) : null,
+    };
+  };
+
+  const canOfferPreview = !!previewSrc && mode === "full";
 
   return (
     <div style={{ position: "absolute", inset: 0, background: "var(--navy)" }}>
+      {/* A new canvas per attempt: a canvas whose context was lost keeps
+          handing back that dead context. */}
       <canvas
+        key={`${mode}-${attempt}`}
         ref={canvasRef}
         aria-label="3D walkthrough. Use the left side of the screen to move and the right side to look around."
         style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }}
@@ -403,14 +543,32 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
       {joystick && <Joystick base={[joystick[0], joystick[1]]} stick={[joystick[2], joystick[3]]} />}
       {!error && progress.stage !== "done" && <SplatLoader progress={progress} />}
       {!error && detail && <DetailPill detail={detail} onRetry={() => setAttempt((n) => n + 1)} />}
+      {!error && !detail && mode === "preview-only" && progress.stage === "done" && (
+        <PreviewOnlyPill onLoadFull={() => reopen("full")} />
+      )}
       {error && (
         <div role="alert" style={overlayStyle}>
-          <p style={{ margin: "0 0 1rem", maxWidth: "22rem", textAlign: "center" }}>{error}</p>
-          <button type="button" onClick={() => setAttempt((n) => n + 1)} style={buttonStyle}>
-            Try again
-          </button>
+          <p style={{ margin: "0 0 1rem", maxWidth: "22rem", textAlign: "center" }}>{error.message}</p>
+          {error.contextLost && canOfferPreview ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
+              <p style={{ margin: "0 0 0.25rem", maxWidth: "22rem", textAlign: "center", opacity: 0.85, fontSize: "0.9rem" }}>
+                Preview mode shows the same room in less detail and uses much less memory.
+              </p>
+              <button type="button" onClick={() => reopen("preview-only")} style={{ ...buttonStyle, background: "var(--cloud)", color: "var(--navy)" }}>
+                Reopen in preview mode
+              </button>
+              <button type="button" onClick={() => reopen("full")} style={{ ...buttonStyle, border: "none", textDecoration: "underline" }}>
+                Try full detail again
+              </button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setAttempt((n) => n + 1)} style={buttonStyle}>
+              Try again
+            </button>
+          )}
         </div>
       )}
+      {debug && <SplatDebugPanel snapshot={snapshot} />}
     </div>
   );
 });
@@ -431,26 +589,7 @@ function DetailPill({ detail, onRetry }: { detail: NonNullable<DetailState>; onR
       role="status"
       aria-live="polite"
       className="walkthrough-detail-pill"
-      style={{
-        position: "absolute",
-        left: "50%",
-        bottom: "calc(max(1rem, env(safe-area-inset-bottom)) + var(--consent-h, 0px))",
-        transform: "translateX(-50%)",
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem",
-        maxWidth: "calc(100vw - 2rem)",
-        padding: "0.4rem 0.8rem",
-        borderRadius: "999px",
-        background: "rgba(4, 44, 83, 0.62)",
-        backdropFilter: "blur(14px) saturate(160%)",
-        WebkitBackdropFilter: "blur(14px) saturate(160%)",
-        boxShadow: "inset 0 1px 0 rgba(230, 241, 251, 0.45), 0 10px 24px -14px rgba(0, 0, 0, 0.6)",
-        color: "var(--cloud)",
-        fontSize: "0.8rem",
-        fontVariantNumeric: "tabular-nums",
-        whiteSpace: "nowrap",
-      }}
+      style={pillStyle}
     >
       <span>{text}</span>
       {"failed" in detail && (
@@ -458,6 +597,18 @@ function DetailPill({ detail, onRetry }: { detail: NonNullable<DetailState>; onR
           Retry
         </button>
       )}
+    </div>
+  );
+}
+
+// Preview-only mode: say so, and let the visitor try full detail anyway.
+function PreviewOnlyPill({ onLoadFull }: { onLoadFull: () => void }) {
+  return (
+    <div role="status" className="walkthrough-detail-pill" style={pillStyle}>
+      <span>Preview mode · uses less memory</span>
+      <button type="button" onClick={onLoadFull} style={{ ...buttonStyle, padding: "0.15rem 0.6rem", fontSize: "0.8rem" }}>
+        Load full detail
+      </button>
     </div>
   );
 }
@@ -487,6 +638,27 @@ function Joystick({ base, stick }: { base: [number, number]; stick: [number, num
     </>
   );
 }
+
+const pillStyle = {
+  position: "absolute" as const,
+  left: "50%",
+  bottom: "calc(max(1rem, env(safe-area-inset-bottom)) + var(--consent-h, 0px))",
+  transform: "translateX(-50%)",
+  display: "flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  maxWidth: "calc(100vw - 2rem)",
+  padding: "0.4rem 0.8rem",
+  borderRadius: "999px",
+  background: "rgba(4, 44, 83, 0.62)",
+  backdropFilter: "blur(14px) saturate(160%)",
+  WebkitBackdropFilter: "blur(14px) saturate(160%)",
+  boxShadow: "inset 0 1px 0 rgba(230, 241, 251, 0.45), 0 10px 24px -14px rgba(0, 0, 0, 0.6)",
+  color: "var(--cloud)",
+  fontSize: "0.8rem",
+  fontVariantNumeric: "tabular-nums",
+  whiteSpace: "nowrap" as const,
+};
 
 const overlayStyle = {
   position: "absolute" as const,
