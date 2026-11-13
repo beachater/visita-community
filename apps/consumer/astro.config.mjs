@@ -4,6 +4,33 @@ import cloudflare from "@astrojs/cloudflare";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 
+// This app has no Node types (it runs on Workers), so the config reaches Node
+// through this typed view of `process`.
+/**
+ * @typedef {{ status: number | null }} SpawnResult
+ * @typedef {{ spawnSync(cmd: string, args: string[], opts: object): SpawnResult }} ChildProcess
+ * @typedef {{ argv: string[], getBuiltinModule(id: "node:child_process"): ChildProcess }} NodeProcess
+ */
+const process = /** @type {{ process: NodeProcess }} */ (/** @type {unknown} */ (globalThis)).process;
+
+// Remote bindings (the real ASSETS_BUCKET, see wrangler.jsonc) need Wrangler
+// auth: a `wrangler login` or CLOUDFLARE_API_TOKEN. `astro dev` and logged-in
+// builds keep them. A build with no auth turns them off instead of failing in
+// the prerender step. No prerendered page reads R2, so the output is the same.
+// `wrangler auth token` is Wrangler's own check (env token, login, profiles,
+// keyring). Its output, the token, is discarded.
+function hasCloudflareAuth() {
+  const { spawnSync } = process.getBuiltinModule("node:child_process");
+  const result = spawnSync("wrangler", ["auth", "token"], { stdio: "ignore", timeout: 30_000 });
+  return result.status === 0;
+}
+
+const isBuild = process.argv.includes("build");
+const remoteBindings = !isBuild || hasCloudflareAuth();
+if (!remoteBindings) {
+  console.warn("[visita] No Cloudflare auth found, so this build runs without remote bindings.");
+}
+
 // Server output by default; pages that are the same for every visitor opt in
 // with `export const prerender = true` (PRD 5.2). Every page declares its mode
 // explicitly so it can be grepped.
@@ -17,7 +44,7 @@ export default defineConfig({
   // they'd need) are off. Images are optimized at build time, so there's no
   // runtime Cloudflare Images binding to pay for ($0 budget, PRD 5.8).
   session: false,
-  adapter: cloudflare({ imageService: "compile" }),
+  adapter: cloudflare({ imageService: "compile", remoteBindings }),
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
