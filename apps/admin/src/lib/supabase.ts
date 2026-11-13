@@ -13,4 +13,4 @@ export const supabase = createClient<Database>(url, key, {
   auth: { flowType: "pkce", persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
-export const CONSUMER_URL = (import.meta.env.VITE_CONSUMER_URL ?? "https://visita.ph").replace(/\/+$/, "");
+export const CONSUMER_URL = (import.meta.env.VITE_CONSUMER_URL ?? "https://visita.today").replace(/\/+$/, "");

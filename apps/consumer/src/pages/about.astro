@@ -1,13 +1,79 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import PageHeader from "../components/kit/PageHeader.astro";
+import AmberCta from "../components/kit/AmberCta.astro";
 
 export const prerender = true;
+
+// Copy: BEA-9 `copy` document, revision 2 (approved 13 Nov 2026).
+const differences = [
+  {
+    title: "Real scans, not edited photos.",
+    body: "We visit each cafe and scan the whole room. What you walk through is the space as it was on scan day: no filters, no staging, no clever angles.",
+  },
+  {
+    title: "The scan date is always visible.",
+    body: "Every walkthrough shows when it was scanned. If a scan is more than a year old, we show that too.",
+  },
+  {
+    title: "If we don't know, we say nothing.",
+    body: "If we haven't checked the Wi-Fi or counted the outlets, that detail stays off the page. We'd rather leave a blank than guess.",
+  },
+  {
+    title: "A preview, not a replacement.",
+    body: "Visita won't replace the smell of fresh coffee or the feel of your favourite corner seat. It just helps you pick the right place to go.",
+  },
+];
 ---
 
-<BaseLayout title="About">
-  <Placeholder route="/about" mode="prerendered">
-    <h1>About</h1>
-    <!-- TODO: mission, the honesty argument, the team. -->
-  </Placeholder>
+<BaseLayout
+  fullTitle
+  title="About Visita · See inside Cagayan de Oro's cafes before you go"
+  description="Visita lets you walk through real, unedited 3D scans of CDO cafes in your browser, so you know what a place is like before you go."
+>
+  <main class="mx-auto max-w-6xl px-4 py-10">
+    <PageHeader
+      eyebrow="About Visita"
+      title="See the cafe before you go."
+      lede="Visita lets you walk through Cagayan de Oro's cafes in 3D, right in your browser, before you spend the fare to get there."
+    >
+      <p class="text-sm font-medium tracking-wide text-muted-foreground">Step Inside From Anywhere</p>
+      <div class="pt-4">
+        <AmberCta href="/explore">Explore cafes</AmberCta>
+      </div>
+    </PageHeader>
+
+    <div class="prose-visita">
+      <h2>Why we built Visita</h2>
+      <p>
+        You've probably done this: found a cafe on TikTok or Facebook that looked calm and spacious, took a jeep across town, and walked into a small, packed room
+        with no free outlets.
+      </p>
+      <p>
+        The problem isn't a lack of photos. There are too many photos and too many angles, and you can't tell which ones show the place as it is today. What's
+        missing is a way to check.
+      </p>
+      <p>Visita is that check.</p>
+
+      <h2>What makes it different</h2>
+    </div>
+    <ul class="mt-6 grid max-w-4xl gap-4 sm:grid-cols-2">
+      {
+        differences.map((d) => (
+          <li class="rounded-card bg-card p-6 shadow-card">
+            <h3 class="font-bold">{d.title}</h3>
+            <p class="mt-2 leading-relaxed text-muted-foreground">{d.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="prose-visita">
+      <h2>Made in CDO</h2>
+      <p>
+        Visita started in Cagayan de Oro, and that's where we're building it, one cafe at a time. If a cafe you love isn't scanned yet,
+        tap <strong>"I want to see inside"</strong> on its page. That tells us which cafes to visit next.
+      </p>
+    </div>
+  </main>
 </BaseLayout>

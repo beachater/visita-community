@@ -3,7 +3,7 @@
 // cached at Cloudflare's edge for 5 minutes. Only responses that are the same
 // for every visitor qualify; personal parts come from server islands.
 // The Workers Cache API is a no-op on *.workers.dev, so caching takes effect
-// on a custom domain (visita.ph); the test link renders fresh each time.
+// on a custom domain (visita.today); the test link renders fresh each time.
 
 const CAFE_PAGE = /^\/cafe\/[a-z0-9]+(-[a-z0-9]+)*$/;
 const CACHED_EXACT = new Set(["/api/venues.json"]);

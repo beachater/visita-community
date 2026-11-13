@@ -1,13 +1,136 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import PageHeader from "../components/kit/PageHeader.astro";
 
 export const prerender = true;
+
+// Copy: BEA-9 `copy` document, revision 2 (approved 13 Nov 2026).
+// Answers are trusted, static HTML (links and emphasis only).
+interface Faq {
+  q: string;
+  a: string;
+}
+
+const visitors: Faq[] = [
+  {
+    q: "What is Visita?",
+    a: "A map of cafes in Cagayan de Oro. Some cafes have a 3D walkthrough, so you can look around the real room from your phone or computer before you go.",
+  },
+  {
+    q: "Do I need to download an app?",
+    a: "No. Visita works in your browser on Android, iPhone, or a computer. Just open the link.",
+  },
+  { q: "Is it free?", a: "Yes. Browsing the map, walking through cafes and saving favourites cost nothing." },
+  {
+    q: "Why do some pins on the map look different?",
+    a: "Amber pins are cafes we've scanned in 3D. White pins are cafes on the map that we haven't scanned yet.",
+  },
+  {
+    q: "Are the walkthroughs edited?",
+    a: "No. Each walkthrough is a scan of the real room on the day we visited. We don't add filters or retouch anything, and we don't move furniture to make a space look bigger.",
+  },
+  {
+    q: "How current is a walkthrough?",
+    a: "Every cafe page shows its scan date. Cafes change: new tables, a repaint, a new counter. If the scan is old, keep that in mind.",
+  },
+  {
+    q: "The walkthrough is slow or won't load. What can I do?",
+    a: '3D scans are large files, usually a few dozen megabytes. On mobile data the first load can take a minute, and the loading bar shows real progress. A stable Wi-Fi connection helps. If it still won\'t load, <a href="/contact">tell us</a> your phone model and the cafe\'s name.',
+  },
+  {
+    q: "Do I need an account?",
+    a: "Not to browse or open walkthroughs. You need one to save cafes and write reviews. Sign-in is through Google, so there's no new password to remember.",
+  },
+  {
+    q: "Something on a cafe's page is wrong. How do I report it?",
+    a: 'Use <strong>"Something\'s changed"</strong> on the cafe\'s page, or <a href="/contact">contact us</a>. We check reports before changing anything.',
+  },
+  {
+    q: "My favourite cafe isn't scanned. Can you add it?",
+    a: 'Open the cafe on the map and tap <strong>"I want to see inside."</strong> We use these requests to decide which cafes to scan next.',
+  },
+  {
+    q: "What do you do with my data?",
+    a: 'As little as we can. Our <a href="/privacy">privacy policy</a> explains exactly what we keep and why, under the Philippine Data Privacy Act of 2012.',
+  },
+];
+
+const owners: Faq[] = [
+  {
+    q: "How does my cafe get a 3D walkthrough?",
+    a: 'Get in touch through the <a href="/for-cafes">For Cafes</a> page. We\'ll arrange a time to visit and scan your space, usually outside your busiest hours.',
+  },
+  {
+    q: "How much does it cost?",
+    a: 'Every cafe is different, so we\'ll talk it through with you first. <a href="/contact">Contact us</a> and we\'ll explain the options. There\'s no commitment.',
+  },
+  {
+    q: "Can I update my own listing?",
+    a: "Yes. After your cafe is set up, you can edit your menu, prices, opening hours and events yourself. You can also show whether it's quiet, moderate or full right now. Changes to verified details, like Wi-Fi or outlets, are checked by our team first.",
+  },
+  {
+    q: "Can I edit or retouch my walkthrough?",
+    a: "No, and that's on purpose. Visitors trust Visita because the scans are real. If your space changes, we can rescan it.",
+  },
+  {
+    q: "My cafe is listed but I didn't sign up. Why?",
+    a: "The map shows cafes so people can find them. If you own the cafe, you can claim the listing through the owner sign-up. We confirm you're the owner before giving you access.",
+  },
+];
+
+const sections = [
+  { id: "cafe-goers", heading: "For cafe-goers", items: visitors },
+  { id: "cafe-owners", heading: "For cafe owners", items: owners },
+];
+
+const plain = (html: string) => html.replace(/<[^>]+>/g, "");
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [...visitors, ...owners].map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: plain(f.a) },
+  })),
+};
 ---
 
-<BaseLayout title="FAQ">
-  <Placeholder route="/faq" mode="prerendered">
-    <h1>FAQ</h1>
-    <!-- TODO: questions and answers. -->
-  </Placeholder>
+<BaseLayout title="FAQ" description="How Visita's 3D cafe walkthroughs work, what they cost, and how cafes get listed in Cagayan de Oro.">
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <main class="mx-auto max-w-6xl px-4 py-10">
+    <PageHeader eyebrow="FAQ" title="Questions, answered">
+      <nav aria-label="FAQ sections" class="flex flex-wrap gap-2 pt-2 text-sm">
+        {sections.map((s) => <a href={`#${s.id}`} class="rounded-full border bg-card px-3 py-2 font-medium hover:bg-accent">{s.heading}</a>)}
+      </nav>
+    </PageHeader>
+
+    {
+      sections.map((s) => (
+        <section aria-labelledby={s.id} class="mt-8 max-w-[68ch]">
+          <h2 id={s.id} class="scroll-mt-24 font-display text-2xl font-semibold text-primary">
+            {s.heading}
+          </h2>
+          <div class="mt-4 divide-y divide-border overflow-hidden rounded-card bg-card shadow-card">
+            {s.items.map((f) => (
+              <details class="faq-item group px-5">
+                <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold">
+                  <span>{f.q}</span>
+                  <span aria-hidden="true" class="text-xl leading-none text-muted-foreground transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <div class="prose-visita pb-4 text-muted-foreground" set:html={`<p>${f.a}</p>`} />
+              </details>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </main>
 </BaseLayout>
+
+<style>
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+</style>
