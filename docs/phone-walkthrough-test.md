@@ -10,6 +10,9 @@ checklist on a mid-range Android phone (Chrome) when there is one.
 
 - **Wi-Fi off**, mobile data on (4G/LTE). Note the signal bars.
 - Close other apps. Use a normal (not private) tab.
+- **Keep Safari in the foreground the whole time.** Don't switch apps, lock
+  the phone or check messages mid-test. iOS can unload a background tab, and the
+  reload then counts as a crash in the readout.
 - Write down the phone model and OS version (Settings → About).
 
 ## For each scan
