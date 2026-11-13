@@ -119,7 +119,7 @@ export function markFullScanClosed(src: string, store: KeyValueStore | null = se
 export interface DiagnosticsSnapshot {
   src: string;
   previewSrc: string | null;
-  mode: "full" | "preview-only";
+  mode: "full" | "preview-only" | "confirm-full";
   /** ms since the viewer started, per phase reached (first time only). */
   phases: Partial<Record<string, number>>;
   bytes: { received: number; total: number | null } | null;

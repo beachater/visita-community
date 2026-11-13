@@ -55,8 +55,11 @@ type DetailState = { received: number; total: number | null } | { failed: true }
 /**
  * "preview-only" shows just the small preview file. Offered after the phone
  * ran out of memory, and used straight away when the last full open crashed.
+ * "confirm-full" is for scans with no preview whose last open crashed: ask
+ * before loading the full scan again, so a phone that can't hold it doesn't
+ * reload into the same crash over and over.
  */
-type ViewerMode = "full" | "preview-only";
+type ViewerMode = "full" | "preview-only" | "confirm-full";
 
 interface ViewerError {
   message: string;
@@ -91,7 +94,10 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
   const [progress, setProgress] = useState<LoadProgress>({ stage: "engine" });
   const [error, setError] = useState<ViewerError | null>(null);
   // If the last full open of this scan crashed the tab, start with the preview.
-  const [mode, setMode] = useState<ViewerMode>(() => (previewSrc && lastFullOpenCrashed(src) ? "preview-only" : "full"));
+  // With no preview to fall back on, ask first instead of reloading into the same crash.
+  const [mode, setMode] = useState<ViewerMode>(() =>
+    lastFullOpenCrashed(src) ? (previewSrc ? "preview-only" : "confirm-full") : "full",
+  );
   const diagnostics = useRef<Diagnostics>(emptyDiagnostics());
   const [detail, setDetail] = useState<DetailState>(null);
   const [joystick, setJoystick] = useState<[number, number, number, number] | null>(null);
@@ -109,6 +115,11 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (mode === "confirm-full") {
+      // Count the crash now; nothing loads until the visitor chooses to.
+      consumeCrashMarker(src);
+      return;
+    }
 
     // In preview-only mode the preview file is the whole scan.
     const previewOnly = mode === "preview-only" && !!previewSrc;
@@ -541,7 +552,20 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
         style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }}
       />
       {joystick && <Joystick base={[joystick[0], joystick[1]]} stick={[joystick[2], joystick[3]]} />}
-      {!error && progress.stage !== "done" && <SplatLoader progress={progress} />}
+      {!error && mode !== "confirm-full" && progress.stage !== "done" && <SplatLoader progress={progress} />}
+      {!error && mode === "confirm-full" && (
+        <div role="alert" style={overlayStyle}>
+          <p style={{ margin: "0 0 0.5rem", maxWidth: "22rem", textAlign: "center" }}>
+            The 3D view closed last time, usually because this device ran low on memory.
+          </p>
+          <p style={{ margin: "0 0 1rem", maxWidth: "22rem", textAlign: "center", opacity: 0.85, fontSize: "0.9rem" }}>
+            Closing other apps and tabs first can help.
+          </p>
+          <button type="button" onClick={() => reopen("full")} style={{ ...buttonStyle, background: "var(--cloud)", color: "var(--navy)" }}>
+            Open the 3D view
+          </button>
+        </div>
+      )}
       {!error && detail && <DetailPill detail={detail} onRetry={() => setAttempt((n) => n + 1)} />}
       {!error && !detail && mode === "preview-only" && progress.stage === "done" && (
         <PreviewOnlyPill onLoadFull={() => reopen("full")} />
