@@ -28,10 +28,10 @@ The deployed consumer Worker must already have its `SUPABASE_SECRET_KEY`
 Wrangler secret. The production R2 bucket `visita-assets` (with the CORS rule
 in `infra/r2/cors.json`) and the Workers AI binding in the Wrangler configs must
 also exist. Each Worker attaches its custom domain on deploy (`routes` in
-`wrangler.jsonc`: `visita.ph` and `admin.visita.ph`), so their DNS zone must be
+`wrangler.jsonc`: `visita.today` and `admin.visita.today`), so their DNS zone must be
 active on the same Cloudflare account. Supabase Auth must list both domains
-(Site URL `https://visita.ph`; redirect URLs `https://visita.ph/auth/callback**`
-and `https://admin.visita.ph/**`). The workflow deploys code and schema;
+(Site URL `https://visita.today`; redirect URLs `https://visita.today/auth/callback**`
+and `https://admin.visita.today/**`). The workflow deploys code and schema;
 it does not create those resources, upload R2 scan files, import cafe listings,
 or change Supabase Auth settings. Keep secrets out of Git and do not set the
 database password as a command-line argument.

@@ -8,7 +8,7 @@
   // Production domain. Cloudflare creates the DNS record and certificate on
   // deploy; the zone must be active on the same account. The Cache API
   // (edge-cache.ts) only works on a custom domain, not on *.workers.dev.
-  "routes": [{ "pattern": "visita.ph", "custom_domain": true }],
+  "routes": [{ "pattern": "visita.today", "custom_domain": true }],
   "vars": {
     "SUPABASE_URL": "https://zgbvtnoticzhlyuavwdc.supabase.co"
   },

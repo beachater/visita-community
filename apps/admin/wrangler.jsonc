@@ -10,7 +10,7 @@
     "run_worker_first": ["/api/*"]
   },
   // Production domain; the zone must be active on the same Cloudflare account.
-  "routes": [{ "pattern": "admin.visita.ph", "custom_domain": true }],
+  "routes": [{ "pattern": "admin.visita.today", "custom_domain": true }],
   // Non-secret: the publishable key is meant for browsers. Local values come
   // from .dev.vars (see .dev.vars.example).
   "vars": {
