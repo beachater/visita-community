@@ -1,15 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@visita/ui/button";
 import { BottomSheet } from "@visita/ui/bottom-sheet";
-import { appleMapsUrl, googleMapsUrl, prefersAppleMapsChoice } from "@/lib/venue/directions";
+import { appleMapsUrl, googleEmbedKey, googleMapsUrl, prefersAppleMapsChoice } from "@/lib/venue/directions";
 import { loadPlatformSettings } from "@/lib/settings/platform";
 import { InAppDirections } from "./InAppDirections";
 
 // "Get directions" hands off to a maps app (decided 2026-09-28). Apple devices
 // get a Google Maps / Apple Maps choice, since many only have Apple Maps.
 // When an admin turns on "In-app Google Maps directions" (platform_settings),
-// directions show inside Visita instead (InAppDirections). With it off, or
-// until the setting has loaded, nothing changes.
+// directions show inside Visita instead (InAppDirections). With it off, with
+// no Maps Embed key in the build, or until the setting has loaded, nothing
+// changes.
 // Returns the action to call and the sheet to render.
 
 export interface DirectionsTarget {
@@ -24,6 +25,7 @@ export interface DirectionsTarget {
 function useInAppDirections(): boolean {
   const [on, setOn] = useState(false);
   useEffect(() => {
+    if (!googleEmbedKey()) return; // No key: the route can't be drawn, so keep the hand-off.
     let live = true;
     void loadPlatformSettings().then((s) => live && setOn(s.inAppDirections));
     return () => {

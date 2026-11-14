@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
   /** R2 public base; `venues.splat_url` keys are resolved against it. */
   readonly PUBLIC_ASSETS_BASE_URL?: string;
+  /** Google Maps Embed API key. Unset = no in-app directions, even with the admin setting on. */
+  readonly PUBLIC_GOOGLE_MAPS_EMBED_KEY?: string;
 }
 
 // Wrangler cannot infer deployed secrets from wrangler.jsonc during CI type
