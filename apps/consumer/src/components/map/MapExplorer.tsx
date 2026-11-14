@@ -17,7 +17,10 @@ import { getDeviceProfile } from "@/lib/splat/device";
 import { splatSrc } from "@/lib/splat/source";
 import { isOpenAt } from "@/lib/venue/hours";
 import { useDirections } from "../directions/useDirections";
+import { WalkthroughReviews } from "../reviews/WalkthroughReviews";
+import { MenuSheet } from "../venue/MenuSheet";
 import { WalkthroughScreen } from "../walkthrough/WalkthroughScreen";
+import { DetailsPanel } from "./DetailsPanel";
 import { Dock } from "./Dock";
 import { FilterSheet } from "./FilterSheet";
 import { PinCard } from "./PinCard";
@@ -28,9 +31,10 @@ import { BASEMAP_KEY, setupMapLibre } from "./setup";
 setupMapLibre();
 
 // PRD 4.1 discovery: the Cagayan de Oro map with a pin for every cafe. Tapping
-// a pin opens its card; "Enter 3D walkthrough" opens the walkthrough over the
-// map and puts /cafe/<slug> in the address bar, so the link is shareable and
-// Back returns to the map exactly as it was.
+// a pin opens its card (on a computer, the full details panel on the left);
+// "Enter 3D walkthrough" opens the walkthrough over the map and puts
+// /cafe/<slug> in the address bar, so the link is shareable and Back returns
+// to the map exactly as it was.
 
 interface Props {
   /** "full": /explore, the whole screen. "hero": the top of the home page. */
@@ -56,6 +60,9 @@ export function MapExplorer({ mode }: Props) {
   const [here, setHere] = useState<Coords | null>(null);
   const [demandPending, setDemandPending] = useState(false);
   const savedSlugs = useStore($saved);
+  const desktop = useDesktop();
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const demandedSlugs = useStore($demanded);
 
   useEffect(() => {
@@ -125,6 +132,15 @@ export function MapExplorer({ mode }: Props) {
     track("profile_view", v.id, withFilters());
     if (pinnable(v)) mapRef.current?.easeTo({ center: [v.lng, v.lat], duration: 400 });
   }, []);
+
+  // ?cafe=<slug> opens that cafe, e.g. back from signing in on its panel.
+  useEffect(() => {
+    if (!data) return;
+    const wanted = new URLSearchParams(location.search).get("cafe");
+    const venue = wanted ? data.venues.find((v) => v.slug === wanted) : undefined;
+    if (venue) select(venue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
   const browseDock = data && (
     <Dock
       scanned={lists.scanned}
@@ -195,8 +211,38 @@ export function MapExplorer({ mode }: Props) {
     };
   }, [walkthrough]);
 
+  const detailsPanel = selectedVenue && data && desktop && (
+    <DetailsPanel
+      key={selectedVenue.slug}
+      venue={selectedVenue}
+      definitions={data.definitions}
+      distance={selectedDistance}
+      onClose={() => setSelected(null)}
+      onWalkthrough={() => openWalkthrough(selectedVenue)}
+      onDirections={() => {
+        track("directions_tap", selectedVenue.id);
+        directions.open(selectedVenue);
+      }}
+      onDemand={() => {
+        track("demand_tap", selectedVenue.id);
+        void onDemand(selectedVenue.slug);
+      }}
+      onOpenReviews={() => setReviewsOpen(true)}
+      onOpenMenu={() => setMenuOpen(true)}
+      demanded={demandedSlugs.includes(selectedVenue.slug)}
+      demandPending={demandPending}
+    />
+  );
+
   return (
-    <div className={cn("relative h-dvh w-full overflow-hidden bg-muted", mode === "hero" && "map-home", mode === "hero" && selectedVenue && "map-home-selected")} style={{ "--map-card-h": `${cardHeight}px` } as CSSProperties}>
+    <div
+      className={cn(
+        "relative h-dvh w-full overflow-hidden bg-muted md:[--panel-w:22.5rem] lg:[--panel-w:25rem] xl:[--panel-w:27.5rem] min-[90rem]:[--panel-w:30rem]",
+        mode === "hero" && "map-home",
+        mode === "hero" && selectedVenue && "map-home-selected",
+      )}
+      style={{ "--map-card-h": `${cardHeight}px` } as CSSProperties}
+    >
       <Toaster position="top-center" />
       <Map
         ref={attachMap}
@@ -234,12 +280,20 @@ export function MapExplorer({ mode }: Props) {
 
       {/* Home groups search and browse controls; /explore keeps its compact search. */}
       <div
-        className={cn("pointer-events-none absolute z-20", mode === "hero" ? "map-home-search" : "left-[6.75rem] right-3 sm:left-auto sm:w-[26rem]")}
+        className={cn("pointer-events-none absolute z-20", mode === "hero" ? cn("map-home-search", detailsPanel && "map-home-search-panel") : "left-[6.75rem] right-3 sm:left-auto sm:w-[26rem]")}
         style={mode === "full" ? { top: "max(0.75rem, env(safe-area-inset-top))" } : undefined}
       >
         {data && <SearchBar venues={venues} onPick={select} home={mode === "hero"} />}
         {mode === "hero" && <div className="relative z-10">{browseDock}</div>}
+        {mode === "hero" && detailsPanel}
       </div>
+
+      {/* /explore keeps search on the right, so the panel has the left to itself. */}
+      {mode === "full" && detailsPanel && (
+        <div className="pointer-events-none absolute left-3 z-20 flex flex-col" style={{ top: "calc(max(0.75rem, env(safe-area-inset-top)) + 3.75rem)", bottom: "calc(0.75rem + var(--consent-h, 0px))" }}>
+          {detailsPanel}
+        </div>
+      )}
 
       {/* The selected venue stays above the consent notice. Home puts browse controls by search. */}
       <div
@@ -247,7 +301,7 @@ export function MapExplorer({ mode }: Props) {
         className={cn("pointer-events-none absolute z-10 grid gap-2", mode === "hero" ? "map-home-card" : "inset-x-3")}
         style={{ bottom: "calc(0.75rem + var(--consent-h, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        {selectedVenue && data && (
+        {selectedVenue && data && !desktop && (
           <div className="flex justify-center sm:justify-start">
             <div className="w-full max-w-md">
               <PinCard
@@ -288,9 +342,28 @@ export function MapExplorer({ mode }: Props) {
 
       {directions.sheet}
 
+      {selectedVenue && (
+        <>
+          <WalkthroughReviews slug={selectedVenue.slug} cafeName={selectedVenue.name} open={reviewsOpen} onOpenChange={setReviewsOpen} />
+          <MenuSheet cafeName={selectedVenue.name} menu={selectedVenue.menu} open={menuOpen} onOpenChange={setMenuOpen} />
+        </>
+      )}
+
       {walkthroughCafe && data && (
         <WalkthroughScreen cafe={walkthroughCafe} definitions={data.definitions} profile={profile} onClose={closeWalkthrough} />
       )}
     </div>
   );
+}
+
+/** Computers get the details panel; phones keep the pin card. */
+function useDesktop(): boolean {
+  const [desktop, setDesktop] = useState(() => window.matchMedia("(min-width: 768px)").matches);
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const update = () => setDesktop(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  return desktop;
 }

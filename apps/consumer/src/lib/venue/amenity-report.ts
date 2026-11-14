@@ -32,3 +32,13 @@ export function amenityReturnPath(slug: string, key: string, walkthrough: boolea
   if (walkthrough) params.set("walkthrough", "1");
   return `/cafe/${encodeURIComponent(slug)}?${params}#amenity-${encodeURIComponent(key)}`;
 }
+
+/**
+ * Where sign-in sends a visitor back to after "Help keep this accurate": the
+ * cafe page with the window reopened (and the walkthrough, if they were in it).
+ */
+export function accuracyReturnPath(slug: string, walkthrough: boolean): string {
+  const params = new URLSearchParams({ check: "1" });
+  if (walkthrough) params.set("walkthrough", "1");
+  return `/cafe/${encodeURIComponent(slug)}?${params}`;
+}
