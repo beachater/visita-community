@@ -11,7 +11,7 @@ import { formatPhp, scanDate } from "@/lib/venue/scan";
 import type { WalkthroughCafe } from "@/lib/venue/types";
 import { AmenityList } from "../venue/AmenityList";
 
-// PRD 4.2 "Cafe info panel": one glass container on the left holding every
+// PRD 4.2 "Cafe info panel": one near-solid container on the left holding every
 // known detail, collapsed to a three-stat strip by default. Unknown fields
 // don't render.
 
@@ -49,7 +49,7 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
   return (
     <aside
       aria-label={`About ${cafe.name}`}
-      className="glass-dark pointer-events-auto flex max-h-full flex-col overflow-hidden rounded-card text-glass-foreground"
+      className="panel-dark pointer-events-auto flex max-h-full flex-col overflow-hidden rounded-card text-glass-foreground"
     >
       {/* Always visible: identity, state, and the three-stat strip. */}
       <div className="grid gap-2.5 p-5">
