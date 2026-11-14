@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { isReviewPhotoOf } from "@visita/uploads/photo";
 import { parseReviewInput } from "../../lib/reviews/input";
+import { decodeCursor, loadFirstReviewPage, loadReviewPage, toClientReview } from "../../lib/reviews/page";
 import { isJsonRequest } from "../../lib/server/saved";
 import { json, publishedVenueId, requireSession } from "../../lib/server/session";
 
@@ -20,31 +21,34 @@ async function readBody(request: Request): Promise<unknown> {
   return request.json().catch(() => null);
 }
 
-// The walkthrough reads reviews without leaving the cafe. RLS also returns a
-// signed-in visitor's own hidden review, which the client labels separately.
+// Reads reviews a page at a time (BEA-18), for the walkthrough and for "Show
+// more reviews" on the cafe page.
+//   GET ?slug=s           → { signedIn, summary, own, ownReview, reviews, nextCursor }
+//   GET ?slug=s&cursor=c  → { reviews, nextCursor }   (the page after c)
+// The visitor's own review (even one a moderator hid) comes back as
+// ownReview, and is left out of `reviews`.
 export const GET: APIRoute = async ({ locals, url }) => {
   if (!locals.supabase) return json(503, { error: "Reviews aren't available right now." });
   const slug = url.searchParams.get("slug") ?? "";
   if (!slug) return json(400, { error: "Choose a cafe." });
+  const cursor = url.searchParams.get("cursor");
+  if (cursor !== null && !decodeCursor(cursor)) return json(400, { error: "Couldn't load more reviews. Reload the page." });
+  const userId = locals.user?.id ?? null;
   try {
     const venueId = await publishedVenueId(locals.supabase, slug);
     if (!venueId) return json(404, { error: "Unknown cafe." });
-    const { data, error } = await locals.supabase.from("reviews")
-      .select("id, author_id, rating, body, photo_url, status, created_at, profiles(display_name, avatar_url), review_replies(body, created_at)")
-      .eq("venue_id", venueId).order("created_at", { ascending: false }).limit(100);
-    if (error) return json(502, { error: "Couldn't load reviews. Try again." });
-    const rows = data ?? [];
-    const own = locals.user ? rows.find((row) => row.author_id === locals.user?.id) : null;
+    if (cursor !== null) {
+      const page = await loadReviewPage(locals.supabase, venueId, userId, cursor);
+      return json(200, { reviews: page.reviews.map((row) => toClientReview(row, false)), nextCursor: page.nextCursor });
+    }
+    const first = await loadFirstReviewPage(locals.supabase, venueId, userId);
     return json(200, {
       signedIn: Boolean(locals.user),
-      own: own ? { rating: own.rating, body: own.body, photoUrl: own.photo_url } : null,
-      reviews: rows.filter((row) => row.status === "visible" || row.author_id === locals.user?.id)
-        .map((row) => ({
-          id: row.id, name: row.profiles?.display_name ?? (row.author_id === locals.user?.id ? "You" : "Visita member"),
-          rating: row.rating, body: row.body, photoUrl: row.photo_url,
-          createdAt: row.created_at, own: row.author_id === locals.user?.id,
-          hidden: row.status === "hidden", reply: row.review_replies,
-        })),
+      summary: first.summary,
+      own: first.own ? { rating: first.own.rating, body: first.own.body, photoUrl: first.own.photo_url } : null,
+      ownReview: first.own ? toClientReview(first.own, true) : null,
+      reviews: first.reviews.map((row) => toClientReview(row, false)),
+      nextCursor: first.nextCursor,
     });
   } catch {
     return json(502, { error: "Couldn't load reviews. Try again." });

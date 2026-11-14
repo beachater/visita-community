@@ -4,7 +4,7 @@ import type { CameraControls } from "playcanvas/scripts/esm/camera-controls.mjs"
 import { normalizeScanPose, type ScanExperience, type ScanPose } from "@visita/shared-types";
 import type { DeviceProfile } from "../../lib/splat/device";
 import { splatFormat } from "../../lib/splat/source";
-import { createWalkController } from "../../lib/splat/walk-controller";
+import { createWalkController } from "@visita/splat/walk-controller";
 import { SplatLoader, type LoadProgress } from "./SplatLoader";
 
 export type ViewerPhase = "engine" | "downloading" | "preparing" | "first-view" | "complete" | "error";

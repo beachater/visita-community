@@ -8,9 +8,10 @@ Step inside with confidence. See `visita-prd-full.md` for the product and techni
 |---|---|---|
 | `apps/consumer` | Public app: map, venue pages, walkthrough, community | Astro + React islands, Cloudflare |
 | `apps/admin` | Owner and admin app | Vite + React SPA on a Cloudflare Worker (static assets + `/api`) |
-| `apps/embed` | Iframe walkthrough widget for venue websites | Static HTML/JS |
+| `apps/embed` | Iframe walkthrough widget for venue websites | Static Vite + TypeScript, Cloudflare Pages |
 | `packages/shared-types` | Generated Supabase types plus amenity/hours shapes | TypeScript |
 | `packages/ui` | Shared UI kit (tokens, shadcn components, map) | React + Tailwind |
+| `packages/splat` | Walkthrough controls shared by the consumer viewer and the embed | TypeScript + PlayCanvas |
 | `packages/uploads` | Photo checks (type from bytes, size) and browser resizing | TypeScript |
 | `supabase` | Migrations (schema + RLS), local config | Supabase CLI |
 
@@ -120,6 +121,36 @@ Hosted projects don't grant the `anon` role access to new tables by default,
 though the local stack does, so local tests won't catch a missing grant. Any new
 table signed-out visitors should read needs an explicit `grant select ... to
 anon` in its migration (see `20261004000200_anon_read_grants.sql`).
+
+## Embed widget
+
+`apps/embed` is a static page that shows one published scan (preview first,
+then full detail) and a "Powered by Visita" link to the cafe's listing. A cafe
+adds it to its own site with:
+
+```html
+<iframe src="https://<embed host>/?venue=<slug>" title="3D walkthrough"
+  allow="fullscreen" style="width:100%;aspect-ratio:16/9;border:0"></iframe>
+```
+
+It reads the venue from Supabase's public REST API with the publishable key
+(RLS: published venues only) and loads scans from the consumer site's
+`/assets` route, which sends `Access-Control-Allow-Origin: *`. Its public
+settings are in `apps/embed/.env`. A `VITE_*` variable set in your shell
+overrides that file, so unset any stray `VITE_SUPABASE_*` before running it.
+`vite build` writes `dist/_headers` for Cloudflare Pages:
+`frame-ancestors *` so any site can frame it, and a CSP that only allows
+connections to Supabase and the assets origin.
+
+To check it inside a third-party page locally:
+
+```sh
+pnpm dev:embed
+python3 -m http.server 8090 -b 127.0.0.1 -d apps/embed/test
+# open http://127.0.0.1:8090/host.html?venue=sonnys
+```
+
+CI type-checks and tests the embed but does not build or deploy it yet.
 
 ## Owner and admin app
 
