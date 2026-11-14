@@ -43,13 +43,15 @@ import { cn } from "@visita/ui/utils";
     const observer = new ResizeObserver(sync);
     observer.observe(banner);
     sync();
+    const close = () => {
+      banner.hidden = true;
+      observer.disconnect();
+      root.style.removeProperty("--consent-h");
+    };
     for (const button of banner.querySelectorAll<HTMLButtonElement>("[data-consent]")) {
-      button.addEventListener("click", () => {
-        setConsent(button.dataset.consent as ConsentChoice);
-        banner.hidden = true;
-        observer.disconnect();
-        root.style.removeProperty("--consent-h");
-      });
+      button.addEventListener("click", () => setConsent(button.dataset.consent as ConsentChoice));
     }
+    // Answered here or in the copy inside the phone map's cafe sheet.
+    window.addEventListener("visita:consent", close, { once: true });
   }
 </script>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, ChevronUp, Compass, Heart, SlidersHorizontal, Star } from "lucide-react";
 import { BottomSheet } from "@visita/ui/bottom-sheet";
 import { Label } from "@visita/ui/label";
@@ -8,6 +8,7 @@ import type { MapVenue } from "@/lib/discovery/venues";
 import { EMPTY_FILTERS, type FilterOption, type Filters } from "@/lib/discovery/filters";
 import { FilterControls } from "./FilterControls";
 import { isOpenAt } from "@/lib/venue/hours";
+import { ConsentInline } from "../site/ConsentInline";
 import { VenueList } from "./VenueList";
 
 // PRD 4.1 dock: 3D Layout (every scanned cafe), Filter, Top Picks (flagged per
@@ -39,6 +40,21 @@ interface Props {
 
 export function Dock({ scanned, topPicks, saved, matches, filters, filterOptions, onChangeFilters, showUnknown, onShowUnknown, hiddenForMissingData, activeFilters, onOpenFilters, onPick, home = false, openNow = false, onToggleOpenNow, threeDOnly = false, onToggleThreeD, selected = false }: Props) {
   const [panel, setPanel] = useState<Panel>(null);
+  // The phone sheet's height, for the map buttons and credit above it (global.css --peek-h).
+  const peekRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = peekRef.current;
+    const root = document.documentElement;
+    if (!el) return;
+    const sync = () => root.style.setProperty("--peek-h", `${el.offsetHeight}px`);
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    sync();
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--peek-h");
+    };
+  }, [selected, home]);
   const pick = (v: MapVenue) => {
     setPanel(null);
     onPick(v);
@@ -50,8 +66,9 @@ export function Dock({ scanned, topPicks, saved, matches, filters, filterOptions
   if (home) return (
     <>
       {/* Phone peek: the cafes you can step inside, as cards. "See all" opens the full list. */}
-      {!selected && <section aria-label="Cafes" className="map-home-peek pointer-events-auto grid gap-3 md:hidden">
+      {!selected && <section ref={peekRef} aria-label="Cafes" className="map-home-peek pointer-events-auto grid gap-3 md:hidden">
         <div className="mx-auto h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
+        <ConsentInline />
         <div className="flex items-baseline justify-between gap-3 px-4.5">
           <h2 className="text-xl">{scanned.length > 0 ? "Step inside before you go" : "Cafes in CDO"}</h2>
           <button type="button" className="inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-primary" onClick={() => setPanel("browse")}>See all {matches.length}</button>
