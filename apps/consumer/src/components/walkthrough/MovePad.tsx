@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
-// The walkthrough's movement pad (approved 2026-11-14): always visible at the
-// bottom left, a glass ring with four arrows and a knob; the arrow you're
-// heading toward lights up gold.
+// The walkthrough's movement pad (approved 2026-11-14, lighter and lower):
+// always visible at the bottom left, a thin white ring with four arrows and a
+// soft knob over the room; the arrow you're heading toward lights up gold.
 //
 // Phones: the engine's own touch joystick still does the moving (a touch on
 // the left half of the screen); this pad shows it, the knob following the
@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 type Dir = "up" | "right" | "down" | "left";
 
-const RADIUS = 38;
+const RADIUS = 30;
 const DEAD = 10;
 const KEYS: Record<Dir, string> = { up: "KeyW", right: "KeyD", down: "KeyS", left: "KeyA" };
 const FROM_KEY: Record<string, Dir> = { KeyW: "up", ArrowUp: "up", KeyD: "right", ArrowRight: "right", KeyS: "down", ArrowDown: "down", KeyA: "left", ArrowLeft: "left" };
@@ -82,39 +82,35 @@ export function MovePad({ touchStick }: { touchStick: [number, number, number, n
   const lit = coarse || drag ? dirsOf(knob[0], knob[1]) : keysLit;
 
   return (
-    <div className="walkthrough-move-pad pointer-events-none absolute left-6 z-10 grid justify-items-center gap-1.5 md:left-[calc(var(--panel-w,0px)+2.5rem)]">
+    <div className="walkthrough-move-pad pointer-events-none absolute left-5 z-10 md:left-[calc(var(--panel-w,0px)+2.5rem)]">
       <div
         ref={padRef}
         role={coarse ? "img" : "slider"}
         aria-label={coarse ? "Move: touch and drag on the left side of the screen" : "Move: drag the pad, or use W A S D or the arrow keys"}
-        className={`relative size-33 touch-none rounded-full ${coarse ? "" : "pointer-events-auto cursor-grab active:cursor-grabbing"}`}
+        className={`relative size-26 touch-none rounded-full ${coarse ? "" : "pointer-events-auto cursor-grab active:cursor-grabbing"}`}
         onPointerDown={coarse ? undefined : (e) => { e.currentTarget.setPointerCapture(e.pointerId); fromPointer(e); }}
         onPointerMove={coarse ? undefined : (e) => { if (drag) fromPointer(e); }}
         onPointerUp={coarse ? undefined : release}
         onPointerCancel={coarse ? undefined : release}
       >
-        <span className="glass-dark absolute inset-0 rounded-full" aria-hidden="true" />
-        <span className="absolute inset-[1.625rem] rounded-full border-[1.5px] border-dashed border-cloud/25" aria-hidden="true" />
+        <span className="absolute inset-0 rounded-full border-[1.5px] border-white/45 bg-white/14 backdrop-blur-[6px]" aria-hidden="true" />
         {(["up", "right", "down", "left"] as Dir[]).map((d, i) => (
           <svg
             key={d}
             viewBox="0 0 24 24"
-            className="absolute top-1/2 left-1/2 size-5.5 transition-colors"
-            style={{ transform: `translate(-50%, -50%) rotate(${i * 90}deg) translateY(-44px)` }}
+            className="absolute top-1/2 left-1/2 size-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)] transition-colors"
+            style={{ transform: `translate(-50%, -50%) rotate(${i * 90}deg) translateY(-36px)` }}
             aria-hidden="true"
           >
-            <path d="m6 15 6-6 6 6" fill="none" stroke={lit.has(d) ? "var(--brand-gold)" : "rgba(230,241,251,0.85)"} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="m7 14 5-5 5 5" fill="none" stroke={lit.has(d) ? "var(--brand-gold)" : "rgba(255,255,255,0.9)"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         ))}
         <span
-          className="absolute top-1/2 left-1/2 grid size-12.5 place-items-center rounded-full bg-cloud/95 shadow-[inset_0_1px_0_#fff,0_8px_18px_-8px_rgba(0,0,0,0.6)]"
+          className="absolute top-1/2 left-1/2 size-9.5 rounded-full bg-white/82 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.45)]"
           style={{ transform: `translate(calc(-50% + ${knob[0]}px), calc(-50% + ${knob[1]}px))` }}
           aria-hidden="true"
-        >
-          <span className="size-3.5 rounded-full bg-mist" />
-        </span>
+        />
       </div>
-      <span className="text-[0.7rem] font-semibold text-cloud [text-shadow:0_1px_6px_rgba(0,0,0,0.6)]">Move</span>
     </div>
   );
 }
