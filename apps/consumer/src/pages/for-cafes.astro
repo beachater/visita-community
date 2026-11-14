@@ -1,13 +1,107 @@
 ---
+import { buttonVariants } from "@visita/ui/button";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import PageHeader from "../components/kit/PageHeader.astro";
+import AmberCta from "../components/kit/AmberCta.astro";
 
 export const prerender = true;
+
+// Copy: BEA-9 `copy` document, revision 2 (approved 13 Nov 2026).
+// Pricing is "contact us" by decision; don't add figures without sign-off.
+const benefits = [
+  {
+    title: "A 3D walkthrough of your cafe.",
+    body: "We visit and scan your space. Visitors can walk through it in their browser, with no app to download.",
+  },
+  {
+    title: "An amber pin on the map.",
+    body: "Scanned cafes stand out on the Visita map of Cagayan de Oro, so they're the ones people notice first.",
+  },
+  {
+    title: "A listing you control.",
+    body: "Update your menu and prices, opening hours and events whenever you like. Tap once to show whether you're quiet, moderate or full right now.",
+  },
+  {
+    title: "See what's working.",
+    body: "See how many people viewed your page, opened your walkthrough and tapped for directions, and which hours are busiest.",
+  },
+  { title: "Reply to reviews.", body: "Thank your regulars and answer questions in public." },
+];
+
+const steps = [
+  { title: "Get in touch.", body: "Tell us about your cafe." },
+  { title: "We visit and scan.", body: "It takes a single visit, at a time that suits you." },
+  { title: "Your walkthrough goes live.", body: "We set up your listing with you and give you access to update it." },
+  { title: "Keep it fresh.", body: "Your listing shows its scan date. When your space changes, we rescan." },
+];
 ---
 
-<BaseLayout title="For cafes">
-  <Placeholder route="/for-cafes" mode="prerendered">
-    <h1>For cafes</h1>
-    <!-- TODO: pricing (onboarding + subscription, founder pricing) and owner sign-up. -->
-  </Placeholder>
+<BaseLayout
+  title="For cafe owners"
+  description="Let people in Cagayan de Oro walk through your cafe in 3D before they visit. Real scans, a listing you control, and visitor numbers you can see."
+>
+  <main class="mx-auto max-w-6xl px-4 py-10">
+    <PageHeader
+      eyebrow="For cafe owners"
+      title="Let people walk in before they walk in."
+      lede="Most people decide where to go before they leave the house. With a Visita walkthrough, they can see your real space from their phone and arrive knowing it suits them."
+    >
+      <div class="pt-4">
+        <AmberCta href="/contact">Get your cafe on Visita</AmberCta>
+      </div>
+    </PageHeader>
+
+    <section aria-labelledby="what-you-get" class="mt-6">
+      <h2 id="what-you-get" class="font-display text-2xl font-semibold text-primary">What you get</h2>
+      <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          benefits.map((b) => (
+            <li class="rounded-card bg-card p-6 shadow-card">
+              <h3 class="font-bold">{b.title}</h3>
+              <p class="mt-2 leading-relaxed text-muted-foreground">{b.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <div class="prose-visita">
+      <h2>Why honesty works in your favour</h2>
+      <p>
+        Visitors know Visita doesn't edit or stage anything, so they trust what they see. The people who come in are the ones who already like what they saw: the
+        laptop crowd who checked your outlets, or the group who checked you have a big table. That means fewer disappointed walk-outs and more people who come
+        back.
+      </p>
+    </div>
+
+    <section aria-labelledby="how-it-works" class="mt-10">
+      <h2 id="how-it-works" class="font-display text-2xl font-semibold text-primary">How it works</h2>
+      <ol class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          steps.map((s, i) => (
+            <li class="rounded-card border bg-card p-6">
+              <span class="grid size-9 place-items-center rounded-full bg-primary font-bold text-primary-foreground" aria-hidden="true">
+                {i + 1}
+              </span>
+              <h3 class="mt-3 font-bold">{s.title}</h3>
+              <p class="mt-1 leading-relaxed text-muted-foreground">{s.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <div class="prose-visita">
+      <h2>Pricing</h2>
+      <p>Every cafe is different, so we'll talk it through with you first. <a href="/contact">Contact us</a> and we'll explain the options. There's no commitment.</p>
+
+      <h2>Already on the map?</h2>
+      <p>If your cafe is already listed, you can claim it. Sign up as the owner and we'll confirm the cafe is yours before giving you access.</p>
+    </div>
+
+    <!-- Second CTA stays navy: the amber rule allows one amber call to action per page. -->
+    <div class="mt-8">
+      <a href="/contact" class={buttonVariants({ size: "lg" })}>Get your cafe on Visita</a>
+    </div>
+  </main>
 </BaseLayout>

@@ -25,6 +25,6 @@ describe("isJsonRequest", () => {
     [null, false],
   ])("%j → %s", (type, expected) => {
     const headers = new Headers(type ? { "content-type": type } : {});
-    expect(isJsonRequest(new Request("https://visita.ph/api/saved", { method: "POST", headers }))).toBe(expected);
+    expect(isJsonRequest(new Request("https://visita.today/api/saved", { method: "POST", headers }))).toBe(expected);
   });
 });

@@ -111,7 +111,7 @@ Cafe pages and the map's venue list (`/api/venues.json`) render on request, so
 publishing a venue or an owner's edit shows up without a rebuild. The middleware
 skips the session for them (no Set-Cookie can reach a shared cache) and keeps a
 copy in the Workers Cache API for 5 minutes (`s-maxage=300`, ignoring query
-strings). The Cache API works on a custom domain such as visita.ph; on
+strings). The Cache API works on a custom domain such as visita.today; on
 `*.workers.dev` every request renders fresh from Supabase. Unknown slugs get
 the 404 page.
 

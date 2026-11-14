@@ -13,10 +13,12 @@ interface Props {
    * which bring their own controls. The consent notice still shows.
    */
   chrome?: "site" | "bare";
+  /** Use `title` as the whole tab title, without the " · Visita" suffix. */
+  fullTitle?: boolean;
 }
 
-const { title, description, chrome = "site" } = Astro.props;
-const pageTitle = title === "Visita" ? title : `${title} · Visita`;
+const { title, description, chrome = "site", fullTitle = false } = Astro.props;
+const pageTitle = fullTitle || title === "Visita" ? title : `${title} · Visita`;
 // Prerendered pages see their output file (/cafe/sonnys.html) as the path;
 // share URLs never carry the extension.
 const canonicalPath = Astro.url.pathname.replace(/(\/index)?\.html$/, "") || "/";

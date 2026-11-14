@@ -1,13 +1,44 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Placeholder from "../components/Placeholder.astro";
+import PageHeader from "../components/kit/PageHeader.astro";
+import AmberCta from "../components/kit/AmberCta.astro";
+import { CONTACT_EMAIL, PRIVACY_EMAIL, mailto } from "../lib/contact";
 
 export const prerender = true;
+
+// Copy: BEA-9 `copy` document, revision 2 (approved 13 Nov 2026).
+// v1 is email only; there's no form or Worker endpoint.
 ---
 
-<BaseLayout title="Contact">
-  <Placeholder route="/contact" mode="prerendered">
-    <h1>Contact</h1>
-    <!-- TODO: contact details. The form submits to a Worker endpoint later. -->
-  </Placeholder>
+<BaseLayout title="Contact" description="Questions, corrections or partnership ideas? Get in touch with the Visita team in Cagayan de Oro.">
+  <main class="mx-auto max-w-6xl px-4 py-10">
+    <PageHeader eyebrow="Contact" title="Say hello" lede="Questions, a correction or an idea? We read everything." />
+
+    <section aria-label="Email" class="max-w-xl rounded-card bg-card p-6 shadow-card">
+      <p class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Email</p>
+      <p class="mt-1 text-xl font-semibold break-all">
+        <a href={mailto(CONTACT_EMAIL)} class="text-primary underline underline-offset-2">{CONTACT_EMAIL}</a>
+      </p>
+      <div class="mt-5">
+        <AmberCta href={mailto(CONTACT_EMAIL)}>Email us</AmberCta>
+      </div>
+      <p class="mt-4 text-muted-foreground">We usually reply within two working days.</p>
+    </section>
+
+    <div class="prose-visita mt-4">
+      <h2>Looking for something specific?</h2>
+      <ul>
+        <li>
+          <strong>You own a cafe</strong> → see <a href="/for-cafes">For Cafes</a>, or <a href={mailto(CONTACT_EMAIL, "Cafe")}>email us</a> with "Cafe" in the
+          subject.
+        </li>
+        <li>
+          <strong>A detail on a cafe page is wrong</strong> → use "Something's changed" on that cafe's page. It's the quickest way to fix it.
+        </li>
+        <li>
+          <strong>Privacy or your data</strong> → <a href={mailto(PRIVACY_EMAIL)}>{PRIVACY_EMAIL}</a> (see our <a href="/privacy">privacy policy</a>).
+        </li>
+      </ul>
+    </div>
+  </main>
 </BaseLayout>

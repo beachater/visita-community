@@ -16,7 +16,7 @@ describe("isEdgeCacheable", () => {
 
 describe("cacheKeyFor", () => {
   it("ignores the query string, so ?review=1 or tracking tags share one copy", () =>
-    expect(cacheKeyFor("https://visita.ph/cafe/sonnys?review=1&utm_source=fb")).toBe("https://visita.ph/cafe/sonnys"));
+    expect(cacheKeyFor("https://visita.today/cafe/sonnys?review=1&utm_source=fb")).toBe("https://visita.today/cafe/sonnys"));
 });
 
 describe("PUBLIC_CACHE_CONTROL", () => {

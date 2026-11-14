@@ -36,7 +36,7 @@ if (!remoteBindings) {
 // with `export const prerender = true` (PRD 5.2). Every page declares its mode
 // explicitly so it can be grepped.
 export default defineConfig({
-  site: "https://visita.ph",
+  site: "https://visita.today",
   output: "server",
   // Clean share URLs (/cafe/sonnys), the same for prerendered and server routes.
   trailingSlash: "never",
