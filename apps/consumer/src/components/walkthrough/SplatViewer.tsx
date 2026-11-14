@@ -5,6 +5,7 @@ import { normalizeScanPose, type ScanExperience, type ScanPose } from "@visita/s
 import type { DeviceProfile } from "../../lib/splat/device";
 import { splatFormat } from "../../lib/splat/source";
 import { createWalkController } from "@visita/splat/walk-controller";
+import { MovePad } from "./MovePad";
 import { SplatLoader, type LoadProgress } from "./SplatLoader";
 
 export type ViewerPhase = "engine" | "downloading" | "preparing" | "first-view" | "complete" | "error";
@@ -29,6 +30,8 @@ export interface SplatViewerProps {
   onPhase?: (phase: ViewerPhase, ms: number) => void;
   /** Sampled twice a second while mounted. */
   onStats?: (stats: ViewerStats) => void;
+  /** Shown under "Stepping inside…" while the room opens. */
+  cafeName?: string;
   experience?: ScanExperience | null;
 }
 
@@ -49,11 +52,11 @@ type DetailState = { received: number; total: number | null } | { failed: true }
  * the engine's "fast first frame" pattern. Once the scene settles it renders
  * on demand, so an idle view leaves the GPU (and the phone's battery) alone.
  */
-export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, onStats, experience }, ref) {
+export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(function SplatViewer({ src, previewSrc, profile, splatBudget, onPhase, onStats, experience, cafeName }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [progress, setProgress] = useState<LoadProgress>({ stage: "engine" });
   const [error, setError] = useState<string | null>(null);
-  const [detail, setDetail] = useState<DetailState>(null);
+  const [, setDetail] = useState<DetailState>(null);
   const [joystick, setJoystick] = useState<[number, number, number, number] | null>(null);
   const [attempt, setAttempt] = useState(0);
   const experienceRef = useRef(experience);
@@ -248,7 +251,7 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
           phase("downloading");
           try {
             previewAsset = await loadAsset(previewSrc, (received, total) =>
-              setProgress({ stage: "downloading", received, total, label: "Loading a preview of the room" }),
+              setProgress({ stage: "downloading", received, total }),
             );
           } catch {
             // No usable preview: load the full scan on its own instead.
@@ -400,9 +403,11 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
         aria-label="3D walkthrough. Use the left side of the screen to move and the right side to look around."
         style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }}
       />
-      {joystick && <Joystick base={[joystick[0], joystick[1]]} stick={[joystick[2], joystick[3]]} />}
-      {!error && progress.stage !== "done" && <SplatLoader progress={progress} />}
-      {!error && detail && <DetailPill detail={detail} onRetry={() => setAttempt((n) => n + 1)} />}
+      {/* Approved 2026-11-14: a fixed movement pad, a calm loader with no
+          download sizes, and full detail swapping in without a status pill
+          (if it fails, the preview, which is the real room, simply stays). */}
+      {!error && progress.stage === "done" && <MovePad touchStick={joystick} />}
+      {!error && progress.stage !== "done" && <SplatLoader progress={progress} cafeName={cafeName} />}
       {error && (
         <div role="alert" style={overlayStyle}>
           <p style={{ margin: "0 0 1rem", maxWidth: "22rem", textAlign: "center" }}>{error}</p>
@@ -415,78 +420,6 @@ export const SplatViewer = forwardRef<SplatViewerHandle, SplatViewerProps>(funct
   );
 });
 
-const MB = 1024 * 1024;
-
-// Small, non-blocking note that the view is a preview and full detail is on
-// its way. Honest about what's on screen without getting in the way.
-function DetailPill({ detail, onRetry }: { detail: NonNullable<DetailState>; onRetry: () => void }) {
-  const text =
-    "failed" in detail
-      ? "Showing a preview. Full detail didn't load."
-      : detail.total
-        ? `Preview · loading full detail ${(detail.received / MB).toFixed(1)} of ${(detail.total / MB).toFixed(1)} MB`
-        : "Preview · loading full detail";
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="walkthrough-detail-pill"
-      style={{
-        position: "absolute",
-        left: "50%",
-        bottom: "calc(max(1rem, env(safe-area-inset-bottom)) + var(--consent-h, 0px))",
-        transform: "translateX(-50%)",
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem",
-        maxWidth: "calc(100vw - 2rem)",
-        padding: "0.4rem 0.8rem",
-        borderRadius: "999px",
-        background: "rgba(4, 44, 83, 0.62)",
-        backdropFilter: "blur(14px) saturate(160%)",
-        WebkitBackdropFilter: "blur(14px) saturate(160%)",
-        boxShadow: "inset 0 1px 0 rgba(230, 241, 251, 0.45), 0 10px 24px -14px rgba(0, 0, 0, 0.6)",
-        color: "var(--cloud)",
-        fontSize: "0.8rem",
-        fontVariantNumeric: "tabular-nums",
-        whiteSpace: "nowrap",
-      }}
-    >
-      <span>{text}</span>
-      {"failed" in detail && (
-        <button type="button" onClick={onRetry} style={{ ...buttonStyle, padding: "0.15rem 0.6rem", fontSize: "0.8rem" }}>
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
-function Joystick({ base, stick }: { base: [number, number]; stick: [number, number] }) {
-  const ring = (x: number, y: number, r: number, fill: string) => ({
-    position: "fixed" as const,
-    left: x - r,
-    top: y - r,
-    width: r * 2,
-    height: r * 2,
-    borderRadius: "50%",
-    background: fill,
-    pointerEvents: "none" as const,
-  });
-  return (
-    <>
-      <div
-        style={{
-          ...ring(base[0], base[1], 52, "rgba(230, 241, 251, 0.14)"),
-          backdropFilter: "blur(10px) saturate(150%)",
-          WebkitBackdropFilter: "blur(10px) saturate(150%)",
-          boxShadow: "inset 0 1.5px 0 rgba(255, 255, 255, 0.55), inset 0 0 18px rgba(230, 241, 251, 0.12), 0 10px 24px -14px rgba(0, 0, 0, 0.6)",
-        }}
-      />
-      <div style={{ ...ring(stick[0], stick[1], 22, "rgba(230, 241, 251, 0.9)"), boxShadow: "inset 0 1px 0 #fff, 0 6px 14px -6px rgba(0, 0, 0, 0.55)" }} />
-    </>
-  );
-}
 
 const overlayStyle = {
   position: "absolute" as const,
