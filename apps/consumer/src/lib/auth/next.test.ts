@@ -21,7 +21,7 @@ describe("safeNext", () => {
     ["/%2e//evil.example", "encoded dot before a double slash"],
   ])("falls back to home for %j (%s)", (input) => {
     const out = safeNext(input);
-    expect(new URL(out, "https://visita.ph").origin).toBe("https://visita.ph");
+    expect(new URL(out, "https://visita.today").origin).toBe("https://visita.today");
     if (input !== "/%2F%2Fevil.example") expect(out).toBe("/");
   });
 

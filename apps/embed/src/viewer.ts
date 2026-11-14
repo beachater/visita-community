@@ -83,7 +83,7 @@ export function startViewer({ canvas, src, previewSrc, experience, maxPixelRatio
     instance.root.addChild(camera);
     camera.addComponent("script");
     const controls = camera.script!.create(Controls) as unknown as CameraControls;
-    // Walk at eye height, like the walkthrough on visita.ph: joystick on the
+    // Walk at eye height, like the walkthrough on visita.today: joystick on the
     // left half of a touch screen, drag to look on the right; WASD + drag on desktop.
     (controls as unknown as { _flyController: PC.FlyController })._flyController = createWalkController(pc, experience?.walkable);
     controls.enableOrbit = false;

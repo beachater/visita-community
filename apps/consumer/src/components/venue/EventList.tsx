@@ -8,7 +8,17 @@ import { eventRange, upcomingEventsPath, type VenueEvent } from "@/lib/venue/eve
 // page and the walkthrough show what the owner posted today. Renders nothing
 // when there are none.
 
-export function EventList({ venueId, tone = "light", heading = true }: { venueId: string; tone?: "light" | "glass"; heading?: boolean }) {
+interface Props {
+  venueId: string;
+  tone?: "light" | "glass";
+  heading?: boolean;
+  /** Overrides for the details panel, which has its own section styles. */
+  headingClassName?: string;
+  itemClassName?: string;
+  className?: string;
+}
+
+export function EventList({ venueId, tone = "light", heading = true, headingClassName, itemClassName, className }: Props) {
   const [events, setEvents] = useState<VenueEvent[]>([]);
 
   useEffect(() => {
@@ -24,11 +34,11 @@ export function EventList({ venueId, tone = "light", heading = true }: { venueId
   if (events.length === 0) return null;
   const now = Date.now();
   return (
-    <section aria-label="Events" className="grid gap-2">
-      {heading && <h2 className={cn(tone === "glass" ? "text-xs font-bold uppercase tracking-wider opacity-70" : "font-display text-2xl font-semibold")}>Events</h2>}
+    <section aria-label="Events" className={cn("grid gap-2", className)}>
+      {heading && <h2 className={headingClassName ?? cn(tone === "glass" ? "text-xs font-bold uppercase tracking-wider opacity-70" : "font-display text-2xl font-semibold")}>Events</h2>}
       <ul className="grid gap-2">
         {events.map((e) => (
-          <li key={e.id} className={cn("flex gap-3 rounded-2xl p-3", tone === "glass" ? "bg-white/10" : "bg-card shadow-card")}>
+          <li key={e.id} className={cn("flex gap-3 rounded-2xl p-3", itemClassName ?? (tone === "glass" ? "bg-white/10" : "bg-card shadow-card"))}>
             {e.photo_url ? (
               <img src={`/assets/${e.photo_url}`} alt="" className="size-16 shrink-0 rounded-xl object-cover" loading="lazy" />
             ) : (

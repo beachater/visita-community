@@ -6,12 +6,10 @@ import { BadgeCheck, ChevronLeft, ChevronRight, ChevronUp, Heart, Share2, X } fr
 import type { AmenityDefinition } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
 import { Toaster } from "@visita/ui/sonner";
-import { BottomSheet } from "@visita/ui/bottom-sheet";
 import { cn } from "@visita/ui/utils";
 import type { DeviceProfile } from "@/lib/splat/device";
 import { splatSrc } from "@/lib/splat/source";
 import { currentPosition, formatDistance, haversineMeters, locationAlreadyAllowed } from "@/lib/venue/distance";
-import { formatPhp } from "@/lib/venue/scan";
 import { isOpenAt } from "@/lib/venue/hours";
 import type { WalkthroughCafe } from "@/lib/venue/types";
 import { $saved, recordRecent, toggleSaved } from "@/lib/visitor/stores";
@@ -19,6 +17,7 @@ import { useDirections } from "../directions/useDirections";
 import { InfoPanel } from "./InfoPanel";
 import { MobileInfoSheet } from "./MobileInfoSheet";
 import { WalkthroughReviews } from "../reviews/WalkthroughReviews";
+import { MenuSheet } from "../venue/MenuSheet";
 import { SplatViewer, type SplatViewerHandle } from "./SplatViewer";
 
 // PRD 4.2 in one screen: the 3D walkthrough full-screen, a solid info panel
@@ -131,14 +130,13 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
     directions.open(cafe);
   };
 
-  const sections = [...new Set(cafe.menu.map((m) => m.section ?? ""))];
-
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`Walkthrough of ${cafe.name}`}
-      className="fixed inset-0 z-50 bg-scan"
+      // --panel-w: the details panel's width (BEA-14: 440 px at 1280, 480 px from 1440).
+      className="fixed inset-0 z-50 bg-scan md:[--panel-w:22.5rem] lg:[--panel-w:25rem] xl:[--panel-w:27.5rem] min-[90rem]:[--panel-w:30rem]"
       onKeyDown={(e) => {
         if (e.key === "Escape" && !infoOpen && !menuOpen && !reviewsOpen && !directions.isOpen) onClose();
       }}
@@ -147,7 +145,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
 
       <SplatViewer ref={viewerRef} src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} experience={cafe.scanExperience} />
       {jumping && <div className="pointer-events-none absolute inset-0 z-10 bg-scan/80" aria-hidden="true" />}
-      {stops.length > 0 && <nav aria-label="Cafe tour stops" className="absolute bottom-[max(5rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#042c53]/80 p-1 text-white shadow-lg backdrop-blur-md">
+      {stops.length > 0 && <nav aria-label="Cafe tour stops" className="absolute bottom-[max(5rem,env(safe-area-inset-bottom))] left-1/2 z-20 md:left-[calc(50%+var(--panel-w)/2+0.375rem)] flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#042c53]/80 p-1 text-white shadow-lg backdrop-blur-md">
         <Button variant="ghost" size="icon-sm" className="text-white hover:text-white" aria-label="Previous stop" disabled={jumping || stopIndex <= 0} onClick={() => goToStop(stopIndex - 1)}><ChevronLeft /></Button>
         <span className="max-w-28 truncate text-center text-xs sm:max-w-48">{stopIndex < 0 ? "Explore or start tour" : `${stopIndex + 1}/${stops.length} · ${stops[stopIndex]?.label}`}</span>
         <Button variant="ghost" size="icon-sm" className="text-white hover:text-white" aria-label="Next stop" disabled={jumping || stopIndex >= stops.length - 1} onClick={() => goToStop(stopIndex + 1)}><ChevronRight /></Button>
@@ -169,9 +167,9 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
           </div>
         </div>
 
-        {/* PRD: the panel sits on the left. It caps its height so the lower
-            screen stays free for the walking joystick. */}
-        <div className="hidden max-h-[calc(100%-9rem)] w-[min(22rem,100%)] min-h-0 md:flex">
+        {/* PRD: the panel sits on the left, as tall as the screen allows. On
+            touch screens it leaves the lower left free for the walking joystick. */}
+        <div className="hidden min-h-0 w-[var(--panel-w)] flex-1 items-start md:flex pointer-coarse:max-h-[calc(100%-9rem)]">
           <InfoPanel
             cafe={cafe}
             definitions={definitions}
@@ -216,26 +214,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
 
       <WalkthroughReviews slug={cafe.slug} cafeName={cafe.name} open={reviewsOpen} onOpenChange={setReviewsOpen} />
 
-      <BottomSheet open={menuOpen} onOpenChange={setMenuOpen} title="Menu" description={cafe.name}>
-        {sections.map((section) => (
-          <div key={section || "menu"} className="mb-4 last:mb-0">
-            {section && <h3 className="mb-1 mt-2 text-sm font-bold">{section}</h3>}
-            <ul className="divide-y">
-              {cafe.menu
-                .filter((m) => (m.section ?? "") === section)
-                .map((item, i) => (
-                  <li key={i} className="flex justify-between gap-4 py-2.5">
-                    <span>
-                      {item.name}
-                      {item.note && <span className="block text-sm text-muted-foreground">{item.note}</span>}
-                    </span>
-                    {item.price_php !== undefined && <span className="shrink-0 tabular-nums">{formatPhp(item.price_php)}</span>}
-                  </li>
-                ))}
-            </ul>
-          </div>
-        ))}
-      </BottomSheet>
+      <MenuSheet cafeName={cafe.name} menu={cafe.menu} open={menuOpen} onOpenChange={setMenuOpen} />
 
       {directions.sheet}
     </div>

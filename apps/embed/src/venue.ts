@@ -7,9 +7,9 @@ import { parseScanExperience, type ScanExperience } from "@visita/shared-types";
 export interface EmbedConfig {
   supabaseUrl: string;
   publishableKey: string;
-  /** Prefix for R2 keys, e.g. https://visita.ph/assets */
+  /** Prefix for R2 keys, e.g. https://visita.today/assets */
   assetsBaseUrl: string;
-  /** Where the badge links, e.g. https://visita.ph */
+  /** Where the badge links, e.g. https://visita.today */
   siteUrl: string;
 }
 

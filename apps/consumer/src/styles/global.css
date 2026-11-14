@@ -98,6 +98,14 @@
     width: 27.5rem;
   }
   .map-home-card { right: auto; width: 25rem; }
+  /* A selected cafe's details panel hangs under search and stops above the
+     bottom edge, scrolling inside itself. */
+  .map-home-search-panel {
+    bottom: calc(1rem + var(--consent-h, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
   .map-home-controls { bottom: calc(1.5rem + var(--consent-h, 0px)) !important; }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { amenityReturnPath, confirmationText, parseAmenityReport } from "./amenity-report";
+import { accuracyReturnPath, amenityReturnPath, confirmationText, parseAmenityReport } from "./amenity-report";
 
 const venueId = "aaaaaaaa-0000-0000-0000-000000000001";
 
@@ -26,4 +26,10 @@ describe("amenity display", () => {
   });
   it("returns to the same walkthrough amenity", () =>
     expect(amenityReturnPath("cafe-one", "wifi", true)).toBe("/cafe/cafe-one?amenity=wifi&walkthrough=1#amenity-wifi"));
+});
+
+describe("accuracyReturnPath", () => {
+  it("reopens the window inside the walkthrough", () =>
+    expect(accuracyReturnPath("sonnys", true)).toBe("/cafe/sonnys?check=1&walkthrough=1"));
+  it("reopens the window on the cafe page", () => expect(accuracyReturnPath("sonnys", false)).toBe("/cafe/sonnys?check=1"));
 });

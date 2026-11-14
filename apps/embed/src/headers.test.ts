@@ -3,7 +3,7 @@ import { embedHeaders, headersFile } from "./headers";
 
 const headers = embedHeaders({
   supabaseUrl: "https://example.supabase.co",
-  assetsBaseUrl: "https://visita.ph/assets",
+  assetsBaseUrl: "https://visita.today/assets",
 });
 const csp = headers["Content-Security-Policy"]!;
 
@@ -13,7 +13,7 @@ describe("embedHeaders", () => {
     expect(Object.keys(headers).map((h) => h.toLowerCase())).not.toContain("x-frame-options");
   });
   it("only connects to Supabase and the assets origin", () => {
-    expect(csp).toContain("connect-src 'self' https://example.supabase.co https://visita.ph;");
+    expect(csp).toContain("connect-src 'self' https://example.supabase.co https://visita.today;");
   });
   it("writes a Cloudflare Pages _headers file", () => {
     const file = headersFile(headers);

@@ -1,0 +1,24 @@
+---
+import { buttonVariants } from "@visita/ui/button";
+import { cn } from "@visita/ui/utils";
+
+// The screen's one amber call to action (brand manual "amber rule"). Amber
+// fills take navy text (6.48:1); white on amber fails contrast. Use at most
+// one per screen; secondary actions use the regular button variants.
+interface Props {
+  href: string;
+  class?: string;
+}
+const { href, class: className } = Astro.props;
+---
+
+<a
+  href={href}
+  class={cn(
+    buttonVariants({ size: "lg" }),
+    "bg-verified font-semibold text-verified-foreground hover:bg-verified/85",
+    className,
+  )}
+>
+  <slot />
+</a>
