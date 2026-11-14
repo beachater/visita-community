@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useStore } from "@nanostores/react";
-import { Armchair, BadgeCheck, Car, CreditCard, Heart, Info, LocateFixed, MapPin, MessageSquare, Navigation, Plug, Snowflake, Users, UtensilsCrossed, Wifi, X, type LucideIcon } from "lucide-react";
+import { Armchair, ArrowRight, BadgeCheck, Car, CreditCard, Heart, Info, LocateFixed, MapPin, MessageSquare, Navigation, Plug, Snowflake, Users, UtensilsCrossed, Wifi, X, type LucideIcon } from "lucide-react";
 import type { AmenityDefinition, MenuItem, VenueAmenities, WeeklyHours } from "@visita/shared-types";
 import { amenityIcon } from "@visita/ui/amenity-icon";
 import { Button } from "@visita/ui/button";
@@ -52,6 +52,8 @@ interface Props {
   onOpenMenu: () => void;
   /** Where sign-in returns to from "Help keep this accurate". */
   accuracyReturnPath: string;
+  /** Link to the cafe's own page; omitted where you're already on it. */
+  fullPageHref?: string | null;
 }
 
 const MENU_PREVIEW = 4;
@@ -85,7 +87,7 @@ export function useMinuteClock(): Date {
   return now;
 }
 
-export function CafeDetails({ cafe, definitions, tone, showName = true, onClose, distance, onRequestDistance, actions, onOpenMenu, accuracyReturnPath }: Props) {
+export function CafeDetails({ cafe, definitions, tone, showName = true, onClose, distance, onRequestDistance, actions, onOpenMenu, accuracyReturnPath, fullPageHref }: Props) {
   const t = TONE[tone];
   const dark = tone === "dark";
   const now = useMinuteClock();
@@ -153,6 +155,11 @@ export function CafeDetails({ cafe, definitions, tone, showName = true, onClose,
               )
             )}
           </p>
+        )}
+        {fullPageHref && (
+          <a href={fullPageHref} className={cn("inline-flex min-h-9 w-fit items-center gap-1.5 text-sm font-semibold hover:underline", dark ? "text-mist" : "text-primary")}>
+            See full page <ArrowRight className="size-4" aria-hidden="true" />
+          </a>
         )}
       </header>
 

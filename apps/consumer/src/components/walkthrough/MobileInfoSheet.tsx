@@ -17,9 +17,11 @@ interface Props {
   onDirections: () => void;
   onOpenMenu: () => void;
   onOpenReviews: () => void;
+  /** Link to the cafe's own page, when the walkthrough was opened from the map. */
+  fullPageHref?: string | null;
 }
 
-export function MobileInfoSheet({ cafe, definitions, open, onOpenChange, distance, onRequestDistance, onDirections, onOpenMenu, onOpenReviews }: Props) {
+export function MobileInfoSheet({ cafe, definitions, open, onOpenChange, distance, onRequestDistance, onDirections, onOpenMenu, onOpenReviews, fullPageHref }: Props) {
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange} title={cafe.name} description={`About ${cafe.name}`} className="md:hidden [&_[data-slot=sheet-description]]:sr-only">
       {/* The sheet pads its content; the details bring their own edges and dividers. */}
@@ -33,6 +35,7 @@ export function MobileInfoSheet({ cafe, definitions, open, onOpenChange, distanc
           onRequestDistance={onRequestDistance}
           onOpenMenu={onOpenMenu}
           accuracyReturnPath={accuracyReturnPath(cafe.slug, true)}
+          fullPageHref={fullPageHref}
           actions={<CafeActions touch onDirections={onDirections} onReviews={() => { onOpenChange(false); onOpenReviews(); }} onMenu={cafe.menu.length > 0 ? onOpenMenu : null} />}
         />
       </div>
