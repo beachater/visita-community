@@ -108,6 +108,8 @@ jobs:
           PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
           # Unset until the board adds it; the app then keeps external directions.
           PUBLIC_GOOGLE_MAPS_EMBED_KEY: ${{ vars.GOOGLE_MAPS_EMBED_KEY }}
+          # The owner app, for "Claim your cafe" on /for-cafes.
+          PUBLIC_OWNER_APP_URL: https://portal.visita.today
         run: pnpm --filter @visita/consumer build
       - name: Build admin Worker
         env:
