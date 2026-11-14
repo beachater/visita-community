@@ -14,6 +14,7 @@ import {
   LogOut,
   MessageSquare,
   MessageSquareWarning,
+  Settings,
   ShieldCheck,
   Store,
   type LucideIcon,
@@ -41,6 +42,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   amenities: ListChecks,
   reports: Flag,
   moderation: MessageSquareWarning,
+  settings: Settings,
 };
 
 const row = "flex min-h-10 items-center gap-3 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2";
