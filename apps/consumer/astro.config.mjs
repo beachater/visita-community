@@ -3,6 +3,7 @@ import { defineConfig } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
+import { TIER3_ENABLED, TIER3_ROUTES } from "./src/tier3/routes.mjs";
 
 // This app has no Node types (it runs on Workers), so the config reaches Node
 // through this typed view of `process`.
@@ -45,7 +46,7 @@ export default defineConfig({
   // runtime Cloudflare Images binding to pay for ($0 budget, PRD 5.8).
   session: false,
   adapter: cloudflare({ imageService: "compile", remoteBindings }),
-  integrations: [react()],
+  integrations: [react(), tier3Routes()],
   vite: {
     plugins: [tailwindcss()],
     // Dev only. The Cloudflare adapter adds these to the server environment's
@@ -73,3 +74,17 @@ export default defineConfig({
     },
   },
 });
+
+// Injects the Tier 3 pages only while they're switched on (see src/tier3/routes.mjs).
+/** @returns {import("astro").AstroIntegration} */
+function tier3Routes() {
+  return {
+    name: "visita:tier3-routes",
+    hooks: {
+      "astro:config:setup": ({ injectRoute }) => {
+        if (!TIER3_ENABLED) return;
+        for (const route of TIER3_ROUTES) injectRoute(route);
+      },
+    },
+  };
+}
