@@ -9,10 +9,13 @@ import { EMPTY_FILTERS, type FilterOption, type Filters } from "@/lib/discovery/
 import { FilterControls } from "./FilterControls";
 import { isOpenAt } from "@/lib/venue/hours";
 import { ConsentInline } from "../site/ConsentInline";
+import { getConsent } from "@/lib/consent";
 import { VenueList } from "./VenueList";
 
 // PRD 4.1 dock: 3D Layout (every scanned cafe), Filter, Top Picks (flagged per
 // cafe record) and Saved. Lists sort nearest first when location is known.
+
+const FOLD_KEY = "visita:peek-folded";
 
 type Panel = "scanned" | "top" | "saved" | "browse" | null;
 
@@ -40,6 +43,36 @@ interface Props {
 
 export function Dock({ scanned, topPicks, saved, matches, filters, filterOptions, onChangeFilters, showUnknown, onShowUnknown, hiddenForMissingData, activeFilters, onOpenFilters, onPick, home = false, openNow = false, onToggleOpenNow, threeDOnly = false, onToggleThreeD, selected = false }: Props) {
   const [panel, setPanel] = useState<Panel>(null);
+  // Phone sheet, folded to a slim bar so the map gets the screen. Remembered
+  // on this device; it can't fold while the privacy notice inside it waits
+  // for an answer.
+  const [folded, setFoldedState] = useState(() => { try { return localStorage.getItem(FOLD_KEY) === "1"; } catch { return false; } });
+  const [consentPending, setConsentPending] = useState(() => getConsent() === null);
+  useEffect(() => {
+    const answered = () => setConsentPending(false);
+    window.addEventListener("visita:consent", answered);
+    return () => window.removeEventListener("visita:consent", answered);
+  }, []);
+  const canFold = !consentPending;
+  const setFolded = (value: boolean) => {
+    setFoldedState(value);
+    try { localStorage.setItem(FOLD_KEY, value ? "1" : "0"); } catch { /* private mode */ }
+  };
+  if (folded && consentPending) setFoldedState(false);
+  // Swipe down on the sheet folds it; swipe up unfolds it. Sideways swipes
+  // (the card row) are left alone.
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const swipe = {
+    onTouchStart: (e: React.TouchEvent) => { const t = e.touches[0]; touch.current = t ? { x: t.clientX, y: t.clientY } : null; },
+    onTouchEnd: (e: React.TouchEvent) => {
+      const start = touch.current; const t = e.changedTouches[0];
+      touch.current = null;
+      if (!start || !t || !canFold) return;
+      const dx = t.clientX - start.x; const dy = t.clientY - start.y;
+      if (Math.abs(dy) < 40 || Math.abs(dy) < Math.abs(dx)) return;
+      setFolded(dy > 0);
+    },
+  };
   // The phone sheet's height, for the map buttons and credit above it (global.css --peek-h).
   const peekRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -54,7 +87,7 @@ export function Dock({ scanned, topPicks, saved, matches, filters, filterOptions
       observer.disconnect();
       root.style.removeProperty("--peek-h");
     };
-  }, [selected, home]);
+  }, [selected, home, folded]);
   const pick = (v: MapVenue) => {
     setPanel(null);
     onPick(v);
@@ -66,8 +99,24 @@ export function Dock({ scanned, topPicks, saved, matches, filters, filterOptions
   if (home) return (
     <>
       {/* Phone peek: the cafes you can step inside, as cards. "See all" opens the full list. */}
-      {!selected && <section ref={peekRef} aria-label="Cafes" className="map-home-peek pointer-events-auto grid gap-3 md:hidden">
-        <div className="mx-auto h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
+      {!selected && <section ref={peekRef} aria-label="Cafes" className="map-home-peek pointer-events-auto grid gap-3 md:hidden" {...swipe}>
+        {/* The handle folds and unfolds the sheet (tap or swipe); folding waits until the privacy notice is answered. */}
+        <button
+          type="button"
+          onClick={() => canFold && setFolded(!folded)}
+          disabled={!canFold}
+          aria-expanded={!folded}
+          aria-label={folded ? "Show cafes" : "Hide cafes and see the map"}
+          className="-my-2 grid h-7 w-full place-items-center disabled:cursor-default"
+        >
+          <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
+        </button>
+        {folded ? (
+          <button type="button" onClick={() => setFolded(false)} className="flex min-h-11 items-center justify-between gap-3 px-4.5 text-left">
+            <span className="font-display text-lg">{scanned.length > 0 ? "Step inside before you go" : "Cafes in CDO"}</span>
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">{matches.length} cafes <ChevronUp className="size-4" aria-hidden="true" /></span>
+          </button>
+        ) : (<>
         <ConsentInline />
         <div className="flex items-baseline justify-between gap-3 px-4.5">
           <h2 className="text-xl">{scanned.length > 0 ? "Step inside before you go" : "Cafes in CDO"}</h2>
@@ -90,6 +139,7 @@ export function Dock({ scanned, topPicks, saved, matches, filters, filterOptions
             );
           })}
         </ul>
+        </>)}
       </section>}
       <BottomSheet open={panel === "browse"} onOpenChange={(o) => !o && setPanel(null)} title="Find a cafe" description={`${matches.length} ${matches.length === 1 ? "cafe" : "cafes"} match`}>
         <div className="grid gap-3 py-1">
