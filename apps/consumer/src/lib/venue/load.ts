@@ -25,10 +25,11 @@ export type CafeRow = Pick<
   | "menu"
   | "is_top_pick"
   | "search_terms"
+  | "description"
 >;
 
 const CAFE_COLUMNS =
-  "id,slug,name,address,city,lat,lng,google_place_id,splat_url,splat_preview_url,scanned_at,scan_experience,amenities,hours,menu,is_top_pick,search_terms";
+  "id,slug,name,address,city,lat,lng,google_place_id,splat_url,splat_preview_url,scanned_at,scan_experience,amenities,hours,menu,is_top_pick,search_terms,description";
 
 export async function loadPublishedCafes(): Promise<{ cafes: CafeRow[]; definitions: AmenityDefinition[] }> {
   const [cafes, definitions] = await Promise.all([

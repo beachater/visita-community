@@ -54,7 +54,7 @@ export function DetailsPanel({ venue, definitions, distance, onClose, onWalkthro
   return (
     <aside
       aria-label={`About ${venue.name}`}
-      className={rail ? "text-card-foreground" : "surface-raised pointer-events-auto max-h-full min-h-0 w-[var(--panel-w)] overflow-y-auto overscroll-contain rounded-card text-card-foreground"}
+      className={rail ? "text-card-foreground" : "surface-raised scroll-soft pointer-events-auto max-h-full min-h-0 w-[var(--panel-w)] overflow-y-auto overscroll-contain rounded-card text-card-foreground"}
     >
       <CafeDetails
         cafe={venue}

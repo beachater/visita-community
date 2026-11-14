@@ -8,6 +8,7 @@ import { Label } from "@visita/ui/label";
 import { supabase } from "@/lib/supabase";
 import { describeEntry, toEntry } from "./amenity-form";
 import { HoursEditor } from "./HoursEditor";
+import { DescriptionEditor } from "./DescriptionEditor";
 import { MenuEditor } from "./MenuEditor";
 import { useVenue } from "./VenueLayout";
 
@@ -185,6 +186,7 @@ function AmenityRequests() {
 export function ListingEditor() {
   return (
     <div className="grid gap-10">
+      <DescriptionEditor />
       <MenuEditor />
       <HoursEditor />
       <AmenityRequests />

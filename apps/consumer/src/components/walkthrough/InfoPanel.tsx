@@ -23,8 +23,10 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
   return (
     <aside
       aria-label={`About ${cafe.name}`}
-      className="panel-dark pointer-events-auto max-h-full w-full overflow-y-auto overscroll-contain rounded-card text-glass-foreground"
+      className="panel-dark pointer-events-auto flex max-h-full w-full flex-col overflow-hidden rounded-card text-glass-foreground"
     >
+      {/* The rounded panel clips; the inner area scrolls, so the scrollbar stays clear of the corners. */}
+      <div className="scroll-soft min-h-0 flex-1 overflow-y-auto overscroll-contain">
       <CafeDetails
         cafe={cafe}
         definitions={definitions}
@@ -35,6 +37,7 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
         accuracyReturnPath={accuracyReturnPath(cafe.slug, true)}
         actions={<CafeActions tone="dark" onDirections={onDirections} onReviews={onOpenReviews} onMenu={cafe.menu.length > 0 ? onOpenMenu : null} />}
       />
+      </div>
     </aside>
   );
 }

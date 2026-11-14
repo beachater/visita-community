@@ -1080,6 +1080,7 @@ export type Database = {
           amenities: Json
           city: string
           created_at: string
+          description: string | null
           google_place_id: string | null
           hours: Json | null
           id: string
@@ -1103,6 +1104,7 @@ export type Database = {
           amenities?: Json
           city?: string
           created_at?: string
+          description?: string | null
           google_place_id?: string | null
           hours?: Json | null
           id?: string
@@ -1126,6 +1128,7 @@ export type Database = {
           amenities?: Json
           city?: string
           created_at?: string
+          description?: string | null
           google_place_id?: string | null
           hours?: Json | null
           id?: string

@@ -13,6 +13,8 @@ export interface VenueFormState {
   searchTerms: string;
   isTopPick: boolean;
   isPublished: boolean;
+  /** "About this cafe", owner-written; admins can edit or clear it. */
+  description?: string;
 }
 
 export interface VenueRow {
@@ -26,6 +28,7 @@ export interface VenueRow {
   search_terms: string[];
   is_top_pick: boolean;
   is_published: boolean;
+  description?: string | null;
 }
 
 export type VenueResult = { ok: true; row: VenueRow } | { ok: false; field: keyof VenueFormState; error: string };
@@ -43,6 +46,7 @@ export function toVenueRow(f: VenueFormState): VenueResult {
   if (!f.name.trim()) return { ok: false, field: "name", error: "Give the venue a name." };
   if (!SLUG.test(f.slug)) return { ok: false, field: "slug", error: "Use lowercase letters, numbers and single dashes, like sonnys-coffee." };
   if (!f.city.trim()) return { ok: false, field: "city", error: "Which city is it in?" };
+  if (f.description !== undefined && f.description.trim().length > 400) return { ok: false, field: "description", error: "Keep the description to 400 characters." };
   const lat = num(f.lat);
   const lng = num(f.lng);
   if ((lat === null) !== (lng === null)) return { ok: false, field: "lat", error: "Enter both latitude and longitude, or neither." };
@@ -63,6 +67,7 @@ export function toVenueRow(f: VenueFormState): VenueResult {
       search_terms: [...new Set(f.searchTerms.split(",").map((t) => t.trim()).filter(Boolean))],
       is_top_pick: f.isTopPick,
       is_published: f.isPublished,
+      ...(f.description !== undefined ? { description: f.description.trim() || null } : {}),
     },
   };
 }

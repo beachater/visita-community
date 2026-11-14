@@ -23,6 +23,8 @@ export interface MapVenue {
   hours: WeeklyHours | null;
   menu: MenuItem[];
   isTopPick: boolean;
+  /** Owner-written "About this cafe" (venues.description). */
+  description?: string | null;
   searchTerms: string[];
 }
 
@@ -47,6 +49,7 @@ export function toMapVenue(row: CafeRow): MapVenue {
     hours: (row.hours ?? null) as WeeklyHours | null,
     menu: (row.menu ?? []) as unknown as MenuItem[],
     isTopPick: row.is_top_pick,
+    description: row.description ?? null,
     searchTerms: row.search_terms ?? [],
   };
 }
@@ -73,6 +76,7 @@ export function toWalkthrough(v: MapVenue): WalkthroughCafe | null {
     lng: v.lng,
     googlePlaceId: v.googlePlaceId,
     splatKey: v.splatKey,
+    description: v.description ?? null,
     previewKey: v.previewKey,
     scannedAt: v.scannedAt,
     scanExperience: v.scanExperience,
