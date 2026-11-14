@@ -35,6 +35,8 @@ export interface DetailsCafe {
   menu: MenuItem[];
   /** Map venues can be unscanned; walkthrough cafes always are scanned. */
   scanned?: boolean;
+  /** Owner-written "About this cafe". */
+  description?: string | null;
 }
 
 interface Props {
@@ -154,8 +156,17 @@ export function CafeDetails({ cafe, definitions, tone, showName = true, onClose,
         )}
       </header>
 
-      {/* 2. What can I do? */}
+      {/* 2. What can I do? (On the map this starts with the 3D view.) */}
       <div>{actions}</div>
+
+      {/* The cafe's own words, right after the room; marked as theirs. */}
+      {cafe.description && (
+        <section aria-label="About this cafe" className={cn("grid gap-1.5 rounded-[1.125rem] p-3.5", dark ? "bg-white/[0.07] ring-1 ring-white/10" : "bg-muted")}>
+          <h3 className={cn("text-[0.7rem] font-bold tracking-[0.1em] uppercase", t.muted)}>About this cafe</h3>
+          <p className="text-sm leading-relaxed whitespace-pre-line">{cafe.description}</p>
+          <p className={cn("text-xs", t.muted)}>Written by the cafe</p>
+        </section>
+      )}
 
       {/* 3. Good to know: one rounded tile per fact. */}
       <section aria-label="Good to know" className="grid gap-2.5">

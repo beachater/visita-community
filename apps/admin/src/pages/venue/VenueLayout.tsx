@@ -21,6 +21,7 @@ export interface OwnedVenue {
   menu: MenuItem[];
   hours: WeeklyHours | null;
   amenities: VenueAmenities;
+  description: string | null;
 }
 
 interface VenueState {
@@ -47,7 +48,7 @@ export function VenueLayout() {
   const reload = useCallback(async () => {
     const { data } = await supabase
       .from("venues")
-      .select("id, name, slug, venue_type, address, is_published, splat_url, menu, hours, amenities")
+      .select("id, name, slug, venue_type, address, is_published, splat_url, menu, hours, amenities, description")
       .eq("id", venueId)
       .maybeSingle();
     setVenue(

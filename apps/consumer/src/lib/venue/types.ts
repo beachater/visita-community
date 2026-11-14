@@ -22,4 +22,6 @@ export interface WalkthroughCafe {
   amenities: VenueAmenities;
   hours: WeeklyHours | null;
   menu: MenuItem[];
+  /** Owner-written "About this cafe". */
+  description?: string | null;
 }

@@ -6,6 +6,7 @@ import type { AmenityDefinition, Json, VenueAmenities } from "@visita/shared-typ
 import { Button } from "@visita/ui/button";
 import { Input } from "@visita/ui/input";
 import { Label } from "@visita/ui/label";
+import { Textarea } from "@visita/ui/textarea";
 import { Switch } from "@visita/ui/switch";
 import { CONSUMER_URL, supabase } from "@/lib/supabase";
 import { describeEntry, toEntry } from "../venue/amenity-form";
@@ -129,7 +130,7 @@ export function VenueForm() {
     if (!venueId) return;
     const { data } = await supabase
       .from("venues")
-      .select("id, slug, venue_type, name, address, city, lat, lng, google_place_id, search_terms, is_top_pick, is_published, amenities, splat_url, splat_preview_url, scanned_at")
+      .select("id, slug, venue_type, name, address, city, lat, lng, google_place_id, search_terms, is_top_pick, is_published, amenities, splat_url, splat_preview_url, scanned_at, description")
       .eq("id", venueId)
       .maybeSingle();
     if (!data) return;
@@ -145,6 +146,7 @@ export function VenueForm() {
       searchTerms: (data.search_terms ?? []).join(", "),
       isTopPick: data.is_top_pick,
       isPublished: data.is_published,
+      description: data.description ?? "",
     });
   }, [venueId]);
 
@@ -215,6 +217,17 @@ export function VenueForm() {
           {field("name", "Name")}
           {field("slug", "Slug (the /cafe/… address)")}
           {field("address", "Address")}
+          <div className="grid gap-1.5">
+            <Label htmlFor="f-description">About this cafe (shown after the 3D view)</Label>
+            <Textarea
+              id="f-description"
+              rows={3}
+              value={form.description ?? ""}
+              aria-invalid={error?.field === "description"}
+              onChange={(e) => set({ description: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">{(form.description ?? "").trim().length} / 400 · written by the cafe; owners can change it too</p>
+          </div>
           {field("city", "City")}
           {field("lat", "Latitude", { inputMode: "decimal", placeholder: "8.4822" })}
           {field("lng", "Longitude", { inputMode: "decimal", placeholder: "124.6465" })}

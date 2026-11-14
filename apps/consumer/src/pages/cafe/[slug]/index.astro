@@ -1,5 +1,7 @@
 ---
 import type { MenuItem, VenueAmenities, WeeklyHours } from "@visita/shared-types";
+import { ChevronLeft, Info, MapPin } from "lucide-react";
+import { amenityIcon } from "@visita/ui/amenity-icon";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import ReviewList from "../../../components/reviews/ReviewList.astro";
 import { TrackView } from "../../../components/analytics/TrackView";
@@ -7,8 +9,11 @@ import { EventList } from "../../../components/venue/EventList";
 import { OccupancyPill } from "../../../components/venue/OccupancyPill";
 import OpenNowPill from "../../../components/cafe/OpenNowPill.astro";
 import { CafeWalkthrough } from "../../../components/walkthrough/CafeWalkthrough";
-import { AmenityList } from "../../../components/venue/AmenityList";
-import { amenityRows, summaryRows } from "../../../lib/venue/amenities";
+import { AccuracyCheck } from "../../../components/venue/AccuracyCheck";
+import { CafePageActions } from "../../../components/venue/CafePageActions";
+import { amenityRows } from "../../../lib/venue/amenities";
+import { accuracyReturnPath } from "../../../lib/venue/amenity-report";
+import { googleMapsUrl } from "../../../lib/venue/directions";
 import { weeklyRows } from "../../../lib/venue/hours";
 import { loadPublishedCafe, toWalkthroughCafe } from "../../../lib/venue/load";
 import { formatPhp, scanDate } from "../../../lib/venue/scan";
@@ -17,6 +22,11 @@ import { formatPhp, scanDate } from "../../../lib/venue/scan";
 // middleware), so publishing a venue or an owner's menu edit shows up without
 // a rebuild. The page is the same for every visitor; personal parts are
 // server islands.
+//
+// Layout (approved 2026-11-14): the same pieces as the map and walkthrough
+// panels. Computers: the room, what's on, menu and reviews on the left; on the
+// right, sticky while the left scrolls, the actions, "Good to know", hours and
+// one "Help keep this accurate". Phones: one column in that reading order.
 export const prerender = false;
 
 const loaded = await loadPublishedCafe(Astro.params.slug ?? "");
@@ -29,250 +39,155 @@ const menu = cafe.menu as unknown as MenuItem[];
 const walkthrough = toWalkthroughCafe(cafe);
 const scanned = walkthrough !== null;
 const scan = scanDate(cafe.scanned_at);
-const strip = summaryRows(definitions, amenities);
-const cards = amenityRows(definitions, amenities);
-const hourRows = hours ? weeklyRows(hours) : [];
+const facts = amenityRows(definitions, amenities);
+const hourRows = hours ? weeklyRows(hours, true) : [];
 const sections = [...new Set(menu.map((m) => m.section ?? ""))];
+const known = hourRows.filter((r) => r.text !== null);
+const sameEveryDay = known.length === 7 && known.every((r) => r.text === known[0]!.text) ? known[0]!.text : null;
+const today = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "Asia/Manila" }).format(new Date()).toLowerCase().slice(0, 3);
+const directionsHref = cafe.lat !== null || cafe.address
+  ? googleMapsUrl({ name: cafe.name, address: cafe.address, city: cafe.city, lat: cafe.lat, lng: cafe.lng, googlePlaceId: cafe.google_place_id })
+  : null;
+const FIRST_FACTS = 6;
 
 const description = scanned
   ? `Step inside ${cafe.name} before you go: a real, unedited 3D walkthrough.`
   : `${cafe.name} in ${cafe.city}, on Visita.`;
+const card = "rounded-card bg-card p-5 shadow-card sm:p-6";
+const title = "font-display text-[1.1875rem] leading-tight sm:text-[1.375rem]";
 ---
 
 <BaseLayout title={cafe.name} description={description}>
-  <main class="cafe">
-    <header class="hero">
-      <div class="meta">
-        {scanned && <span class="scanned">Scanned</span>}
+  <main class="mx-auto grid max-w-6xl gap-5 px-4 pt-6 pb-12 sm:gap-7 md:pt-10 lg:grid-cols-[minmax(0,1fr)_23.75rem] lg:items-start">
+    <header class="grid gap-2.5 lg:col-start-1">
+      <a href="/explore" class="inline-flex w-fit items-center gap-1 text-sm font-semibold text-primary hover:underline"><ChevronLeft className="size-4" aria-hidden="true" /> Back to the map</a>
+      <div class="flex flex-wrap items-center gap-1.5">
+        {scanned && <span class="rounded-full bg-verified px-2.5 py-1 text-xs font-bold text-verified-foreground">Scanned in 3D</span>}
         <OpenNowPill hours={hours} />
         <OccupancyPill client:load venueId={cafe.id} />
-        {scan && <span class:list={["scan-date", { stale: scan.stale }]}>{scan.label}</span>}
+        {scan && <span class:list={["rounded-full bg-card px-2.5 py-1 text-xs font-medium text-primary", { "opacity-60": scan.stale }]}>{scan.label}{scan.stale && " · the room may have changed"}</span>}
       </div>
-      <h1>{cafe.name}</h1>
-      {cafe.address && <p class="address">{cafe.address}</p>}
+      <h1 class="text-[2rem] leading-[1.05] tracking-[-0.03em] sm:text-5xl">{cafe.name}</h1>
+      {cafe.address && <p class="flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin className="size-4 shrink-0" aria-hidden="true" />{cafe.address}</p>}
     </header>
 
-    {walkthrough ? (
-      <CafeWalkthrough client:only="react" cafe={walkthrough} definitions={definitions} />
-    ) : (
-      <section class="not-scanned">
-        <p>This cafe isn't scanned yet, so there's no walkthrough.</p>
+    <!-- The room is the hero. -->
+    <div class="lg:col-start-1">
+      {walkthrough ? (
+        <CafeWalkthrough client:only="react" cafe={walkthrough} definitions={definitions} />
+      ) : (
+        <section class="grid gap-2 rounded-card bg-scan p-6 text-cloud sm:p-8">
+          <h2 class="font-display text-xl text-white">Not scanned yet</h2>
+          <p class="text-sm text-mist">There's no walkthrough for this cafe yet. If you'd like one, tap “I want to see inside” on the map, and we'll ask the cafe.</p>
+        </section>
+      )}
+    </div>
+
+    {cafe.description && (
+      <section aria-labelledby="about" class:list={[card, "grid gap-2 lg:col-start-1"]}>
+        <h2 id="about" class={title}>About this cafe</h2>
+        <p class="text-[0.95rem] leading-[1.7] whitespace-pre-line sm:text-base">{cafe.description}</p>
+        <p class="text-xs text-muted-foreground">Written by the cafe</p>
       </section>
     )}
+
+    <!-- What you check before going: sticky on the right on computers, while the left scrolls. -->
+    <aside class="scroll-soft grid content-start gap-4 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-6 lg:row-start-1 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto lg:pr-1">
+      <div class={card}>
+        <CafePageActions client:idle slug={cafe.slug} name={cafe.name} directionsHref={directionsHref} hasMenu={menu.length > 0} />
+      </div>
+
+      {facts.length > 0 && (
+        <section aria-labelledby="facts" class:list={[card, "grid gap-3"]}>
+          <h2 id="facts" class={title}>Good to know</h2>
+          <dl class="grid grid-cols-2 gap-2">
+            {facts.slice(0, FIRST_FACTS).map((row) => { const Icon = row.icon ? amenityIcon(row.icon) : Info; return (
+              <div class:list={["flex items-center gap-2.5 rounded-[1.125rem] bg-muted p-3", { "col-span-2": row.text.length > 22 }]}>
+                <span class="grid size-9 shrink-0 place-items-center rounded-full bg-card text-primary" aria-hidden="true"><Icon className="size-[1.125rem]" /></span>
+                <div class="min-w-0"><dt class="text-xs text-muted-foreground">{row.label}</dt><dd class="text-sm leading-snug font-semibold">{row.text}</dd></div>
+              </div>
+            ); })}
+          </dl>
+          {facts.length > FIRST_FACTS && (
+            <details class="group grid">
+              <summary class="w-fit cursor-pointer list-none text-sm font-semibold text-primary group-open:hidden">Show all {facts.length}</summary>
+              <dl class="grid grid-cols-2 gap-2">
+                {facts.slice(FIRST_FACTS).map((row) => { const Icon = row.icon ? amenityIcon(row.icon) : Info; return (
+                  <div class:list={["flex items-center gap-2.5 rounded-[1.125rem] bg-muted p-3", { "col-span-2": row.text.length > 22 }]}>
+                    <span class="grid size-9 shrink-0 place-items-center rounded-full bg-card text-primary" aria-hidden="true"><Icon className="size-[1.125rem]" /></span>
+                    <div class="min-w-0"><dt class="text-xs text-muted-foreground">{row.label}</dt><dd class="text-sm leading-snug font-semibold">{row.text}</dd></div>
+                  </div>
+                ); })}
+              </dl>
+            </details>
+          )}
+        </section>
+      )}
+
+      {hourRows.length > 0 && (
+        <section aria-labelledby="hours" class:list={[card, "grid gap-3"]}>
+          <h2 id="hours" class={title}>Hours</h2>
+          <div class="flex justify-between" aria-hidden="true">
+            {hourRows.map((row) => (
+              <span class:list={["grid size-9 place-items-center rounded-full text-xs font-semibold", row.day === today ? "bg-foreground text-white" : "bg-muted", { "line-through opacity-50": row.text === "Closed" && row.day !== today }]}>{row.label.charAt(0)}</span>
+            ))}
+          </div>
+          {sameEveryDay ? (
+            <p class="text-sm"><b class="font-semibold">Every day</b> · {sameEveryDay}</p>
+          ) : (
+            <dl class="grid gap-1 text-sm">
+              {hourRows.map((row) => (
+                <div class:list={["grid grid-cols-[2.75rem_1fr] gap-2", { "font-bold": row.day === today }]}>
+                  <dt class={row.day === today ? "" : "text-muted-foreground"}>{row.label.slice(0, 3)}</dt>
+                  <dd>{row.text ?? "Not listed"}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </section>
+      )}
+
+      {facts.length > 0 && <AccuracyCheck client:visible rows={facts} venueId={cafe.id} returnPath={accuracyReturnPath(cafe.slug, false)} tone="light" />}
+    </aside>
 
     <!-- Fetched fresh, so today's events show on the cached page. -->
-    <EventList client:idle venueId={cafe.id} />
+    <div class="empty:hidden lg:col-start-1">
+      <EventList client:idle venueId={cafe.id} headingClassName={title} />
+    </div>
     <TrackView client:idle venueId={cafe.id} />
 
-    {strip.length > 0 && (
-      <ul class="strip" aria-label="At a glance">
-        {strip.map((row) => (
-          <li>
-            <span class="strip-label">{row.label}</span>
-            <span class="strip-value">{row.text}</span>
-          </li>
-        ))}
-      </ul>
-    )}
-
-    {cards.length > 0 && (
-      <section>
-        <h2>Amenities</h2>
-        <AmenityList client:visible rows={cards} venueId={cafe.id} slug={cafe.slug} />
-      </section>
-    )}
-
-    {hourRows.length > 0 && (
-      <section>
-        <h2>Opening hours</h2>
-        <table class="hours">
-          <tbody>
-            {hourRows.map((row) => (
-              <tr>
-                <th scope="row">{row.label}</th>
-                <td>{row.text ?? "Not known"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    )}
-
     {menu.length > 0 && (
-      <section>
-        <h2>Menu</h2>
-        {sections.map((section) => (
-          <>
-            {section && <h3>{section}</h3>}
-            <ul class="menu">
-              {menu.filter((m) => (m.section ?? "") === section).map((item) => (
-                <li>
-                  <span>
-                    {item.name}
-                    {item.note && <small>{item.note}</small>}
-                  </span>
-                  {item.price_php !== undefined && <span class="price">{formatPhp(item.price_php)}</span>}
-                </li>
-              ))}
-            </ul>
-          </>
-        ))}
+      <section id="menu" aria-labelledby="menu-title" class:list={[card, "grid scroll-mt-28 gap-4 lg:col-start-1"]}>
+        <div class="flex items-baseline justify-between gap-3">
+          <h2 id="menu-title" class={title}>Menu</h2>
+          <span class="text-sm text-muted-foreground">{menu.length} {menu.length === 1 ? "item" : "items"}</span>
+        </div>
+        <div class="grid gap-x-7 gap-y-5 sm:grid-cols-2 xl:grid-cols-3">
+          {sections.map((section) => (
+            <div>
+              {section && <h3 class="mb-1 font-sans text-[0.7rem] font-bold tracking-[0.1em] text-muted-foreground uppercase">{section}</h3>}
+              <ul>
+                {menu.filter((m) => (m.section ?? "") === section).map((item) => (
+                  <li class="flex justify-between gap-3 border-b border-accent py-2 text-sm last:border-0">
+                    <span>{item.name}{item.note && <small class="block text-xs text-muted-foreground">{item.note}</small>}</span>
+                    {item.price_php !== undefined && <span class="shrink-0 font-semibold tabular-nums">{formatPhp(item.price_php)}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </section>
     )}
 
     <!-- Fresh per request while the page above stays cached. -->
-    <ReviewList server:defer venueId={cafe.id} slug={cafe.slug} cafeName={cafe.name}>
-      <section slot="fallback" id="reviews" aria-busy="true">
-        <h2>Reviews</h2>
-        <p class="reviews-loading">Loading reviews…</p>
-      </section>
-    </ReviewList>
+    <div class:list={[card, "scroll-mt-28 lg:col-start-1"]}>
+      <ReviewList server:defer venueId={cafe.id} slug={cafe.slug} cafeName={cafe.name}>
+        <section slot="fallback" id="reviews" aria-busy="true">
+          <h2 class={title}>Reviews</h2>
+          <p class="text-sm text-muted-foreground">Loading reviews…</p>
+        </section>
+      </ReviewList>
+    </div>
   </main>
 </BaseLayout>
-
-<style>
-  .cafe {
-    max-width: 56rem;
-    margin: 0 auto;
-    padding: 1.5rem 1rem 3rem;
-    display: grid;
-    gap: 1.75rem;
-  }
-  h1 {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(2rem, 6vw, 3rem);
-    line-height: 1.1;
-    margin: 0.5rem 0 0.25rem;
-  }
-  h2 {
-    font-family: var(--font-display);
-    font-weight: 600;
-    color: var(--ocean);
-    font-size: 1.4rem;
-    margin: 0 0 0.75rem;
-  }
-  h3 {
-    font-size: 0.95rem;
-    margin: 1rem 0 0.25rem;
-  }
-  .meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  /* The one amber element: amber means scanned and verified, with navy text (6.48:1). */
-  .scanned {
-    padding: 0.2rem 0.65rem;
-    border-radius: 999px;
-    background: var(--amber);
-    color: var(--navy);
-    font-size: 0.8rem;
-    font-weight: 700;
-  }
-  .scan-date {
-    font-size: 0.85rem;
-  }
-  .scan-date.stale {
-    opacity: 0.6;
-  }
-  .address {
-    margin: 0;
-    color: var(--ocean);
-  }
-  .not-scanned {
-    padding: 1.25rem;
-    border: 1px dashed var(--mist);
-    border-radius: var(--radius-card);
-    corner-shape: squircle;
-    background: rgba(255, 255, 255, 0.7);
-  }
-  .not-scanned p {
-    margin: 0;
-  }
-  .strip {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-    gap: 0.75rem;
-  }
-  .strip li,
-  .amenity {
-    padding: 0.85rem 1rem;
-    border-radius: 1.25rem;
-    corner-shape: squircle;
-    background: #ffffff;
-    box-shadow: var(--shadow-card);
-  }
-  .strip-label,
-  .amenity dt {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--ocean);
-  }
-  .strip-value {
-    display: block;
-    font-weight: 500;
-    margin-top: 0.15rem;
-  }
-  .amenities {
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-    gap: 0.75rem;
-  }
-  .amenity dd {
-    margin: 0.15rem 0 0;
-  }
-  .hours {
-    border-collapse: collapse;
-    width: 100%;
-    max-width: 28rem;
-    background: #ffffff;
-    border-radius: var(--radius-card);
-    corner-shape: squircle;
-    box-shadow: var(--shadow-card);
-    overflow: hidden;
-  }
-  .hours th,
-  .hours td {
-    text-align: left;
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid var(--cloud);
-    font-weight: 400;
-  }
-  .hours th {
-    color: var(--ocean);
-  }
-  .menu {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    background: #ffffff;
-    border-radius: var(--radius-card);
-    corner-shape: squircle;
-    box-shadow: var(--shadow-card);
-    overflow: hidden;
-  }
-  .menu li {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--cloud);
-  }
-  .menu li:last-child {
-    border-bottom: none;
-  }
-  .menu small {
-    display: block;
-    color: var(--ocean);
-  }
-  .price {
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-</style>

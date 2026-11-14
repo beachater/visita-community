@@ -8,6 +8,7 @@ const row = (over: Partial<CafeRow> = {}): CafeRow => ({
   name: "Sonny's Coffee + Diner",
   address: "Sonny's, Cagayan de Oro",
   city: "Cagayan de Oro",
+  description: null,
   lat: 8.47,
   lng: 124.64,
   google_place_id: null,
