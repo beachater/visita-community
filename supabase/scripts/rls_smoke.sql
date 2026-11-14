@@ -781,5 +781,44 @@ end $$;
 select pg_temp.pass('admin edits live setup without replacing scan file');
 reset role;
 
+-- Reviews past 100 (BEA-18): the count and average come from
+-- venue_review_summary over every visible review, not the first 100 rows.
+-- 160 reviewers on a fresh cafe; every tenth review is hidden, ratings cycle 1..5.
+insert into public.venues (id, slug, name, is_published) values ('aaaaaaaa-0000-0000-0000-0000000000b1', 'busy-cafe', 'Busy', true);
+insert into auth.users (id, email, aud, role)
+  select ('cccccccc-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid, 'r' || n || '@test', 'authenticated', 'authenticated'
+  from generate_series(1, 160) n;
+insert into public.reviews (venue_id, author_id, rating, status, created_at)
+  select 'aaaaaaaa-0000-0000-0000-0000000000b1', ('cccccccc-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
+         (n % 5) + 1, case when n % 10 = 0 then 'hidden' else 'visible' end::public.review_status,
+         now() - n * interval '1 hour'
+  from generate_series(1, 160) n;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$
+declare s record;
+begin
+  select * into s from public.venue_review_summary('aaaaaaaa-0000-0000-0000-0000000000b1');
+  assert s.review_count = 144, format('count %s', s.review_count);
+  assert s.average = (select round(avg((n % 5) + 1)::numeric, 1) from generate_series(1, 160) n where n % 10 <> 0), format('average %s', s.average);
+  assert (select count(*) from public.reviews where venue_id = 'aaaaaaaa-0000-0000-0000-0000000000b1') = 144;
+end $$;
+select pg_temp.pass('review summary counts and averages all 144 visible reviews past 100');
+reset role;
+-- The author of a hidden review still reads it, but it isn't counted.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"cccccccc-0000-0000-0000-000000000150","role":"authenticated"}';
+do $$ begin
+  assert (select review_count from public.venue_review_summary('aaaaaaaa-0000-0000-0000-0000000000b1')) = 144;
+  assert (select status from public.reviews where author_id = 'cccccccc-0000-0000-0000-000000000150') = 'hidden';
+end $$;
+select pg_temp.pass('own hidden review readable by its author but not counted');
+reset role;
+do $$ begin
+  assert (select review_count from public.venue_review_summary('aaaaaaaa-0000-0000-0000-000000000002')) = 0;
+  assert (select average from public.venue_review_summary('aaaaaaaa-0000-0000-0000-000000000002')) is null;
+end $$;
+select pg_temp.pass('review summary of a cafe without reviews is zero with no average');
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED
