@@ -1,44 +1,112 @@
 ---
+import { ArrowRight, Copy, Mail, Pencil, ShieldCheck, Store } from "lucide-react";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import PageHeader from "../components/kit/PageHeader.astro";
 import AmberCta from "../components/kit/AmberCta.astro";
 import { CONTACT_EMAIL, PRIVACY_EMAIL, mailto } from "../lib/contact";
 
 export const prerender = true;
 
-// Copy: BEA-9 `copy` document, revision 2 (approved 13 Nov 2026).
-// v1 is email only; there's no form or Worker endpoint.
+// Copy: BEA-9 `copy` document, revision 2 (approved 13 Nov 2026), restyled to
+// match the approved site pages (2026-11-14). The cafe-page button is now
+// called "Help keep this accurate". v1 is email only; there's no form or
+// Worker endpoint.
+
+const routes = [
+  {
+    icon: Store,
+    title: "You own a cafe",
+    body: "See what Visita does for cafes, or email us with “Cafe” in the subject.",
+    links: [
+      { label: "For cafes", href: "/for-cafes" },
+      { label: "Email us", href: mailto(CONTACT_EMAIL, "Cafe") },
+    ],
+  },
+  {
+    icon: Pencil,
+    title: "A detail on a cafe page is wrong",
+    body: "Use “Help keep this accurate” on that cafe's page. It's the quickest way to fix it.",
+    links: [{ label: "Find the cafe", href: "/explore" }],
+  },
+  {
+    icon: ShieldCheck,
+    title: "Privacy or your data",
+    body: `Write to ${PRIVACY_EMAIL}. Our privacy policy explains what we keep and why.`,
+    links: [
+      { label: "Email privacy", href: mailto(PRIVACY_EMAIL) },
+      { label: "Privacy policy", href: "/privacy" },
+    ],
+  },
+];
 ---
 
 <BaseLayout title="Contact" description="Questions, corrections or partnership ideas? Get in touch with the Visita team in Cagayan de Oro.">
-  <main class="mx-auto max-w-6xl px-4 py-10">
-    <PageHeader eyebrow="Contact" title="Say hello" lede="Questions, a correction or an idea? We read everything." />
+  <main class="mx-auto grid max-w-6xl gap-12 px-4 pt-8 pb-10 md:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16">
+    <!-- Say hello: the address is the hero -->
+    <section aria-labelledby="hello" class="grid content-start gap-5">
+      <p class="text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase">Contact</p>
+      <h1 id="hello" class="text-[2.75rem] leading-[1.02] tracking-[-0.03em] sm:text-6xl">Say hello</h1>
+      <p class="max-w-[40ch] text-base leading-relaxed text-muted-foreground sm:text-lg">Questions, a correction or an idea? We read everything.</p>
 
-    <section aria-label="Email" class="max-w-xl rounded-card bg-card p-6 shadow-card">
-      <p class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Email</p>
-      <p class="mt-1 text-xl font-semibold break-all">
-        <a href={mailto(CONTACT_EMAIL)} class="text-primary underline underline-offset-2">{CONTACT_EMAIL}</a>
-      </p>
-      <div class="mt-5">
-        <AmberCta href={mailto(CONTACT_EMAIL)}>Email us</AmberCta>
+      <div class="mt-2 grid gap-4 rounded-[1.75rem] bg-scan p-6 text-white sm:rounded-[2rem] sm:p-8">
+        <span class="grid size-12 place-items-center rounded-full bg-white/10 text-[var(--brand-gold)]" aria-hidden="true"><Mail className="size-5" /></span>
+        <div class="grid gap-1">
+          <p class="text-xs font-bold tracking-[0.12em] text-mist uppercase">Email</p>
+          <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <a href={mailto(CONTACT_EMAIL)} class="font-display text-2xl break-all text-white underline-offset-4 hover:underline sm:text-[2rem]">{CONTACT_EMAIL}</a>
+            <button
+              type="button"
+              class="copy-email inline-flex h-9 items-center gap-1.5 rounded-full bg-white/10 px-3 text-xs font-semibold text-cloud hover:bg-white/20"
+              data-email={CONTACT_EMAIL}
+            >
+              <Copy className="size-3.5" aria-hidden="true" /> <span data-label>Copy</span>
+            </button>
+          </p>
+        </div>
+        <div class="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:gap-5">
+          <AmberCta href={mailto(CONTACT_EMAIL)} class="h-13 rounded-full px-7 text-base font-bold">Email us</AmberCta>
+          <p class="text-sm text-mist">We usually reply within two working days.</p>
+        </div>
       </div>
-      <p class="mt-4 text-muted-foreground">We usually reply within two working days.</p>
     </section>
 
-    <div class="prose-visita mt-4">
-      <h2>Looking for something specific?</h2>
-      <ul>
-        <li>
-          <strong>You own a cafe</strong> → see <a href="/for-cafes">For Cafes</a>, or <a href={mailto(CONTACT_EMAIL, "Cafe")}>email us</a> with "Cafe" in the
-          subject.
-        </li>
-        <li>
-          <strong>A detail on a cafe page is wrong</strong> → use "Something's changed" on that cafe's page. It's the quickest way to fix it.
-        </li>
-        <li>
-          <strong>Privacy or your data</strong> → <a href={mailto(PRIVACY_EMAIL)}>{PRIVACY_EMAIL}</a> (see our <a href="/privacy">privacy policy</a>).
-        </li>
+    <!-- Looking for something specific? Rows, not cards -->
+    <section aria-labelledby="specific" class="grid content-start gap-4 lg:pt-[4.75rem]">
+      <h2 id="specific" class="text-2xl leading-tight sm:text-3xl">Looking for something specific?</h2>
+      <ul class="border-b border-mist">
+        {routes.map((r) => (
+          <li class="route grid grid-cols-[2.75rem_1fr] gap-x-4 gap-y-2 border-t border-mist py-5 sm:py-6">
+            <span class="grid size-11 place-items-center rounded-full bg-card text-primary shadow-float" aria-hidden="true"><r.icon className="size-5" /></span>
+            <div class="grid gap-1.5">
+              <h3 class="font-display text-lg sm:text-xl">{r.title}</h3>
+              <p class="text-sm leading-relaxed text-muted-foreground sm:text-[0.95rem]">{r.body}</p>
+              <p class="flex flex-wrap gap-x-5 gap-y-1 pt-1">
+                {r.links.map((l) => (
+                  <a href={l.href} class="route-link group inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary">
+                    {l.label}
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+                  </a>
+                ))}
+              </p>
+            </div>
+          </li>
+        ))}
       </ul>
-    </div>
+    </section>
   </main>
 </BaseLayout>
+
+<script>
+  // Copy the address, for people whose mail app doesn't open from a link.
+  for (const btn of document.querySelectorAll<HTMLButtonElement>(".copy-email")) {
+    const label = btn.querySelector("[data-label]");
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.email ?? "");
+        if (label) label.textContent = "Copied";
+      } catch {
+        if (label) label.textContent = "Copy failed";
+      }
+      window.setTimeout(() => { if (label) label.textContent = "Copy"; }, 2000);
+    });
+  }
+</script>

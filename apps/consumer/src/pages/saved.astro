@@ -1,6 +1,5 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import PageHeader from "../components/kit/PageHeader.astro";
 import { SavedList } from "../components/account/SavedList";
 import { loginHref } from "../components/site/nav";
 
@@ -10,8 +9,8 @@ export const prerender = true;
 ---
 
 <BaseLayout title="Saved cafes">
-  <main class="mx-auto max-w-2xl px-4 py-10">
-    <PageHeader title="Saved cafes" />
+  <main class="mx-auto max-w-6xl px-4 pt-8 pb-10 md:pt-12">
+    <h1 class="mb-4 text-4xl leading-[1.05] sm:text-5xl">Saved cafes</h1>
     <SavedList client:load loginHref={loginHref("/saved")} />
   </main>
 </BaseLayout>

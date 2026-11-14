@@ -1,4 +1,4 @@
-import { FILTER_NAMES } from "../discovery/filters";
+import { isFilterName } from "../discovery/filters";
 
 // Validation for POST /api/track (PRD 4.4 analytics). Pure, so it's tested
 // without a Worker. The client sends only with the visitor's consent and
@@ -40,7 +40,8 @@ export function parseTrackBody(body: unknown): TrackBody {
     const clean: TrackEvent["props"] = {};
     const raw = (props as { filters?: unknown } | undefined)?.filters;
     if (WITH_FILTERS.has(type as EventType) && Array.isArray(raw)) {
-      const names = [...new Set(raw.filter((f): f is string => typeof f === "string" && (FILTER_NAMES as readonly string[]).includes(f)))];
+      // Filters come from the database, so names are checked by shape, not a fixed list.
+      const names = [...new Set(raw.filter((f): f is string => typeof f === "string" && isFilterName(f)))].slice(0, 12);
       if (names.length) clean.filters = names;
     }
     out.push({ type: type as EventType, venueId, props: clean });

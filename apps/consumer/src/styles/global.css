@@ -50,7 +50,7 @@
   @keyframes menu-bottom-enter { from { transform: translateY(100%); } to { transform: translateY(0); } }
   @keyframes menu-bottom-exit { from { transform: translateY(0); } to { transform: translateY(100%); } }
   .map-home .maplibregl-ctrl-bottom-right {
-    bottom: calc(5.5rem + var(--consent-h, 0px) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(15rem + var(--consent-h, 0px) + env(safe-area-inset-bottom, 0px));
   }
   .map-home-selected .maplibregl-ctrl-bottom-right {
     bottom: calc(1rem + var(--map-card-h, 0px) + var(--consent-h, 0px));
@@ -67,7 +67,7 @@
   right: calc(var(--map-overlay-inset) + env(safe-area-inset-right, 0px));
 }
 .map-home-controls {
-  bottom: calc(6.75rem + var(--consent-h, 0px) + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(16rem + var(--consent-h, 0px) + env(safe-area-inset-bottom, 0px)) !important;
   right: calc(var(--map-overlay-inset) + env(safe-area-inset-right, 0px)) !important;
 }
 .map-home-controls-selected {
@@ -82,6 +82,18 @@
   min-height: 4.5rem;
   padding: 0.75rem 1rem;
   border-radius: var(--radius-card);
+}
+/* Phone home: the cafe cards peek from the bottom edge. */
+.map-home-peek {
+  position: fixed;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  bottom: var(--consent-h, 0px);
+  padding: 0.5rem 0 calc(1rem + env(safe-area-inset-bottom, 0px));
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--card);
+  box-shadow: 0 -14px 34px -20px rgba(4, 44, 83, 0.55);
 }
 .map-home-card {
   left: calc(var(--map-overlay-inset) + env(safe-area-inset-left, 0px));
@@ -106,7 +118,24 @@
     flex-direction: column;
     gap: 0.75rem;
   }
-  .map-home-controls { bottom: calc(1.5rem + var(--consent-h, 0px)) !important; }
+  /* Sit above the map credit (Protomaps © OpenStreetMap), which the licence
+     needs readable, rather than on top of it. */
+  .map-home-controls { bottom: 3rem !important; right: 1rem !important; }
+  /* Computer home: the header is one floating bar 16 px from the edges, and
+     the privacy notice is a compact card beside the list card. */
+  .map-home-header { padding-left: 1rem; padding-right: 1rem; }
+  body:has(.map-home) #consent-banner {
+    left: 24rem;
+    right: auto;
+    width: min(27.5rem, calc(100vw - 25rem));
+    padding: 0;
+    padding-bottom: 1rem !important;
+  }
+  body:has(.map-home) #consent-banner > div { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  body:has(.map-home) #consent-banner > div > div { justify-content: flex-end; }
+}
+@media (min-width: 1024px) {
+  body:has(.map-home) #consent-banner { left: 28.25rem; width: 27.5rem; }
 }
 
 /* Long-form reading text (legal pages, About, FAQ). */

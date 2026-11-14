@@ -8,9 +8,13 @@ import { AuthProvider, useAuth } from "@/auth/AuthProvider";
 import { SignIn } from "@/auth/SignIn";
 import { homeFor } from "@/routes/home";
 import { Sidebar } from "@/shell/Sidebar";
+import { CafeTabBar } from "@/shell/CafeTabBar";
+import { venueIdFrom, workspaceFor } from "@/routes/nav";
+import { cn } from "@visita/ui/utils";
 import { ClaimPage } from "@/pages/claim/ClaimPage";
 import { StatusPage } from "@/pages/pending/StatusPage";
 import { ApprovalsPage } from "@/pages/admin/approvals/ApprovalsPage";
+import { AmenityCatalog } from "@/pages/admin/AmenityCatalog";
 import { AmenityQueue } from "@/pages/admin/AmenityQueue";
 import { AmenityReports } from "@/pages/admin/AmenityReports";
 import { DemandQueue } from "@/pages/admin/DemandQueue";
@@ -42,14 +46,15 @@ function Centered({ children }: { children: ReactNode }) {
 function Shell() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname } = useLocation();
+  const { access } = useAuth();
+  const adminSpace = workspaceFor(access?.isAdmin ?? false, pathname) === "admin";
+  const venueId = venueIdFrom(pathname);
   useEffect(() => setMenuOpen(false), [pathname]);
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-dvh p-3 pr-0 lg:block">
-        <div className="h-full rounded-card bg-card shadow-card">
-          <Sidebar />
-        </div>
+        <Sidebar />
       </aside>
 
       <header className="sticky top-0 z-40 px-3 lg:hidden" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}>
@@ -57,23 +62,26 @@ function Shell() {
           <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen}>
             <Menu aria-hidden="true" />
           </Button>
-          <Link to="/" className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap font-display text-xl font-bold" aria-label="Visita for cafes home">
-            Visita <span className="font-sans text-xs font-medium text-muted-foreground">for cafes</span>
+          <Link to="/" className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap" aria-label={adminSpace ? "Visita admin console" : "Visita for cafes home"}>
+            <img src="/brand/visita-logo.svg" alt="Visita" className="h-5.5 w-auto" />
+            <span className="text-xs font-semibold text-muted-foreground">{adminSpace ? "Admin console" : "for cafes"}</span>
           </Link>
         </div>
       </header>
 
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side="left" className="w-[min(18rem,85vw)] gap-0 rounded-r-[var(--radius-card)] border-0 bg-card p-0" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <SheetContent side="left" className={cn("w-[min(18rem,85vw)] gap-0 rounded-r-[var(--radius-card)] border-0 p-0", adminSpace ? "bg-scan" : "bg-card")} style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">Pages in your workspace</SheetDescription>
           <Sidebar onNavigate={() => setMenuOpen(false)} />
         </SheetContent>
       </Sheet>
 
-      <main className="mx-auto w-full min-w-0 max-w-[112rem] px-4 py-6 pb-16 sm:px-6 lg:px-8 lg:py-8">
+      <main className={cn("mx-auto w-full min-w-0 max-w-[112rem] px-4 py-6 sm:px-6 lg:px-8 lg:py-8", venueId ? "pb-32 lg:pb-16" : "pb-16")}>
         <Outlet />
       </main>
+
+      {venueId && <CafeTabBar venueId={venueId} />}
     </div>
   );
 }
@@ -138,6 +146,7 @@ export function App() {
             <Route path="admin/billing/:venueId" element={<RequireAdmin><VenueBilling /></RequireAdmin>} />
             <Route path="admin/amenities" element={<RequireAdmin><AmenityQueue /></RequireAdmin>} />
             <Route path="admin/amenity-reports" element={<RequireAdmin><AmenityReports /></RequireAdmin>} />
+            <Route path="admin/amenity-catalog" element={<RequireAdmin><AmenityCatalog /></RequireAdmin>} />
             <Route path="admin/reviews" element={<RequireAdmin><Moderation /></RequireAdmin>} />
             <Route path="admin/settings" element={<RequireAdmin><Settings /></RequireAdmin>} />
             <Route path="*" element={<Navigate to="/" replace />} />

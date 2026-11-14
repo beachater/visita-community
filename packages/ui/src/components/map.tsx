@@ -823,9 +823,11 @@ const positionClasses = {
   "bottom-right": "bottom-10 right-2",
 };
 
+// Same raised surface as the header and search pills, so every control that
+// floats over the map reads as one set (2026-11-14).
 function ControlGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="glass text-foreground flex flex-col overflow-hidden rounded-full p-1">
+    <div className="surface-raised text-foreground flex flex-col overflow-hidden rounded-full p-1">
       {children}
     </div>
   );
@@ -849,7 +851,7 @@ function ControlButton({
       type="button"
       className={cn(
         "flex size-11 items-center justify-center rounded-full transition-colors",
-        "hover:bg-white/70 active:bg-white/90",
+        "hover:bg-muted active:bg-accent",
         "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
         "disabled:pointer-events-none disabled:opacity-50",
       )}

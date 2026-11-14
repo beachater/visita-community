@@ -33,7 +33,7 @@ export function MobileInfoSheet({ cafe, definitions, open, onOpenChange, distanc
           onRequestDistance={onRequestDistance}
           onOpenMenu={onOpenMenu}
           accuracyReturnPath={accuracyReturnPath(cafe.slug, true)}
-          actions={<CafeActions touch onDirections={onDirections} onReviews={() => { onOpenChange(false); onOpenReviews(); }} />}
+          actions={<CafeActions touch onDirections={onDirections} onReviews={() => { onOpenChange(false); onOpenReviews(); }} onMenu={cafe.menu.length > 0 ? onOpenMenu : null} />}
         />
       </div>
     </BottomSheet>

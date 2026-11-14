@@ -14,36 +14,44 @@ interface Props { map?: boolean }
 const { map = false } = Astro.props;
 ---
 
-<header class={cn("pointer-events-none z-40", map ? "map-home-header absolute inset-x-0 top-0" : "sticky top-0 px-3")} style={`padding-top: calc(env(safe-area-inset-top, 0px) + ${map ? "1rem" : "0.75rem"})`}>
-  <div class={cn("pointer-events-auto mx-auto flex items-center gap-4", map ? "h-12 max-w-none" : "glass h-14 max-w-6xl rounded-full pr-2 pl-5")}>
-    <a href="/" class={cn("font-display text-2xl font-bold tracking-tight text-foreground", map && "glass rounded-full px-4 py-1.5 md:hidden")} aria-label="Visita home">Visita</a>
+<!-- One header everywhere (approved split header): phones get separate chips
+     (logo, then account + menu); computers get two pills, logo + nav on the
+     left and the account on the right, with the page or map showing between
+     them. map: floats over the full-screen map; other pages: sticks to the top. -->
+<header class={cn("pointer-events-none z-40", map ? "map-home-header absolute inset-x-0 top-0" : "site-header sticky top-0 px-3 md:px-4")} style={`padding-top: calc(env(safe-area-inset-top, 0px) + ${map ? "1rem" : "0.75rem"})`}>
+  <div class="pointer-events-auto mx-auto flex h-12 max-w-none items-center gap-4 md:h-16">
+    <div class="flex items-center gap-6 md:surface-raised md:h-16 md:rounded-full md:pr-2.5 md:pl-6">
+      <a href="/" class="surface-raised flex h-11 shrink-0 items-center rounded-full px-4 md:h-auto md:px-0 md:[background:none] md:shadow-none md:backdrop-blur-none" aria-label="Visita home">
+        <img src="/brand/visita-logo.svg" alt="Visita" class="h-6 w-auto md:h-8" />
+      </a>
 
-    {!map && <nav aria-label="Main" class="ml-6 hidden md:block">
-      <ul class="flex items-center gap-1">
-        {PRIMARY_NAV.map((link) => (
-          <li>
-            <a
-              href={link.href}
-              aria-current={isCurrent(link.href, path) ? "page" : undefined}
-              class={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                "text-foreground aria-[current=page]:bg-accent aria-[current=page]:font-bold",
-              )}
-            >
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>}
+      <nav aria-label="Main" class="hidden md:block">
+        <ul class="flex items-center gap-0.5 rounded-full bg-muted p-1">
+          {PRIMARY_NAV.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                aria-current={isCurrent(link.href, path) ? "page" : undefined}
+                class={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "rounded-full text-foreground hover:bg-card aria-[current=page]:bg-card aria-[current=page]:font-bold aria-[current=page]:shadow-float",
+                )}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
 
-    <div class={cn("ml-auto flex items-center gap-2", map && "glass rounded-full p-1")}>
+    <div class="surface-raised ml-auto flex items-center gap-2 rounded-full p-1 md:h-16 md:px-2.5">
       <AccountMenu server:defer next={here}>
-        <a slot="fallback" href={loginHref(here)} class={buttonVariants({ variant: "default", size: "sm" })}>Sign in</a>
+        <a slot="fallback" href={loginHref(here)} class={cn(buttonVariants({ variant: "default", size: "sm" }), "rounded-full md:h-11 md:px-5")}>Sign in</a>
       </AccountMenu>
       <button
         type="button"
-        class={cn(buttonVariants({ variant: "ghost", size: "icon" }), !map && "md:hidden")}
+        class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "md:hidden")}
         aria-label="Open menu"
         aria-haspopup="dialog"
         data-menu-open
@@ -61,7 +69,7 @@ const { map = false } = Astro.props;
     <div class="flex h-full flex-col" style="padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px)">
       <div class="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-border md:hidden" aria-hidden="true"></div>
       <div class="flex h-16 items-center justify-between px-5">
-        <span class="font-display text-2xl font-bold">Visita</span>
+        <img src="/brand/visita-logo.svg" alt="Visita" class="h-7 w-auto" />
         <button type="button" class={buttonVariants({ variant: "ghost", size: "icon" })} aria-label="Close menu" data-menu-close>
           <X className="size-6" aria-hidden="true" />
         </button>

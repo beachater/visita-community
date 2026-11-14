@@ -1,20 +1,20 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "../components/site/SiteHeader.astro";
 import { MapExplorer } from "../components/map/MapExplorer";
 
-// The app on its own: the discovery map, full screen.
+// The discovery map on its own address: the same map, list and filters as the
+// home page (approved 2026-11-14), so links to /explore open straight into it.
 export const prerender = true;
 ---
 
 <BaseLayout title="Explore" description="Find a cafe in Cagayan de Oro and step inside before you go." chrome="bare">
   <h1 class="sr-only">Explore cafes in Cagayan de Oro</h1>
-  <a
-    href="/"
-    class="glass fixed left-3 z-30 flex h-12 items-center rounded-full px-5 font-display text-lg font-bold text-foreground"
-    style="top: max(0.75rem, env(safe-area-inset-top))"
-    aria-label="Visita home"
-  >
-    Visita
-  </a>
-  <MapExplorer client:only="react" mode="full" />
+  <SiteHeader map />
+  <MapExplorer
+    client:only="react"
+    mode="hero"
+    title="Explore cafes"
+    lede="Every cafe on Visita in Cagayan de Oro. Amber pins have a 3D walkthrough you can step into."
+  />
 </BaseLayout>

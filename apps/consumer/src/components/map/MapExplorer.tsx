@@ -6,7 +6,7 @@ import { Toaster } from "@visita/ui/sonner";
 import { cn } from "@visita/ui/utils";
 import { fetchVenues, type VenuesPayload } from "@/lib/discovery/api";
 import { requestScan } from "@/lib/discovery/demand-client";
-import { activeFilterCount, activeFilterNames, applyFilters, EMPTY_FILTERS, type Filters } from "@/lib/discovery/filters";
+import { activeFilterCount, activeFilterNames, applyFilters, EMPTY_FILTERS, filterOptions, type Filters } from "@/lib/discovery/filters";
 import { track } from "@/lib/analytics/track";
 import { sortVenues, withDistance } from "@/lib/discovery/sort";
 import type { Coords } from "@/lib/venue/distance";
@@ -22,7 +22,9 @@ import { MenuSheet } from "../venue/MenuSheet";
 import { WalkthroughScreen } from "../walkthrough/WalkthroughScreen";
 import { DetailsPanel } from "./DetailsPanel";
 import { Dock } from "./Dock";
-import { FilterSheet } from "./FilterSheet";
+import { Box, SlidersHorizontal } from "lucide-react";
+import { FilterPanel, FilterSheet } from "./FilterSheet";
+import { HomeRail } from "./HomeRail";
 import { PinCard } from "./PinCard";
 import { SearchBar } from "./SearchBar";
 import { VenuePin } from "./VenuePin";
@@ -39,9 +41,12 @@ setupMapLibre();
 interface Props {
   /** "full": /explore, the whole screen. "hero": the top of the home page. */
   mode: "full" | "hero";
+  /** The list card's heading and line under it, when not the home page. */
+  title?: string;
+  lede?: string;
 }
 
-export function MapExplorer({ mode }: Props) {
+export function MapExplorer({ mode, title, lede }: Props) {
   const [data, setData] = useState<VenuesPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -61,6 +66,8 @@ export function MapExplorer({ mode }: Props) {
   const [demandPending, setDemandPending] = useState(false);
   const savedSlugs = useStore($saved);
   const desktop = useDesktop();
+  // Home on a computer: list column on the left, map on the right.
+  const railMode = mode === "hero" && desktop;
   const [reviewsOpen, setReviewsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const demandedSlugs = useStore($demanded);
@@ -78,6 +85,8 @@ export function MapExplorer({ mode }: Props) {
   // PMTiles needs an absolute URL; the basemap is served from our own domain.
   const style = useMemo(() => mapStyle(new URL(splatSrc(BASEMAP_KEY), location.href).href), []);
   const venues = data?.venues ?? [];
+  // Filters come from amenity definitions marked filterable (plus price and 24/7).
+  const options = useMemo(() => filterOptions(data?.definitions ?? []), [data]);
   const filterResult = useMemo(() => applyFilters(venues, filters, showUnknown), [venues, filters, showUnknown]);
   const visibleResult = useMemo(() => ({
     ...filterResult,
@@ -141,13 +150,16 @@ export function MapExplorer({ mode }: Props) {
     if (venue) select(venue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
-  const browseDock = data && (
+  const toggleOpenNow = () => { setOpenNow((value) => !value); setSelected(null); };
+  const toggleThreeD = () => { setThreeDOnly((value) => !value); setSelected(null); };
+  const browseDock = data && !railMode && (
     <Dock
       scanned={lists.scanned}
       topPicks={lists.topPicks}
       saved={lists.saved}
       matches={matches}
       filters={filters}
+      filterOptions={options}
       onChangeFilters={(f) => { setFilters(f); if (activeFilterCount(f) === 0) setShowUnknown(false); }}
       showUnknown={showUnknown}
       onShowUnknown={setShowUnknown}
@@ -157,9 +169,9 @@ export function MapExplorer({ mode }: Props) {
       onPick={select}
       home={mode === "hero"}
       openNow={openNow}
-      onToggleOpenNow={() => { setOpenNow((value) => !value); setSelected(null); }}
+      onToggleOpenNow={toggleOpenNow}
       threeDOnly={threeDOnly}
-      onToggleThreeD={() => { setThreeDOnly((value) => !value); setSelected(null); }}
+      onToggleThreeD={toggleThreeD}
       selected={Boolean(selectedVenue)}
     />
   );
@@ -231,8 +243,12 @@ export function MapExplorer({ mode }: Props) {
       onOpenMenu={() => setMenuOpen(true)}
       demanded={demandedSlugs.includes(selectedVenue.slug)}
       demandPending={demandPending}
+      rail={railMode}
     />
   );
+
+  const quickChip = "surface-raised pointer-events-auto inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium";
+  const quickChipOn = "bg-foreground! text-white";
 
   return (
     <div
@@ -243,6 +259,27 @@ export function MapExplorer({ mode }: Props) {
       )}
       style={{ "--map-card-h": `${cardHeight}px` } as CSSProperties}
     >
+      {railMode && data && (
+        <HomeRail
+          search={(wide) => <SearchBar venues={venues} onPick={select} rail wide={wide} />}
+          details={detailsPanel}
+          onBack={() => setSelected(null)}
+          matches={matches}
+          total={venues.length}
+          selected={selected}
+          onPick={select}
+          threeDOnly={threeDOnly}
+          onToggleThreeD={toggleThreeD}
+          openNow={openNow}
+          onToggleOpenNow={toggleOpenNow}
+          activeFilters={activeFilterCount(filters)}
+          onOpenFilters={() => setFiltersOpen((o) => !o)}
+          filtersOpen={filtersOpen}
+          title={title}
+          lede={lede}
+        />
+      )}
+      <div className="relative h-full min-w-0 overflow-hidden">
       <Toaster position="top-center" />
       <Map
         ref={attachMap}
@@ -278,15 +315,26 @@ export function MapExplorer({ mode }: Props) {
         </p>
       )}
 
-      {/* Home groups search and browse controls; /explore keeps its compact search. */}
-      <div
-        className={cn("pointer-events-none absolute z-20", mode === "hero" ? cn("map-home-search", detailsPanel && "map-home-search-panel") : "left-[6.75rem] right-3 sm:left-auto sm:w-[26rem]")}
+
+      {/* Phone home groups search, quick filters and browse; /explore keeps its compact search. */}
+      {!railMode && <div
+        className={cn("pointer-events-none absolute z-20", mode === "hero" ? "map-home-search" : "left-[6.75rem] right-3 sm:left-auto sm:w-[26rem]")}
         style={mode === "full" ? { top: "max(0.75rem, env(safe-area-inset-top))" } : undefined}
       >
         {data && <SearchBar venues={venues} onPick={select} home={mode === "hero"} />}
+        {mode === "hero" && data && (
+          <div className="mt-2.5 flex gap-2" aria-label="Quick cafe filters">
+            <button type="button" className={cn(quickChip, threeDOnly && quickChipOn)} aria-pressed={threeDOnly} onClick={toggleThreeD}>
+              <Box className="size-4" aria-hidden="true" /> 3D only
+            </button>
+            <button type="button" className={cn(quickChip, openNow && quickChipOn)} aria-pressed={openNow} onClick={toggleOpenNow}>Open now</button>
+            <button type="button" className={quickChip} onClick={() => setFiltersOpen(true)}>
+              <SlidersHorizontal className="size-4" aria-hidden="true" /> Filters{activeFilterCount(filters) > 0 && ` (${activeFilterCount(filters)})`}
+            </button>
+          </div>
+        )}
         {mode === "hero" && <div className="relative z-10">{browseDock}</div>}
-        {mode === "hero" && detailsPanel}
-      </div>
+      </div>}
 
       {/* /explore keeps search on the right, so the panel has the left to itself. */}
       {mode === "full" && detailsPanel && (
@@ -326,19 +374,38 @@ export function MapExplorer({ mode }: Props) {
         )}
         {mode === "full" && browseDock}
       </div>
+      </div>
 
-      <FilterSheet
-        open={filtersOpen}
-        onOpenChange={setFiltersOpen}
-        filters={filters}
-        onChange={(f) => {
-          setFilters(f);
-          if (activeFilterCount(f) === 0) setShowUnknown(false);
-        }}
-        result={visibleResult}
-        showUnknown={showUnknown}
-        onShowUnknown={setShowUnknown}
-      />
+      {railMode ? (
+        filtersOpen && (
+          <FilterPanel
+            onClose={() => setFiltersOpen(false)}
+            options={options}
+            filters={filters}
+            onChange={(f) => {
+              setFilters(f);
+              if (activeFilterCount(f) === 0) setShowUnknown(false);
+            }}
+            result={visibleResult}
+            showUnknown={showUnknown}
+            onShowUnknown={setShowUnknown}
+          />
+        )
+      ) : (
+        <FilterSheet
+          options={options}
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          filters={filters}
+          onChange={(f) => {
+            setFilters(f);
+            if (activeFilterCount(f) === 0) setShowUnknown(false);
+          }}
+          result={visibleResult}
+          showUnknown={showUnknown}
+          onShowUnknown={setShowUnknown}
+        />
+      )}
 
       {directions.sheet}
 

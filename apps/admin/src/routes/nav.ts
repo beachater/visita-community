@@ -7,7 +7,7 @@ import type { ClaimSummary } from "./home";
 
 export type NavIcon =
   | "cafe" | "overview" | "listing" | "events" | "reviews" | "analytics" | "billing"
-  | "claims" | "claim" | "approvals" | "venues" | "demand" | "amenities" | "reports" | "moderation" | "settings";
+  | "claims" | "claim" | "approvals" | "venues" | "demand" | "amenities" | "catalog" | "reports" | "moderation" | "settings";
 
 export interface NavItem {
   to: string;
@@ -30,7 +30,7 @@ export interface NavClaim extends ClaimSummary {
   proposedName: string | null;
 }
 
-const venuePages = (base: string): NavItem[] => [
+export const venuePages = (base: string): NavItem[] => [
   { to: base, label: "Overview", icon: "overview", end: true },
   { to: `${base}/listing`, label: "Listing", icon: "listing" },
   { to: `${base}/events`, label: "Events", icon: "events" },
@@ -46,6 +46,7 @@ const ADMIN: NavItem[] = [
   { to: "/admin/billing", label: "Billing", icon: "billing" },
   { to: "/admin/amenities", label: "Amenity changes", icon: "amenities" },
   { to: "/admin/amenity-reports", label: "Amenity reports", icon: "reports" },
+  { to: "/admin/amenity-catalog", label: "Amenities & filters", icon: "catalog" },
   { to: "/admin/reviews", label: "Reviews", icon: "moderation" },
   { to: "/admin/settings", label: "Settings", icon: "settings" },
 ];
@@ -72,4 +73,52 @@ export function navFor({ isAdmin, claims }: { isAdmin: boolean; claims: NavClaim
   });
   if (isAdmin) groups.push({ label: "Admin", items: ADMIN });
   return groups;
+}
+
+/** Which queue a sidebar count belongs to. */
+export type QueueKey = "approvals" | "amenities" | "reports";
+
+export interface AdminItem extends NavItem {
+  queue?: QueueKey;
+}
+
+/**
+ * The admin console's sidebar (approved owner/admin workspaces, 2026-11-14):
+ * the same pages as ADMIN, grouped by what they're for. Queues show how many
+ * items are waiting.
+ */
+export const ADMIN_GROUPS: { label: string; items: AdminItem[] }[] = [
+  {
+    label: "Queues",
+    items: [
+      { to: "/admin/approvals", label: "Owner approvals", icon: "approvals", queue: "approvals" },
+      { to: "/admin/amenities", label: "Amenity changes", icon: "amenities", queue: "amenities" },
+      { to: "/admin/amenity-reports", label: "Amenity reports", icon: "reports", queue: "reports" },
+      { to: "/admin/demand", label: "Demand queue", icon: "demand" },
+      { to: "/admin/reviews", label: "Reviews", icon: "moderation" },
+    ],
+  },
+  {
+    label: "Catalog",
+    items: [
+      { to: "/admin/venues", label: "Venues", icon: "venues" },
+      { to: "/admin/amenity-catalog", label: "Amenities & filters", icon: "catalog" },
+      { to: "/admin/billing", label: "Billing", icon: "billing" },
+    ],
+  },
+  { label: "System", items: [{ to: "/admin/settings", label: "Settings", icon: "settings" }] },
+];
+
+/**
+ * Which workspace a page belongs to. Admins work in the admin console; the
+ * cafe pages (and claims) are the cafe workspace, which an admin can open to
+ * see exactly what an owner sees.
+ */
+export function workspaceFor(isAdmin: boolean, pathname: string): "admin" | "cafe" {
+  return isAdmin && (pathname === "/" || pathname.startsWith("/admin")) ? "admin" : "cafe";
+}
+
+/** The cafe a /venue/<id>/… path is about, if any. */
+export function venueIdFrom(pathname: string): string | null {
+  return /^\/venue\/([0-9a-f-]{36})(?:\/|$)/i.exec(pathname)?.[1] ?? null;
 }

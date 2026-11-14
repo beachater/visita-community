@@ -1,0 +1,42 @@
+import {
+  CalendarDays,
+  ChartColumn,
+  CirclePlus,
+  ClipboardList,
+  Coffee,
+  CreditCard,
+  Eye,
+  FileText,
+  Flag,
+  LayoutDashboard,
+  ListChecks,
+  MessageSquare,
+  MessageSquareWarning,
+  Settings,
+  ShieldCheck,
+  SlidersHorizontal,
+  Store,
+  type LucideIcon,
+} from "lucide-react";
+import type { NavIcon } from "@/routes/nav";
+
+/** The glyph for each sidebar icon name (routes/nav.ts). */
+export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
+  cafe: Coffee,
+  overview: LayoutDashboard,
+  listing: FileText,
+  events: CalendarDays,
+  reviews: MessageSquare,
+  analytics: ChartColumn,
+  billing: CreditCard,
+  claims: ClipboardList,
+  claim: CirclePlus,
+  approvals: ShieldCheck,
+  venues: Store,
+  demand: Eye,
+  amenities: ListChecks,
+  catalog: SlidersHorizontal,
+  reports: Flag,
+  moderation: MessageSquareWarning,
+  settings: Settings,
+};

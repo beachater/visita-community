@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Link, Outlet, useParams } from "react-router";
-import { ExternalLink } from "lucide-react";
+import { ArrowLeftRight, Eye } from "lucide-react";
 import type { MenuItem, VenueAmenities, VenueType, WeeklyHours } from "@visita/shared-types";
-import { Button } from "@visita/ui/button";
-import { CONSUMER_URL, supabase } from "@/lib/supabase";
+import { useAuth } from "@/auth/AuthProvider";
+import { supabase } from "@/lib/supabase";
 
 // An approved owner's area for one venue (PRD 4.4): overview and occupancy,
 // the listing (menu, hours, amenities), events, and reviews. RLS decides what
@@ -39,6 +39,10 @@ export function useVenue(): VenueState {
 export function VenueLayout() {
   const { venueId = "" } = useParams();
   const [venue, setVenue] = useState<OwnedVenue | null | undefined>(undefined);
+  const { access } = useAuth();
+  // The cafe's name and identity live in the sidebar; an admin who doesn't
+  // own this cafe is previewing the owner's view.
+  const previewing = Boolean(access?.isAdmin) && !access?.claims.some((c) => c.venueId === venueId && c.status === "approved");
 
   const reload = useCallback(async () => {
     const { data } = await supabase
@@ -76,26 +80,24 @@ export function VenueLayout() {
   return (
     <VenueContext.Provider value={{ venue, reload }}>
       <div className="grid gap-6">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div className="grid gap-1">
-            <h1 className="font-display text-3xl font-bold">{venue.name}</h1>
-            {venue.address && <p className="text-muted-foreground">{venue.address}</p>}
-            <p className="text-sm">
-              {venue.is_published ? (
-                <span className="text-success">Live on Visita</span>
-              ) : (
-                <span className="text-muted-foreground">Not published yet. Visita's team publishes new listings after a first check.</span>
-              )}
+        {previewing && (
+          // An admin seeing a cafe they don't own: always say whose view this is.
+          <div role="status" className="flex flex-wrap items-center gap-3 rounded-[1.75rem] bg-scan py-2.5 pr-2.5 pl-5 text-white shadow-card sm:rounded-full">
+            <Eye className="size-4.5 shrink-0 text-gold" aria-hidden="true" />
+            <p className="min-w-0 flex-1 text-sm">
+              <b>Previewing as the owner of {venue.name}.</b>{" "}
+              <span className="text-mist">This is their view. Changes you make here are real and go live.</span>
             </p>
+            <Link to="/admin/approvals" className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-foreground hover:bg-cloud">
+              <ArrowLeftRight className="size-4" aria-hidden="true" /> Back to admin
+            </Link>
           </div>
-          {venue.is_published && (
-            <Button asChild variant="outline">
-              <a href={`${CONSUMER_URL}/cafe/${venue.slug}`} target="_blank" rel="noopener">
-                <ExternalLink /> View your listing
-              </a>
-            </Button>
-          )}
-        </header>
+        )}
+        {!venue.is_published && (
+          <p className="rounded-[1.25rem] bg-card px-4 py-3 text-sm text-muted-foreground shadow-card">
+            Not published yet. Visita's team publishes new listings after a first check.
+          </p>
+        )}
         <Outlet />
       </div>
     </VenueContext.Provider>
