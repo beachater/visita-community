@@ -49,9 +49,15 @@
   .site-menu.closing { animation-name: menu-bottom-exit; }
   @keyframes menu-bottom-enter { from { transform: translateY(100%); } to { transform: translateY(0); } }
   @keyframes menu-bottom-exit { from { transform: translateY(0); } to { transform: translateY(100%); } }
+  /* The map credit and buttons sit just above the cafe sheet, whatever its
+     height (--peek-h is measured by the sheet; it grows while the privacy
+     notice is inside it). */
   .map-home .maplibregl-ctrl-bottom-right {
-    bottom: calc(15rem + var(--consent-h, 0px) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--peek-h, 14rem) + 0.5rem + var(--consent-h, 0px));
   }
+  /* Phone home: the privacy notice lives inside the cafe sheet instead of a
+     bar over it. If the sheet is closed (a cafe is selected), the bar shows. */
+  body:has(.map-home-peek) #consent-banner { display: none; }
   .map-home-selected .maplibregl-ctrl-bottom-right {
     bottom: calc(1rem + var(--map-card-h, 0px) + var(--consent-h, 0px));
   }
@@ -67,7 +73,7 @@
   right: calc(var(--map-overlay-inset) + env(safe-area-inset-right, 0px));
 }
 .map-home-controls {
-  bottom: calc(16rem + var(--consent-h, 0px) + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(var(--peek-h, 14rem) + 2.5rem + var(--consent-h, 0px)) !important;
   right: calc(var(--map-overlay-inset) + env(safe-area-inset-right, 0px)) !important;
 }
 .map-home-controls-selected {
@@ -136,6 +142,14 @@
 }
 @media (min-width: 1024px) {
   body:has(.map-home) #consent-banner { left: 28.25rem; width: 27.5rem; }
+}
+/* List folded: the notice takes the left column under the folded bar (same
+   width and edge as the bar) instead of floating where the card used to end. */
+@media (min-width: 768px) {
+  html[data-list-folded] body:has(.map-home) #consent-banner { left: 1rem; width: 22rem; }
+}
+@media (min-width: 1024px) {
+  html[data-list-folded] body:has(.map-home) #consent-banner { width: 26.25rem; }
 }
 
 /* Long-form reading text (legal pages, About, FAQ). */

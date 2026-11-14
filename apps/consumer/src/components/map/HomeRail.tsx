@@ -52,6 +52,15 @@ export function HomeRail(props: Props) {
     setCollapsedState(value);
     try { localStorage.setItem(COLLAPSED_KEY, value ? "1" : "0"); } catch { /* private mode */ }
   };
+  // Tell the page the list is folded, so the privacy notice can take the
+  // left column (global.css, html[data-list-folded]).
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.toggleAttribute("data-list-folded", collapsed);
+    return () => {
+      root.removeAttribute("data-list-folded");
+    };
+  }, [collapsed]);
   // Picking a pin on the map while folded opens the card on that cafe.
   useEffect(() => {
     if (props.details && collapsed) setCollapsedState(false);
