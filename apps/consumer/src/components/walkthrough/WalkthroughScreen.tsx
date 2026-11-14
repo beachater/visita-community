@@ -21,7 +21,7 @@ import { MobileInfoSheet } from "./MobileInfoSheet";
 import { WalkthroughReviews } from "../reviews/WalkthroughReviews";
 import { SplatViewer, type SplatViewerHandle } from "./SplatViewer";
 
-// PRD 4.2 in one screen: the 3D walkthrough full-screen, a glass info panel
+// PRD 4.2 in one screen: the 3D walkthrough full-screen, a solid info panel
 // on the left, save and share at the top, the menu in a sheet, and
 // directions handed off to a maps app. Used by the cafe page now and by the
 // map overlay later.
@@ -186,7 +186,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
 
       <button
         type="button"
-        className="glass-dark absolute right-4 left-4 z-10 flex min-h-[66px] items-center gap-3 rounded-[1.2rem] border border-white/25 px-4 py-2 text-left text-glass-foreground shadow-[0_10px_30px_rgba(0,20,36,0.35)] backdrop-blur-xl md:hidden"
+        className="panel-dark absolute right-4 left-4 z-10 flex min-h-[66px] items-center gap-3 rounded-[1.2rem] border border-white/25 px-4 py-2 text-left text-glass-foreground shadow-[0_10px_30px_rgba(0,20,36,0.35)] md:hidden"
         style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
         aria-label={`Show details about ${cafe.name}`}
         aria-expanded={infoOpen}

@@ -1,8 +1,8 @@
 ---
 import { cn } from "@visita/ui/utils";
 
-// Frosted panel that floats over the 3D scan (the walkthrough info panel,
-// map overlays). Readable over any part of the room.
+// Reading panel that floats over the 3D scan (the walkthrough info panel,
+// map overlays): near-solid Deep Navy, so text never sits on the moving room.
 interface Props {
   class?: string;
   as?: "div" | "section" | "aside";
@@ -14,7 +14,7 @@ const { class: className, as: Tag = "div", label } = Astro.props;
 <Tag
   aria-label={label}
   class={cn(
-    "glass-dark rounded-card text-glass-foreground",
+    "panel-dark rounded-card text-glass-foreground",
     className,
   )}
 >
