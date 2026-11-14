@@ -25,7 +25,7 @@ const initial = label.trim().charAt(0).toUpperCase() || "?";
 
 {
   user ? (
-    <a href="/me" class="inline-flex items-center gap-2 rounded-full p-0.5 pr-3 text-sm font-medium hover:bg-accent" aria-label={`Your account (${label})`}>
+    <a href="/me" class="inline-flex items-center gap-2 rounded-full p-0.5 text-sm font-medium hover:bg-accent sm:pr-3" aria-label={`Your account (${label})`}>
       {avatar ? (
         <img src={avatar} alt="" width="32" height="32" class="size-8 rounded-full object-cover" referrerpolicy="no-referrer" />
       ) : (
