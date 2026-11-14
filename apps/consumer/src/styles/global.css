@@ -25,7 +25,8 @@
 }
 .map-home-header {
   padding-left: calc(var(--map-overlay-inset) + env(safe-area-inset-left, 0px));
-  padding-right: calc(var(--map-account-inset) + env(safe-area-inset-right, 0px));
+  /* Same inset on both sides, like every other floating control. */
+  padding-right: calc(var(--map-overlay-inset) + env(safe-area-inset-right, 0px));
 }
 
 /* The native menu stays in the top layer and slides from the screen edge. */

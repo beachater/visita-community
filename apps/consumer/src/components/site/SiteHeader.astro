@@ -45,13 +45,13 @@ const { map = false } = Astro.props;
       </nav>
     </div>
 
-    <div class="surface-raised ml-auto flex items-center gap-2 rounded-full p-1 md:h-16 md:px-2.5">
+    <div class="surface-raised ml-auto flex h-11 items-center gap-1 rounded-full px-1 md:h-16 md:gap-2 md:px-2.5">
       <AccountMenu server:defer next={here}>
         <a slot="fallback" href={loginHref(here)} class={cn(buttonVariants({ variant: "default", size: "sm" }), "rounded-full md:h-11 md:px-5")}>Sign in</a>
       </AccountMenu>
       <button
         type="button"
-        class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "md:hidden")}
+        class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-9 rounded-full md:hidden")}
         aria-label="Open menu"
         aria-haspopup="dialog"
         data-menu-open
