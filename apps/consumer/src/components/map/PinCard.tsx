@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { BadgeCheck, Box, Check, Eye, Navigation, X } from "lucide-react";
+import { ArrowRight, BadgeCheck, Box, Check, Eye, Navigation, X } from "lucide-react";
 import type { AmenityDefinition } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
 import { cn } from "@visita/ui/utils";
@@ -59,6 +59,9 @@ export function PinCard({ venue, definitions, distance, onClose, onWalkthrough, 
       </div>
 
       {venue.address && <p className="text-sm text-muted-foreground">{venue.address}</p>}
+      <a href={`/cafe/${venue.slug}`} className="inline-flex min-h-9 w-fit items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        See full page <ArrowRight className="size-4" aria-hidden="true" />
+      </a>
 
       {strip.length > 0 && (
         <dl className="grid grid-cols-3 gap-2 border-t pt-3">

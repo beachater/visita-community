@@ -30,12 +30,14 @@ interface Props {
   definitions: AmenityDefinition[];
   profile: DeviceProfile;
   onClose: () => void;
+  /** Opened over the map: link the phone sheet to the cafe's own page. */
+  fullPageHref?: string | null;
 }
 
 const glassButton =
   "glass-dark size-11 border-0 hover:text-glass-foreground hover:brightness-125";
 
-export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props) {
+export function WalkthroughScreen({ cafe, definitions, profile, onClose, fullPageHref }: Props) {
   const saved = useStore($saved).includes(cafe.slug);
   const [menuOpen, setMenuOpenState] = useState(false);
   const [reviewsOpen, setReviewsOpenState] = useState(false);
@@ -222,6 +224,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
         onDirections={() => { setInfoOpen(false); onDirections(); }}
         onOpenMenu={() => { backToInfo.current = true; setInfoOpen(false); setMenuOpen(true); }}
         onOpenReviews={() => { backToInfo.current = true; setReviewsOpen(true); }}
+        fullPageHref={fullPageHref}
       />
 
       <WalkthroughReviews slug={cafe.slug} cafeName={cafe.name} open={reviewsOpen} onOpenChange={setReviewsOpen} />

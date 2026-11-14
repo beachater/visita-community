@@ -65,6 +65,7 @@ export function DetailsPanel({ venue, definitions, distance, onClose, onWalkthro
         onRequestDistance={null}
         onOpenMenu={onOpenMenu}
         accuracyReturnPath={mapReturnPath(venue.slug)}
+        fullPageHref={`/cafe/${venue.slug}`}
         actions={<CafeActions primary={primary} onDirections={actions.includes("directions") ? onDirections : null} onReviews={onOpenReviews} onMenu={venue.menu.length > 0 ? onOpenMenu : null} saveSlug={venue.slug} />}
       />
     </aside>

@@ -417,7 +417,7 @@ export function MapExplorer({ mode, title, lede }: Props) {
       )}
 
       {walkthroughCafe && data && (
-        <WalkthroughScreen cafe={walkthroughCafe} definitions={data.definitions} profile={profile} onClose={closeWalkthrough} />
+        <WalkthroughScreen cafe={walkthroughCafe} definitions={data.definitions} profile={profile} onClose={closeWalkthrough} fullPageHref={`/cafe/${walkthroughCafe.slug}`} />
       )}
     </div>
   );
