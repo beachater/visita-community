@@ -37,8 +37,20 @@ const glassButton =
 
 export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props) {
   const saved = useStore($saved).includes(cafe.slug);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [menuOpen, setMenuOpenState] = useState(false);
+  const [reviewsOpen, setReviewsOpenState] = useState(false);
+  // Opened from the phone details sheet? Then closing Menu or Reviews goes
+  // back to that sheet instead of all the way out to the walkthrough.
+  const backToInfo = useRef(false);
+  const closeChild = (set: (open: boolean) => void) => (open: boolean) => {
+    set(open);
+    if (!open && backToInfo.current) {
+      backToInfo.current = false;
+      setInfoOpen(true);
+    }
+  };
+  const setMenuOpen = closeChild(setMenuOpenState);
+  const setReviewsOpen = closeChild(setReviewsOpenState);
   const [infoOpen, setInfoOpen] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches && new URLSearchParams(window.location.search).get("walkthrough") === "1",
   );
@@ -143,7 +155,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
     >
       <Toaster position="top-center" />
 
-      <SplatViewer ref={viewerRef} src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} experience={cafe.scanExperience} />
+      <SplatViewer ref={viewerRef} cafeName={cafe.name} src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} experience={cafe.scanExperience} />
       {jumping && <div className="pointer-events-none absolute inset-0 z-10 bg-scan/80" aria-hidden="true" />}
       {stops.length > 0 && <nav aria-label="Cafe tour stops" className="absolute bottom-[max(5rem,env(safe-area-inset-bottom))] left-1/2 z-20 md:left-[calc(50%+var(--panel-w)/2+0.375rem)] flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#042c53]/80 p-1 text-white shadow-lg backdrop-blur-md">
         <Button variant="ghost" size="icon-sm" className="text-white hover:text-white" aria-label="Previous stop" disabled={jumping || stopIndex <= 0} onClick={() => goToStop(stopIndex - 1)}><ChevronLeft /></Button>
@@ -208,8 +220,8 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
         distance={distance}
         onRequestDistance={hasCoords ? () => void measure(true) : null}
         onDirections={() => { setInfoOpen(false); onDirections(); }}
-        onOpenMenu={() => { setInfoOpen(false); setMenuOpen(true); }}
-        onOpenReviews={() => setReviewsOpen(true)}
+        onOpenMenu={() => { backToInfo.current = true; setInfoOpen(false); setMenuOpen(true); }}
+        onOpenReviews={() => { backToInfo.current = true; setReviewsOpen(true); }}
       />
 
       <WalkthroughReviews slug={cafe.slug} cafeName={cafe.name} open={reviewsOpen} onOpenChange={setReviewsOpen} />

@@ -67,7 +67,8 @@ export function WalkthroughReviews({ slug, cafeName, open, onOpenChange }: { slu
         {error && <p role="alert" className="text-sm text-destructive">{error} <button type="button" className="underline" onClick={refresh}>Retry</button></p>}
         {!data && !error && <p className="text-sm text-muted-foreground">Loading reviews…</p>}
         {data && <>
-          <div className="flex items-center justify-between gap-3">
+          {/* Phones stack the summary over the button; wider screens put them side by side. */}
+          <div className="grid gap-3 sm:flex sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">{average ? `★ ${average} · ${count} ${count === 1 ? "review" : "reviews"}` : "No reviews yet. Be the first."}</p>
             <ReviewSheet slug={slug} cafeName={cafeName} signedIn={data.signedIn} loginHref={`/auth/login?next=${encodeURIComponent(`/cafe/${slug}?review=1`)}`} existing={data.own} onSaved={refresh} />
           </div>

@@ -205,3 +205,12 @@
     vertical-align: top;
   }
 }
+
+/* Walkthrough (approved 2026-11-14): the movement pad sits above the phone's
+   cafe card and tour stops, and at the bottom of the room on computers. The
+   loader pulses gently while a download hasn't reported its size. */
+.walkthrough-move-pad { bottom: calc(env(safe-area-inset-bottom, 0px) + 9.5rem); }
+@media (min-width: 768px) { .walkthrough-move-pad { bottom: 1.5rem; } }
+@keyframes splat-breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.splat-loader-breathe { animation: splat-breathe 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .splat-loader-breathe { animation: none; } }
