@@ -102,6 +102,8 @@ jobs:
         env:
           PUBLIC_SUPABASE_URL: https://${{ vars.SUPABASE_PROJECT_REF }}.supabase.co
           PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+          # Unset until the board adds it; the app then keeps external directions.
+          PUBLIC_GOOGLE_MAPS_EMBED_KEY: ${{ vars.GOOGLE_MAPS_EMBED_KEY }}
         run: pnpm --filter @visita/consumer build
       - name: Build admin Worker
         env:

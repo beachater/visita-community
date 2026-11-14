@@ -17,6 +17,7 @@ import { DemandQueue } from "@/pages/admin/DemandQueue";
 import { BillingList } from "@/pages/admin/billing/BillingList";
 import { VenueBilling } from "@/pages/admin/billing/VenueBilling";
 import { Moderation } from "@/pages/admin/Moderation";
+import { Settings } from "@/pages/admin/Settings";
 import { VenueForm } from "@/pages/admin/VenueForm";
 import { ScanWorkspace } from "@/pages/admin/ScanWorkspace";
 import { Venues } from "@/pages/admin/Venues";
@@ -138,6 +139,7 @@ export function App() {
             <Route path="admin/amenities" element={<RequireAdmin><AmenityQueue /></RequireAdmin>} />
             <Route path="admin/amenity-reports" element={<RequireAdmin><AmenityReports /></RequireAdmin>} />
             <Route path="admin/reviews" element={<RequireAdmin><Moderation /></RequireAdmin>} />
+            <Route path="admin/settings" element={<RequireAdmin><Settings /></RequireAdmin>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

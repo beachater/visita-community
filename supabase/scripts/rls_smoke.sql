@@ -820,5 +820,33 @@ do $$ begin
 end $$;
 select pg_temp.pass('review summary of a cafe without reviews is zero with no average');
 
+-- Platform settings: one row, readable by everyone, changed only by admins.
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  assert (select count(*) from public.platform_settings) = 1, 'anon should see the one settings row';
+  assert (select in_app_directions from public.platform_settings) = false, 'in-app directions should start off';
+end $$;
+select pg_temp.expect_error($q$update public.platform_settings set in_app_directions = true$q$, 'anon cannot change platform settings');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+update public.platform_settings set in_app_directions = true;
+do $$ begin assert (select in_app_directions from public.platform_settings) = false, 'a visitor changed platform settings'; end $$;
+select pg_temp.pass('visitors cannot change platform settings');
+select pg_temp.expect_error($q$insert into public.platform_settings (id) values (true)$q$, 'nobody can add a second settings row');
+select pg_temp.expect_error($q$delete from public.platform_settings$q$, 'visitors cannot delete the settings row');
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+update public.platform_settings set in_app_directions = true;
+do $$ begin
+  assert (select in_app_directions from public.platform_settings) = true, 'admin could not turn in-app directions on';
+  assert (select updated_by from public.platform_settings) = '33333333-3333-3333-3333-333333333333', 'updated_by not stamped';
+end $$;
+select pg_temp.pass('admins change platform settings');
+select pg_temp.expect_error($q$update public.platform_settings set updated_by = null$q$, 'only the flag columns are writable');
+reset role;
+
 rollback;
 \echo ALL RLS SMOKE TESTS PASSED
