@@ -4,8 +4,8 @@ import { assetUrl, listingUrl, loadVenue, toEmbedVenue, venueQuery, venueSlug, V
 const config: EmbedConfig = {
   supabaseUrl: "https://example.supabase.co/",
   publishableKey: "sb_publishable_test",
-  assetsBaseUrl: "https://visita.ph/assets/",
-  siteUrl: "https://visita.ph/",
+  assetsBaseUrl: "https://visita.today/assets/",
+  siteUrl: "https://visita.today/",
 };
 
 const experience = {
@@ -37,13 +37,13 @@ describe("venueSlug", () => {
 
 describe("urls", () => {
   it("joins keys onto the assets base", () => {
-    expect(assetUrl("splats/a/v1.sog", "https://visita.ph/assets/")).toBe("https://visita.ph/assets/splats/a/v1.sog");
-    expect(assetUrl("/splats/a/v1.sog", "https://visita.ph/assets")).toBe("https://visita.ph/assets/splats/a/v1.sog");
-    expect(assetUrl("https://cdn.example/x.sog", "https://visita.ph/assets")).toBe("https://cdn.example/x.sog");
+    expect(assetUrl("splats/a/v1.sog", "https://visita.today/assets/")).toBe("https://visita.today/assets/splats/a/v1.sog");
+    expect(assetUrl("/splats/a/v1.sog", "https://visita.today/assets")).toBe("https://visita.today/assets/splats/a/v1.sog");
+    expect(assetUrl("https://cdn.example/x.sog", "https://visita.today/assets")).toBe("https://cdn.example/x.sog");
   });
   it("links the badge to the listing, or the home page without a venue", () => {
-    expect(listingUrl("https://visita.ph/", "sonnys")).toBe("https://visita.ph/cafe/sonnys");
-    expect(listingUrl("https://visita.ph/", null)).toBe("https://visita.ph");
+    expect(listingUrl("https://visita.today/", "sonnys")).toBe("https://visita.today/cafe/sonnys");
+    expect(listingUrl("https://visita.today/", null)).toBe("https://visita.today");
   });
   it("asks only for published cafes", () => {
     const url = new URL(venueQuery(config, "sonnys"));
@@ -59,8 +59,8 @@ describe("toEmbedVenue", () => {
     expect(toEmbedVenue(row, config.assetsBaseUrl)).toEqual({
       slug: "sonnys",
       name: "Sonny's",
-      src: "https://visita.ph/assets/splats/sonnys/v1.sog",
-      previewSrc: "https://visita.ph/assets/splats/sonnys/v1-preview.sog",
+      src: "https://visita.today/assets/splats/sonnys/v1.sog",
+      previewSrc: "https://visita.today/assets/splats/sonnys/v1-preview.sog",
       experience,
     });
   });
