@@ -48,7 +48,9 @@ create policy "admins change platform settings" on public.platform_settings
   using ((select public.is_admin()))
   with check ((select public.is_admin()));
 
--- Explicit grants: hosted projects don't grant new tables by default. Only the
--- flag columns are writable; RLS limits updates to admins.
+-- Explicit grants: hosted projects don't grant new tables by default, while the
+-- local stack grants everything, so revoke first and both end up the same.
+-- Only the flag columns are writable; RLS limits updates to admins.
+revoke insert, update, delete, truncate on public.platform_settings from anon, authenticated;
 grant select on public.platform_settings to anon, authenticated;
 grant update (in_app_directions) on public.platform_settings to authenticated;
