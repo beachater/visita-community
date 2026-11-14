@@ -34,7 +34,7 @@ export function BottomSheet({ title, description, trigger, open, onOpenChange, f
           <SheetTitle className="font-display text-xl">{title}</SheetTitle>
           {description ? <SheetDescription>{description}</SheetDescription> : <SheetDescription className="sr-only">{title}</SheetDescription>}
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5">{children}</div>
+        <div className="scroll-soft flex-1 overflow-y-auto overscroll-contain px-5 pb-5">{children}</div>
         {footer && <div className="border-t px-5 py-3">{footer}</div>}
       </SheetContent>
     </Sheet>

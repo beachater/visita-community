@@ -3,10 +3,11 @@ import { Box, ChevronUp, Compass, Heart, SlidersHorizontal, Star } from "lucide-
 import { BottomSheet } from "@visita/ui/bottom-sheet";
 import { Label } from "@visita/ui/label";
 import { Switch } from "@visita/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@visita/ui/select";
 import { cn } from "@visita/ui/utils";
 import type { MapVenue } from "@/lib/discovery/venues";
-import { EMPTY_FILTERS, type Filters } from "@/lib/discovery/filters";
+import { EMPTY_FILTERS, type FilterOption, type Filters } from "@/lib/discovery/filters";
+import { FilterControls } from "./FilterControls";
+import { isOpenAt } from "@/lib/venue/hours";
 import { VenueList } from "./VenueList";
 
 // PRD 4.1 dock: 3D Layout (every scanned cafe), Filter, Top Picks (flagged per
@@ -20,6 +21,7 @@ interface Props {
   saved: (MapVenue & { distance: string | null })[];
   matches: (MapVenue & { distance: string | null })[];
   filters: Filters;
+  filterOptions: FilterOption[];
   onChangeFilters: (filters: Filters) => void;
   showUnknown: boolean;
   onShowUnknown: (show: boolean) => void;
@@ -35,7 +37,7 @@ interface Props {
   selected?: boolean;
 }
 
-export function Dock({ scanned, topPicks, saved, matches, filters, onChangeFilters, showUnknown, onShowUnknown, hiddenForMissingData, activeFilters, onOpenFilters, onPick, home = false, openNow = false, onToggleOpenNow, threeDOnly = false, onToggleThreeD, selected = false }: Props) {
+export function Dock({ scanned, topPicks, saved, matches, filters, filterOptions, onChangeFilters, showUnknown, onShowUnknown, hiddenForMissingData, activeFilters, onOpenFilters, onPick, home = false, openNow = false, onToggleOpenNow, threeDOnly = false, onToggleThreeD, selected = false }: Props) {
   const [panel, setPanel] = useState<Panel>(null);
   const pick = (v: MapVenue) => {
     setPanel(null);
@@ -43,19 +45,35 @@ export function Dock({ scanned, topPicks, saved, matches, filters, onChangeFilte
   };
 
   const pill =
-    "glass pointer-events-auto inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium hover:bg-white/80";
+    "surface-raised pointer-events-auto inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium hover:bg-muted";
 
   if (home) return (
     <>
-      <button type="button" className={cn(pill, "hidden w-fit md:inline-flex")} onClick={() => setPanel("browse")}>
-        <Compass className="size-4" aria-hidden="true" /> Find cafes
-        {activeFilters > 0 && <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{activeFilters}</span>}
-      </button>
-      {!selected && <button type="button" className="map-home-browse glass pointer-events-auto flex items-center gap-3 text-left md:hidden" onClick={() => setPanel("browse")}>
-        <span className="grid size-10 shrink-0 place-items-center rounded-card bg-accent text-primary"><Compass className="size-5" aria-hidden="true" /></span>
-        <span className="min-w-0 flex-1"><strong className="block text-sm">Find a cafe</strong><small className="block text-xs text-muted-foreground">{matches.length} matching cafes · browse and filter</small></span>
-        <ChevronUp className="size-5 shrink-0" aria-hidden="true" />
-      </button>}
+      {/* Phone peek: the cafes you can step inside, as cards. "See all" opens the full list. */}
+      {!selected && <section aria-label="Cafes" className="map-home-peek pointer-events-auto grid gap-3 md:hidden">
+        <div className="mx-auto h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
+        <div className="flex items-baseline justify-between gap-3 px-4.5">
+          <h2 className="text-xl">{scanned.length > 0 ? "Step inside before you go" : "Cafes in CDO"}</h2>
+          <button type="button" className="inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-primary" onClick={() => setPanel("browse")}>See all {matches.length}</button>
+        </div>
+        <ul className="flex gap-2.5 overflow-x-auto px-4.5 pb-1 [scrollbar-width:none]">
+          {(scanned.length > 0 ? scanned : matches).slice(0, 8).map((v) => {
+            const open = isOpenAt(v.hours, new Date());
+            return (
+              <li key={v.slug} className="shrink-0">
+                <button type="button" className="flex w-56 flex-col gap-2 rounded-[1.25rem] border border-accent bg-card p-2.5 text-left" onClick={() => onPick(v)}>
+                  <span className={cn("relative grid h-20 place-items-center rounded-2xl", v.scanned ? "bg-foreground" : "bg-accent")}>
+                    <Box className={cn("size-7", v.scanned ? "text-[var(--brand-gold)]" : "text-primary")} strokeWidth={1.6} aria-hidden="true" />
+                    {v.scanned && <span className="absolute top-2 left-2 rounded-full bg-verified px-2 py-0.5 text-[0.7rem] font-bold text-verified-foreground">3D</span>}
+                  </span>
+                  <strong className="truncate text-[0.95rem]">{v.name}</strong>
+                  <small className="truncate text-xs text-muted-foreground">{[open === null ? null : open ? "Open now" : "Closed", v.distance].filter(Boolean).join(" · ") || "Hours not listed yet"}</small>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>}
       <BottomSheet open={panel === "browse"} onOpenChange={(o) => !o && setPanel(null)} title="Find a cafe" description={`${matches.length} ${matches.length === 1 ? "cafe" : "cafes"} match`}>
         <div className="grid gap-3 py-1">
           <div className="grid grid-cols-2 gap-2" aria-label="Quick cafe filters">
@@ -65,9 +83,7 @@ export function Dock({ scanned, topPicks, saved, matches, filters, onChangeFilte
           <details className="rounded-card border px-4 py-3">
             <summary className="flex cursor-pointer items-center gap-2 font-medium"><SlidersHorizontal className="size-4" /> More filters {activeFilters > 0 && `(${activeFilters})`}</summary>
             <div className="grid gap-4 pt-4">
-              <div className="grid gap-2"><Label htmlFor="find-price">Menu prices up to</Label><Select value={filters.priceMax === null ? "any" : String(filters.priceMax)} onValueChange={(v) => onChangeFilters({ ...filters, priceMax: v === "any" ? null : Number(v) })}><SelectTrigger id="find-price"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="any">Any price</SelectItem>{[100, 150, 200, 300, 500].map((p) => <SelectItem key={p} value={String(p)}>₱{p}</SelectItem>)}</SelectContent></Select></div>
-              <div className="grid gap-2"><Label htmlFor="find-outlets">Power outlets</Label><Select value={filters.minOutlets === null ? "any" : String(filters.minOutlets)} onValueChange={(v) => onChangeFilters({ ...filters, minOutlets: v === "any" ? null : Number(v) })}><SelectTrigger id="find-outlets"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="any">Any</SelectItem>{[1, 3, 5, 10].map((n) => <SelectItem key={n} value={String(n)}>{n} or more</SelectItem>)}</SelectContent></Select></div>
-              {([ ["wifi", "Wi-Fi available"], ["open247", "Open 24/7"], ["outdoor", "Outdoor area"], ["parking", "Parking"] ] as const).map(([key, label]) => <div key={key} className="flex items-center justify-between gap-4"><Label htmlFor={`find-${key}`}>{label}</Label><Switch id={`find-${key}`} checked={filters[key]} onCheckedChange={(checked) => onChangeFilters({ ...filters, [key]: checked })} /></div>)}
+              <FilterControls options={filterOptions} filters={filters} onChange={onChangeFilters} />
               {hiddenForMissingData > 0 && <div className="flex items-center justify-between gap-4"><Label htmlFor="find-unknown">Include {hiddenForMissingData} {hiddenForMissingData === 1 ? "cafe" : "cafes"} with missing details</Label><Switch id="find-unknown" checked={showUnknown} onCheckedChange={onShowUnknown} /></div>}
               {activeFilters > 0 && <button type="button" className="text-left text-sm font-medium text-primary underline" onClick={() => onChangeFilters(EMPTY_FILTERS)}>Clear filters</button>}
             </div>
@@ -108,7 +124,7 @@ export function Dock({ scanned, topPicks, saved, matches, filters, onChangeFilte
       </nav>
 
       {home && <>
-        {!selected && <button type="button" className="map-home-browse glass pointer-events-auto flex items-center gap-3 text-left md:hidden" onClick={() => setPanel("browse")}>
+        {!selected && <button type="button" className="map-home-browse surface-raised pointer-events-auto flex items-center gap-3 text-left md:hidden" onClick={() => setPanel("browse")}>
           <span className="grid size-10 shrink-0 place-items-center rounded-card bg-accent text-primary"><Compass className="size-5" aria-hidden="true" /></span>
           <span className="min-w-0 flex-1"><strong className="block text-sm">Explore CDO</strong><small className="block text-xs text-muted-foreground">Browse cafes and top picks</small></span>
           <ChevronUp className="size-5 shrink-0" aria-hidden="true" />

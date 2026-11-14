@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { currentOccupancy, OCCUPANCY_LABEL, type OccupancyLevel, type OccupancyRow } from "@visita/shared-types";
-import { Button } from "@visita/ui/button";
 import { cn } from "@visita/ui/utils";
 import { supabase } from "@/lib/supabase";
 
@@ -13,6 +12,8 @@ const LEVELS: { level: OccupancyLevel; hint: string }[] = [
   { level: "moderate", hint: "Some seats free" },
   { level: "full", hint: "Hard to find a seat" },
 ];
+
+const DOT: Record<OccupancyLevel, string> = { quiet: "bg-success", moderate: "bg-gold", full: "bg-destructive" };
 
 const clock = (iso: string) => new Intl.DateTimeFormat("en-PH", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" }).format(new Date(iso));
 
@@ -46,36 +47,44 @@ export function OccupancyButtons({ venueId }: { venueId: string }) {
 
   const current = currentOccupancy(row, now);
   return (
-    <section aria-labelledby="occ-h" className="grid gap-3 rounded-card border bg-card shadow-card p-5">
-      <div>
-        <h2 id="occ-h" className="text-lg font-semibold">
-          How busy is it right now?
-        </h2>
-        <p className="text-sm text-muted-foreground">
+    <section aria-labelledby="occ-h" className="grid gap-3.5 rounded-card bg-card p-5 shadow-card sm:p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 id="occ-h" className="font-display text-lg">Right now</h2>
+        <p className="text-[0.8rem] text-muted-foreground">
           {current && row
             ? `Showing "${OCCUPANCY_LABEL[current.level]}", set ${current.ago}. It clears at ${clock(row.expires_at)}.`
-            : "Nothing showing. Tap one and visitors see it for the next three hours."}
+            : "Nothing showing. Tap one and visitors see it on your page and in the walkthrough for three hours."}
         </p>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3" role="group" aria-label="Occupancy">
-        {LEVELS.map(({ level, hint }) => (
-          <Button
-            key={level}
-            variant={current?.level === level ? "default" : "outline"}
-            className={cn("h-auto flex-col items-start gap-0.5 py-3")}
-            aria-pressed={current?.level === level}
-            disabled={busy}
-            onClick={() => void set(level)}
-          >
-            <span className="text-base font-semibold">{OCCUPANCY_LABEL[level]}</span>
-            <span className="text-xs font-normal opacity-80">{hint}</span>
-          </Button>
-        ))}
+      {/* The daily tap: three big tiles, one colour dot each. */}
+      <div className="grid gap-2.5 sm:grid-cols-3" role="group" aria-label="How busy is it right now?">
+        {LEVELS.map(({ level, hint }) => {
+          const on = current?.level === level;
+          return (
+            <button
+              key={level}
+              type="button"
+              aria-pressed={on}
+              disabled={busy}
+              onClick={() => void set(level)}
+              className={cn(
+                "flex min-h-16 items-center gap-3 rounded-[1.25rem] px-5 text-left transition-colors disabled:opacity-70",
+                on ? "bg-scan text-white" : "bg-muted text-foreground hover:bg-accent",
+              )}
+            >
+              <span className={cn("size-3 shrink-0 rounded-full", DOT[level])} aria-hidden="true" />
+              <span className="grid">
+                <span className="text-base font-semibold">{OCCUPANCY_LABEL[level]}</span>
+                <span className={cn("text-xs", on ? "text-mist" : "text-muted-foreground")}>{hint}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
       {current && (
-        <Button variant="ghost" size="sm" className="w-fit" disabled={busy} onClick={() => void set(null)}>
+        <button type="button" className="w-fit rounded-full px-3 py-1.5 text-sm font-semibold text-primary hover:bg-accent disabled:opacity-60" disabled={busy} onClick={() => void set(null)}>
           Clear
-        </Button>
+        </button>
       )}
     </section>
   );

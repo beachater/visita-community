@@ -33,7 +33,7 @@ export function InfoPanel({ cafe, definitions, distance, onRequestDistance, onDi
         onRequestDistance={onRequestDistance}
         onOpenMenu={onOpenMenu}
         accuracyReturnPath={accuracyReturnPath(cafe.slug, true)}
-        actions={<CafeActions onDirections={onDirections} onReviews={onOpenReviews} />}
+        actions={<CafeActions tone="dark" onDirections={onDirections} onReviews={onOpenReviews} onMenu={cafe.menu.length > 0 ? onOpenMenu : null} />}
       />
     </aside>
   );

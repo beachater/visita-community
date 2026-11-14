@@ -1,0 +1,181 @@
+---
+// For cafes "What you get" (approved 2026-11-14): a numbered list beside a
+// stage that shows each benefit in motion. While on screen it moves to the
+// next benefit every few seconds, pausing on hover or keyboard focus; picking
+// a benefit shows it. With reduced motion it stays put and nothing animates.
+// Copy: BEA-9 rev 2; heading approved with the redesign.
+
+const items = [
+  { title: "A 3D walkthrough of your cafe.", body: "We visit and scan your space. Visitors can walk through it in their browser, with no app to download." },
+  { title: "An amber pin on the map.", body: "Scanned cafes stand out on the Visita map of Cagayan de Oro, so they're the ones people notice first." },
+  { title: "A listing you control.", body: "Update your menu and prices, opening hours and events whenever you like. Tap once to show whether you're quiet, moderate or full right now." },
+  { title: "See what's working.", body: "See how many people viewed your page, opened your walkthrough and tapped for directions, and which hours are busiest." },
+  { title: "Reply to reviews.", body: "Thank your regulars and answer questions in public." },
+];
+const pin = "M17 1C8 1 1 8 1 16.6 1 28.5 17 43 17 43S33 28.5 33 16.6C33 8 26 1 17 1Z";
+---
+
+<section aria-labelledby="what-you-get" class="benefits grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16" data-active="0">
+  <div class="grid gap-6 lg:order-1">
+    <div class="grid gap-2.5">
+      <p class="text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase">What you get</p>
+      <h2 id="what-you-get" class="text-3xl leading-[1.08] sm:text-[2.5rem]">Everything a visitor checks, in one place.</h2>
+    </div>
+    <ol class="grid border-b border-mist">
+      {items.map((item, i) => (
+        <li class="benefit relative border-t border-mist" data-index={i}>
+          <span class="prog absolute inset-x-0 -top-px h-0.5 origin-left bg-foreground" aria-hidden="true"></span>
+          <button type="button" class="grid w-full grid-cols-[2.25rem_1fr] gap-x-3 py-4 text-left sm:grid-cols-[3.5rem_1fr] sm:gap-x-4 sm:py-4.5" aria-expanded={i === 0 ? "true" : "false"} aria-controls={`benefit-body-${i}`}>
+            <span class="pt-1 font-display text-sm text-primary sm:pt-1.5 sm:text-[0.95rem]">0{i + 1}</span>
+            <span class="font-display text-[1.2rem] leading-tight sm:text-[1.625rem]">{item.title}</span>
+          </button>
+          <p id={`benefit-body-${i}`} class="body pr-2 pl-[3rem] text-sm leading-relaxed text-muted-foreground sm:pl-[4.5rem] sm:text-[0.95rem]">{item.body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  <div class="stage relative h-75 overflow-hidden rounded-[1.75rem] bg-scan shadow-card sm:h-[26rem] lg:order-2 lg:h-[32.5rem] lg:rounded-[2rem]" aria-hidden="true">
+    <!-- 1. The room, drifting as if looking around -->
+    <div class="scene" data-scene="0">
+      <svg viewBox="0 0 520 400" preserveAspectRatio="xMidYMid slice" class="drift absolute -inset-[6%] h-[112%] w-[112%]"><path d="M0 400 L150 230 L370 230 L520 400Z" fill="#0B3B6B" /><path d="M150 230 L150 60 L370 60 L370 230Z" fill="#0E4478" /><path d="M0 0 L150 60 L150 230 L0 400Z" fill="#093561" /><path d="M520 0 L370 60 L370 230 L520 400Z" fill="#093561" /><rect x="190" y="130" width="60" height="100" rx="6" fill="#185FA5" /><rect x="270" y="150" width="70" height="22" rx="6" fill="#FAC775" opacity=".5" /></svg>
+      <span class="absolute top-4 left-4 rounded-full bg-verified px-3 py-1.5 text-xs font-bold text-verified-foreground">Scanned in 3D</span>
+    </div>
+    <!-- 2. The amber pin dropping onto the map -->
+    <div class="scene" data-scene="1">
+      <svg viewBox="0 0 520 400" preserveAspectRatio="xMidYMid slice" class="absolute inset-0 size-full"><rect width="520" height="400" fill="#EEF2F5" /><path d="M300 0 C330 80 420 100 520 90 L520 0Z" fill="#A9D6EE" /><path d="M260 400 C270 300 240 230 265 150 C285 90 300 40 320 0" stroke="#A9D6EE" stroke-width="16" fill="none" /><g stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"><path d="M0 170 C150 160 300 190 520 200" /><path d="M380 400 C370 300 390 200 420 80" /><path d="M0 300 C200 290 350 310 520 290" /></g></svg>
+      <svg viewBox="0 0 34 44" class="absolute top-[26%] left-[22%] h-10 w-8 opacity-80"><path d={pin} fill="#042C53" stroke="#fff" stroke-width="2" /><circle cx="17" cy="16" r="5.5" fill="#fff" /></svg>
+      <svg viewBox="0 0 34 44" class="absolute top-[56%] left-[72%] h-10 w-8 opacity-80"><path d={pin} fill="#042C53" stroke="#fff" stroke-width="2" /><circle cx="17" cy="16" r="5.5" fill="#fff" /></svg>
+      <span class="ripple absolute top-[calc(38%+3.25rem)] left-[calc(46%+0.5rem)] h-3 w-8 rounded-[50%] border-2 border-verified"></span>
+      <svg viewBox="0 0 34 44" class="pinfall absolute top-[38%] left-[46%] h-15 w-12"><path d={pin} fill="#EF9F27" stroke="#fff" stroke-width="2" /><circle cx="17" cy="16" r="6" fill="#042C53" /></svg>
+    </div>
+    <!-- 3. Quiet / moderate / full, and a menu line typing in -->
+    <div class="scene bg-muted" data-scene="2">
+      <div class="absolute inset-x-[10%] top-[16%] grid gap-3.5">
+        <p class="font-display text-xl">Right now</p>
+        <div class="relative grid h-13 grid-cols-3 items-center rounded-full bg-card text-center text-sm font-semibold shadow-float">
+          <span class="occ absolute inset-y-1.5 left-1.5 w-[calc(33.33%-0.375rem)] rounded-full bg-foreground"></span>
+          <span class="occ-label">Quiet</span><span class="occ-label">Moderate</span><span class="occ-label">Full</span>
+        </div>
+        <span class="h-3 w-4/5 rounded-full bg-accent"></span>
+        <span class="h-3 w-3/5 rounded-full bg-accent"></span>
+        <span class="typing h-3 rounded-full bg-mist"></span>
+      </div>
+    </div>
+    <!-- 4. Busiest hours, bars growing -->
+    <div class="scene bg-card" data-scene="3">
+      <div class="absolute inset-x-[10%] inset-y-[14%] flex flex-col gap-3.5">
+        <p class="font-display text-xl">Busiest hours</p>
+        <div class="flex flex-1 items-end gap-2.5 border-b-2 border-accent">
+          {[30, 48, 72, 94, 66, 40, 22].map((h, i) => <span class="bar flex-1 rounded-t-[10px] rounded-b-sm" style={`--h:${h}%;animation-delay:${i * 0.1}s`} data-peak={h === 94 ? "" : undefined}></span>)}
+        </div>
+        <div class="flex justify-between text-xs text-muted-foreground"><span>8 AM</span><span>12 NN</span><span>4 PM</span><span>8 PM</span></div>
+      </div>
+    </div>
+    <!-- 5. A question, then the owner's reply arriving -->
+    <div class="scene bg-muted" data-scene="4">
+      <div class="absolute inset-x-[9%] top-[18%] flex flex-col gap-3.5">
+        <p class="max-w-[78%] self-start rounded-[1.25rem] rounded-bl-md bg-card px-4 py-3.5 text-[0.95rem] leading-normal shadow-float">Is there space for a group of six on weekends?</p>
+        <div class="reply max-w-[78%] self-end rounded-[1.25rem] rounded-br-md bg-primary px-4 py-3.5 text-primary-foreground">
+          <span class="mb-1 block text-xs font-bold opacity-80">Reply from the owner</span>
+          <span class="dots inline-flex gap-1.5"><i></i><i></i><i></i></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scene { position: absolute; inset: 0; overflow: hidden; opacity: 0; transform: translateY(1rem) scale(0.985); transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .benefits[data-active="0"] [data-scene="0"],
+  .benefits[data-active="1"] [data-scene="1"],
+  .benefits[data-active="2"] [data-scene="2"],
+  .benefits[data-active="3"] [data-scene="3"],
+  .benefits[data-active="4"] [data-scene="4"] { opacity: 1; transform: none; }
+
+  .benefit { opacity: 0.4; transition: opacity 0.3s ease; }
+  .benefit .prog { transform: scaleX(0); }
+  .benefits[data-active="0"] [data-index="0"],
+  .benefits[data-active="1"] [data-index="1"],
+  .benefits[data-active="2"] [data-index="2"],
+  .benefits[data-active="3"] [data-index="3"],
+  .benefits[data-active="4"] [data-index="4"] { opacity: 1; }
+  .benefit .body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .benefits[data-active="0"] [data-index="0"] .body,
+  .benefits[data-active="1"] [data-index="1"] .body,
+  .benefits[data-active="2"] [data-index="2"] .body,
+  .benefits[data-active="3"] [data-index="3"] .body,
+  .benefits[data-active="4"] [data-index="4"] .body { max-height: 8rem; padding-bottom: 1.125rem; }
+  .benefit.timing .prog { animation: fill var(--step, 5s) linear forwards; }
+  @keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  .drift { animation: drift 8s ease-in-out infinite; }
+  @keyframes drift { 0%, 100% { transform: none; } 50% { transform: translate(-3%, -2%) scale(1.04); } }
+  .pinfall { animation: pinfall 4s cubic-bezier(0.3, 0.7, 0.3, 1) infinite; }
+  @keyframes pinfall { 0%, 12% { transform: translateY(-140px); opacity: 0; } 24% { transform: none; opacity: 1; } 30% { transform: translateY(-10px); } 36%, 100% { transform: none; opacity: 1; } }
+  .ripple { opacity: 0; animation: ripple 4s ease-out infinite; }
+  @keyframes ripple { 0%, 24% { transform: scale(0.2); opacity: 0; } 30% { opacity: 0.6; } 60%, 100% { transform: scale(2.4); opacity: 0; } }
+  .occ { animation: occ 4s cubic-bezier(0.6, 0, 0.3, 1) infinite; }
+  @keyframes occ { 0%, 28% { transform: none; } 36%, 62% { transform: translateX(100%); } 70%, 100% { transform: translateX(200%); } }
+  .occ-label { position: relative; color: #fff; mix-blend-mode: difference; }
+  .typing { width: 58%; animation: type 4s steps(18) infinite; }
+  @keyframes type { 0% { width: 0; } 60%, 100% { width: 58%; } }
+  .bar { height: var(--h); background: var(--brand-mist); animation: grow 4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
+  .bar[data-peak] { background: var(--brand-ocean); }
+  @keyframes grow { 0% { height: 0; } 35%, 100% { height: var(--h); } }
+  .reply { animation: reply 4s ease-out infinite; }
+  @keyframes reply { 0%, 20% { opacity: 0; transform: translateY(12px); } 35%, 100% { opacity: 1; transform: none; } }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: dot 1s infinite; }
+  .dots i:nth-child(2) { animation-delay: 0.15s; }
+  .dots i:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes dot { 0%, 100% { opacity: 0.3; transform: none; } 50% { opacity: 1; transform: translateY(-3px); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scene, .benefit, .benefit .body { transition: none; }
+    .drift, .pinfall, .ripple, .occ, .typing, .bar, .reply, .dots i, .benefit.timing .prog { animation: none; }
+    .ripple { display: none; }
+  }
+</style>
+
+<script>
+  const STEP_MS = 5000;
+  for (const root of document.querySelectorAll<HTMLElement>(".benefits")) {
+    const items = [...root.querySelectorAll<HTMLElement>(".benefit")];
+    const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let active = 0;
+    let timer: number | undefined;
+    let visible = false;
+    let held = false;
+
+    const show = (i: number) => {
+      active = i;
+      root.dataset.active = String(i);
+      items.forEach((el, n) => {
+        el.querySelector("button")?.setAttribute("aria-expanded", String(n === i));
+        // Restart the progress line on the active benefit.
+        el.classList.remove("timing");
+        if (n === i && !calm && visible && !held) {
+          void el.offsetWidth;
+          el.classList.add("timing");
+        }
+      });
+    };
+    const stop = () => { window.clearInterval(timer); timer = undefined; items.forEach((el) => el.classList.remove("timing")); };
+    const start = () => {
+      if (calm || held || !visible || timer) return;
+      root.style.setProperty("--step", `${STEP_MS}ms`);
+      show(active);
+      timer = window.setInterval(() => show((active + 1) % items.length), STEP_MS);
+    };
+
+    items.forEach((el, i) => el.querySelector("button")?.addEventListener("click", () => { stop(); show(i); start(); }));
+    root.addEventListener("pointerenter", () => { held = true; stop(); });
+    root.addEventListener("pointerleave", () => { held = false; start(); });
+    root.addEventListener("focusin", () => { held = true; stop(); });
+    root.addEventListener("focusout", (e) => { if (!root.contains(e.relatedTarget as Node | null)) { held = false; start(); } });
+    new IntersectionObserver(([entry]) => {
+      visible = Boolean(entry?.isIntersecting);
+      if (visible) start(); else stop();
+    }, { threshold: 0.35 }).observe(root);
+  }
+</script>

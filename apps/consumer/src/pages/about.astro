@@ -1,28 +1,19 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import PageHeader from "../components/kit/PageHeader.astro";
 import AmberCta from "../components/kit/AmberCta.astro";
+import HonestByDesign from "../components/marketing/HonestByDesign.astro";
 
 export const prerender = true;
 
-// Copy: BEA-9 `copy` document, revision 2 (approved 13 Nov 2026).
-const differences = [
-  {
-    title: "Real scans, not edited photos.",
-    body: "We visit each cafe and scan the whole room. What you walk through is the space as it was on scan day: no filters, no staging, no clever angles.",
-  },
-  {
-    title: "The scan date is always visible.",
-    body: "Every walkthrough shows when it was scanned. If a scan is more than a year old, we show that too.",
-  },
-  {
-    title: "If we don't know, we say nothing.",
-    body: "If we haven't checked the Wi-Fi or counted the outlets, that detail stays off the page. We'd rather leave a blank than guess.",
-  },
-  {
-    title: "A preview, not a replacement.",
-    body: "Visita won't replace the smell of fresh coffee or the feel of your favourite corner seat. It just helps you pick the right place to go.",
-  },
+// Approved redesign (2026-11-14). Copy: BEA-9 `copy` document, revision 2,
+// plus the headings, the logo section and buttons approved with the redesign.
+// The logo meanings summarise the brand's logo brief (pin, V, speech bubble).
+
+const eyebrow = "text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase";
+const marks = [
+  { name: "The pin", color: "#F20D0D", body: "The exact place on the map, so you arrive where you meant to." },
+  { name: "The V", color: "#EE7603", body: "Warm, Filipino hospitality: a mark that says “I was here”." },
+  { name: "The bubble", color: "#E19D10", body: "The people behind every place: reviews, tips and shared stories." },
 ];
 ---
 
@@ -31,49 +22,65 @@ const differences = [
   title="About Visita · See inside Cagayan de Oro's cafes before you go"
   description="Visita lets you walk through real, unedited 3D scans of CDO cafes in your browser, so you know what a place is like before you go."
 >
-  <main class="mx-auto max-w-6xl px-4 py-10">
-    <PageHeader
-      eyebrow="About Visita"
-      title="See the cafe before you go."
-      lede="Visita lets you walk through Cagayan de Oro's cafes in 3D, right in your browser, before you spend the fare to get there."
-    >
-      <p class="text-sm font-medium tracking-wide text-muted-foreground">Step Inside From Anywhere</p>
-      <div class="pt-4">
-        <AmberCta href="/explore">Explore cafes</AmberCta>
+  <main class="mx-auto grid max-w-6xl gap-16 px-4 pt-10 pb-10 sm:gap-24 md:pt-16">
+    <!-- Hero: the full logo and tagline, centred -->
+    <section class="mx-auto grid max-w-3xl justify-items-center gap-4 text-center sm:gap-5">
+      <img src="/brand/visita-logo.svg" alt="Visita" class="h-15 w-auto sm:h-22" />
+      <p class="-mt-1 text-[0.95rem] font-medium text-primary sm:text-lg">Step Inside From Anywhere</p>
+      <h1 class="mt-3 max-w-[16ch] text-[2.25rem] leading-[1.05] tracking-[-0.03em] sm:text-6xl">See the cafe before you go.</h1>
+      <p class="max-w-[56ch] text-base leading-relaxed text-muted-foreground sm:text-lg">
+        Visita lets you walk through Cagayan de Oro's cafes in 3D, right in your browser, before you spend the fare to get there.
+      </p>
+      <AmberCta href="/explore" class="mt-2 h-14 w-full rounded-full px-8 text-base font-bold sm:w-auto">Explore cafes</AmberCta>
+    </section>
+
+    <!-- Story: the problem, then the one-line answer -->
+    <section aria-labelledby="why" class="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+      <div class="grid content-start gap-2.5">
+        <p class={eyebrow}>Why we built Visita</p>
+        <h2 id="why" class="text-3xl leading-[1.08] sm:text-[2.5rem]">Too many photos. No way to check.</h2>
       </div>
-    </PageHeader>
+      <div class="grid gap-4 text-base leading-[1.7] sm:text-lg">
+        <p>You've probably done this: found a cafe on TikTok or Facebook that looked calm and spacious, took a jeep across town, and walked into a small, packed room with no free outlets.</p>
+        <p class="text-muted-foreground">The problem isn't a lack of photos. There are too many photos and too many angles, and you can't tell which ones show the place as it is today. What's missing is a way to check.</p>
+        <p class="mt-1 font-display text-2xl tracking-[-0.02em] text-primary sm:text-3xl">Visita is that check.</p>
+      </div>
+    </section>
 
-    <div class="prose-visita">
-      <h2>Why we built Visita</h2>
-      <p>
-        You've probably done this: found a cafe on TikTok or Facebook that looked calm and spacious, took a jeep across town, and walked into a small, packed room
-        with no free outlets.
-      </p>
-      <p>
-        The problem isn't a lack of photos. There are too many photos and too many angles, and you can't tell which ones show the place as it is today. What's
-        missing is a way to check.
-      </p>
-      <p>Visita is that check.</p>
+    <HonestByDesign />
 
-      <h2>What makes it different</h2>
-    </div>
-    <ul class="mt-6 grid max-w-4xl gap-4 sm:grid-cols-2">
-      {
-        differences.map((d) => (
-          <li class="rounded-card bg-card p-6 shadow-card">
-            <h3 class="font-bold">{d.title}</h3>
-            <p class="mt-2 leading-relaxed text-muted-foreground">{d.body}</p>
-          </li>
-        ))
-      }
-    </ul>
+    <!-- The mark: what the logo stands for -->
+    <section aria-labelledby="mark" class="grid gap-6 rounded-[1.75rem] bg-scan p-6 sm:rounded-[2rem] sm:p-14 lg:grid-cols-[16.25rem_minmax(0,1fr)] lg:items-center lg:gap-14">
+      <span class="grid size-30 place-items-center rounded-[2rem] bg-[#004aad] lg:size-65 lg:rounded-[4rem]">
+        <img src="/brand/visita-mark.svg" alt="The Visita mark" class="w-[4.5rem] lg:w-40" />
+      </span>
+      <div class="grid gap-6">
+        <div class="grid gap-2">
+          <p class={`${eyebrow} text-mist`}>The mark</p>
+          <h2 id="mark" class="text-3xl leading-[1.08] text-white sm:text-[2.5rem]">Three shapes, one V.</h2>
+        </div>
+        <ul class="grid gap-5 sm:grid-cols-3 sm:gap-6">
+          {marks.map((m) => (
+            <li class="grid grid-cols-[0.875rem_1fr] gap-x-3 gap-y-1 sm:grid-cols-1 sm:gap-2">
+              <span class="mt-1 size-3.5 rounded-full sm:size-4" style={`background:${m.color}`} aria-hidden="true"></span>
+              <h3 class="font-display text-base text-white sm:text-xl">{m.name}</h3>
+              <p class="col-start-2 text-sm leading-relaxed text-mist sm:col-start-auto sm:text-[0.95rem]">{m.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
 
-    <div class="prose-visita">
-      <h2>Made in CDO</h2>
-      <p>
-        Visita started in Cagayan de Oro, and that's where we're building it, one cafe at a time. If a cafe you love isn't scanned yet,
-        tap <strong>"I want to see inside"</strong> on its page. That tells us which cafes to visit next.
-      </p>
-    </div>
+    <!-- Made in CDO -->
+    <section aria-labelledby="cdo" class="grid gap-4 rounded-[1.75rem] bg-card p-6 shadow-card sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-10 sm:rounded-[2rem] sm:px-14 sm:py-12">
+      <div class="grid gap-3">
+        <h2 id="cdo" class="text-2xl sm:text-[2.125rem]">Made in CDO</h2>
+        <p class="max-w-[60ch] leading-[1.7] text-muted-foreground">
+          Visita started in Cagayan de Oro, and that's where we're building it, one cafe at a time. If a cafe you love isn't scanned yet,
+          tap <strong class="text-foreground">“I want to see inside”</strong> on its page. That tells us which cafes to visit next.
+        </p>
+      </div>
+      <a href="/explore" class="inline-flex h-13 items-center justify-center rounded-full bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90">Find a cafe to request</a>
+    </section>
   </main>
 </BaseLayout>

@@ -1,0 +1,66 @@
+---
+// About "What makes it different" (approved 2026-11-14): four large
+// statements instead of cards. When the section scrolls into view they rise
+// in one after another, an amber line draws under the heading, and a soft
+// scanning beam sweeps down. Everything is visible without the motion
+// (no script, reduced motion). Copy: BEA-9 rev 2.
+
+const rows = [
+  { title: "Real scans, not edited photos.", body: "We visit each cafe and scan the whole room. What you walk through is the space as it was on scan day: no filters, no staging, no clever angles." },
+  { title: "The scan date is always visible.", body: "Every walkthrough shows when it was scanned. If a scan is more than a year old, we show that too." },
+  { title: "If we don't know, we say nothing.", body: "If we haven't checked the Wi-Fi or counted the outlets, that detail stays off the page. We'd rather leave a blank than guess." },
+  { title: "A preview, not a replacement.", body: "Visita won't replace the smell of fresh coffee or the feel of your favourite corner seat. It just helps you pick the right place to go." },
+];
+---
+
+<section aria-labelledby="different" class="honest relative grid gap-4 overflow-hidden sm:gap-5">
+  <span class="beam" aria-hidden="true"></span>
+  <div class="grid gap-2.5">
+    <p class="text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase">What makes it different</p>
+    <h2 id="different" class="w-fit text-3xl leading-[1.08] sm:text-[2.5rem]">
+      Honest by design.
+      <span class="uline mt-1.5 block h-[3px] rounded-full bg-verified" aria-hidden="true"></span>
+    </h2>
+  </div>
+  <ol class="border-b border-mist">
+    {rows.map((r, i) => (
+      <li class="rise grid gap-2 border-t border-mist py-4.5 sm:py-7.5 lg:grid-cols-[4.5rem_minmax(0,1.25fr)_minmax(0,1fr)] lg:items-baseline lg:gap-8" style={`--i:${i}`}>
+        <span class="font-display text-[0.8rem] text-primary sm:text-base">0{i + 1}</span>
+        <h3 class="font-display text-2xl leading-[1.12] tracking-[-0.025em] sm:text-4xl sm:tracking-[-0.03em]">{r.title}</h3>
+        <p class="text-sm leading-relaxed text-muted-foreground sm:text-base">{r.body}</p>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  /* Motion only once the script marks the section as in view. */
+  .honest.ready .rise { opacity: 0.2; transform: translateY(24px); }
+  .honest.ready .uline { transform: scaleX(0); }
+  .honest.seen .rise { opacity: 1; transform: none; transition: opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1); transition-delay: calc(0.25s + var(--i) * 0.3s); }
+  .uline { transform-origin: left; }
+  .honest.seen .uline { transform: scaleX(1); transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s; }
+  .beam {
+    position: absolute; left: -2%; right: -2%; height: 90px; top: -12%; opacity: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(55, 138, 221, 0), rgba(55, 138, 221, 0.14) 70%, rgba(55, 138, 221, 0.5) 98%, rgba(55, 138, 221, 0));
+  }
+  .honest.seen .beam { animation: beam 6s cubic-bezier(0.45, 0, 0.55, 1) 0.4s infinite; }
+  @keyframes beam { 0% { top: -12%; opacity: 0; } 12%, 88% { opacity: 1; } 100% { top: 105%; opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .honest.ready .rise, .honest.seen .rise { opacity: 1; transform: none; transition: none; }
+    .honest.ready .uline { transform: none; }
+    .honest.seen .beam { animation: none; }
+  }
+</style>
+
+<script>
+  for (const el of document.querySelectorAll<HTMLElement>(".honest")) {
+    el.classList.add("ready");
+    new IntersectionObserver((entries, obs) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        el.classList.add("seen");
+        obs.disconnect();
+      }
+    }, { threshold: 0.2 }).observe(el);
+  }
+</script>

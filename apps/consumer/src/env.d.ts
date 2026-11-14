@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly PUBLIC_ASSETS_BASE_URL?: string;
   /** Google Maps Embed API key. Unset = no in-app directions, even with the admin setting on. */
   readonly PUBLIC_GOOGLE_MAPS_EMBED_KEY?: string;
+  /** The owner and admin app, for "Claim your cafe". Empty = /contact. */
+  readonly PUBLIC_OWNER_APP_URL?: string;
 }
 
 // Wrangler cannot infer deployed secrets from wrangler.jsonc during CI type

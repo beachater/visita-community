@@ -11,7 +11,8 @@ export const prerender = true;
   description="Step inside a cafe before you go. Real, unedited 3D walkthroughs of cafes in Cagayan de Oro."
   chrome="bare"
 >
-  <h1 class="sr-only">Visita: step inside with confidence</h1>
+  <h1 class="sr-only">Visita: step inside from anywhere</h1>
+  <!-- The map fills the screen; the header, list and controls float over it. -->
   <SiteHeader map />
   <MapExplorer client:only="react" mode="hero" />
 </BaseLayout>

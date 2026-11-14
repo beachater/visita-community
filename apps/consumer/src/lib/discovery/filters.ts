@@ -1,32 +1,62 @@
-import type { AmenityEntry } from "@visita/shared-types";
+import type { AmenityDefinition, AmenityEntry } from "@visita/shared-types";
 import { WEEKDAYS } from "../venue/hours";
 import type { MapVenue } from "./venues";
 
-// PRD 4.1 filters: price range, minimum outlets, Wi-Fi, open 24/7, outdoor,
-// parking. Each one answers match, fail or unknown for a venue. A cafe that
-// doesn't list something being filtered on is hidden rather than guessed at,
-// with a one-tap "show them anyway" that brings back only the unknowns,
-// never a cafe that fails.
+// PRD 4.1 filters. Two are built in because they come from the menu and the
+// hours, not from amenities: menu price and open 24/7. Every other filter
+// comes from `amenity_definitions` rows with `is_filterable = true`: a yes/no
+// amenity becomes a "must have" toggle, a number amenity a "N or more" choice.
+// Turning a filter on or off is a data change, not a deploy.
+//
+// Each filter answers match, fail or unknown for a venue. A cafe that doesn't
+// list something being filtered on is hidden rather than guessed at, with a
+// one-tap "show them anyway" that brings back only the unknowns, never a
+// cafe that fails.
 
 export interface Filters {
   priceMin: number | null;
   priceMax: number | null;
-  minOutlets: number | null;
-  wifi: boolean;
   open247: boolean;
-  outdoor: boolean;
-  parking: boolean;
+  /** Yes/no amenities that must be yes, by amenity key ("wifi"). */
+  required: string[];
+  /** Number amenities with a minimum, by amenity key ({ power_outlets: 3 }). */
+  minimums: Record<string, number>;
 }
 
 export const EMPTY_FILTERS: Filters = {
   priceMin: null,
   priceMax: null,
-  minOutlets: null,
-  wifi: false,
   open247: false,
-  outdoor: false,
-  parking: false,
+  required: [],
+  minimums: {},
 };
+
+/** One amenity filter, built from its definition. */
+export interface FilterOption {
+  key: string;
+  label: string;
+  icon: string | null;
+  kind: "flag" | "minimum";
+  /** "N or more" choices for a number amenity. */
+  steps: number[];
+}
+
+export const PRICE_CAPS = [100, 150, 200, 300, 500];
+const DEFAULT_STEPS = [1, 3, 5, 10];
+
+/** The amenity filters to offer, in the definitions' order. */
+export function filterOptions(definitions: AmenityDefinition[]): FilterOption[] {
+  return definitions
+    .filter((d) => d.is_filterable && d.is_active && (d.value_type === "boolean" || d.value_type === "number"))
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((d) => ({
+      key: d.key,
+      label: d.label,
+      icon: d.icon,
+      kind: d.value_type === "boolean" ? "flag" : "minimum",
+      steps: DEFAULT_STEPS,
+    }));
+}
 
 type Verdict = "match" | "fail" | "unknown";
 
@@ -52,14 +82,12 @@ function verdicts(v: MapVenue, f: Filters): Verdict[] {
     }
   }
 
-  if (f.minOutlets !== null) {
-    const n = v.amenities.power_outlets?.value;
-    out.push(typeof n === "number" ? (n >= f.minOutlets ? "match" : "fail") : "unknown");
+  for (const [key, min] of Object.entries(f.minimums)) {
+    const n = v.amenities[key]?.value;
+    out.push(typeof n === "number" ? (n >= min ? "match" : "fail") : "unknown");
   }
 
-  if (f.wifi) out.push(flag(v.amenities.wifi));
-  if (f.outdoor) out.push(flag(v.amenities.outdoor));
-  if (f.parking) out.push(flag(v.amenities.parking));
+  for (const key of f.required) out.push(flag(v.amenities[key]));
 
   if (f.open247) {
     const h = v.hours;
@@ -96,28 +124,35 @@ export function applyFilters(venues: MapVenue[], f: Filters, showUnknown: boolea
 }
 
 export function activeFilterCount(f: Filters): number {
-  return (
-    Number(f.priceMin !== null || f.priceMax !== null) +
-    Number(f.minOutlets !== null) +
-    Number(f.wifi) +
-    Number(f.open247) +
-    Number(f.outdoor) +
-    Number(f.parking)
-  );
+  return Number(f.priceMin !== null || f.priceMax !== null) + Number(f.open247) + f.required.length + Object.keys(f.minimums).length;
 }
 
-/** Names of the active filters, for analytics ("which filters brought people in"). */
-export const FILTER_NAMES = ["price", "outlets", "wifi", "open247", "outdoor", "parking"] as const;
-export type FilterName = (typeof FILTER_NAMES)[number];
+/** Turn one amenity filter on or off. */
+export function toggleRequired(f: Filters, key: string): Filters {
+  return { ...f, required: f.required.includes(key) ? f.required.filter((k) => k !== key) : [...f.required, key] };
+}
 
-export function activeFilterNames(f: Filters): FilterName[] {
-  const on: Record<FilterName, boolean> = {
-    price: f.priceMin !== null || f.priceMax !== null,
-    outlets: f.minOutlets !== null,
-    wifi: f.wifi,
-    open247: f.open247,
-    outdoor: f.outdoor,
-    parking: f.parking,
-  };
-  return FILTER_NAMES.filter((n) => on[n]);
+/** Set or clear (null) a number amenity's minimum. */
+export function setMinimum(f: Filters, key: string, min: number | null): Filters {
+  const minimums = { ...f.minimums };
+  if (min === null) delete minimums[key];
+  else minimums[key] = min;
+  return { ...f, minimums };
+}
+
+// Analytics names ("which filters brought people in"): "price", "open247",
+// and the amenity key. Older names are kept so owner charts stay continuous.
+const ANALYTICS_ALIAS: Record<string, string> = { power_outlets: "outlets" };
+const FILTER_NAME = /^[a-z][a-z0-9_]{0,39}$/;
+
+/** Whether a name sent by the browser is a well-formed filter name. */
+export const isFilterName = (name: string): boolean => FILTER_NAME.test(name);
+
+export function activeFilterNames(f: Filters): string[] {
+  const names: string[] = [];
+  if (f.priceMin !== null || f.priceMax !== null) names.push("price");
+  for (const key of Object.keys(f.minimums)) names.push(ANALYTICS_ALIAS[key] ?? key);
+  for (const key of f.required) names.push(ANALYTICS_ALIAS[key] ?? key);
+  if (f.open247) names.push("open247");
+  return names;
 }

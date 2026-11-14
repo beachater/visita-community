@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { BadgeCheck, Check, Eye, Navigation, X } from "lucide-react";
+import { BadgeCheck, Box, Check, Eye, Navigation, X } from "lucide-react";
 import type { AmenityDefinition } from "@visita/shared-types";
 import { Button } from "@visita/ui/button";
 import { cn } from "@visita/ui/utils";
 import { cardActions, type MapVenue } from "@/lib/discovery/venues";
 import { summaryRows } from "@/lib/venue/amenities";
 import { isOpenAt } from "@/lib/venue/hours";
+import { STEP_INSIDE_CLASS } from "./DetailsPanel";
 
 // The card that opens when a pin is tapped. Non-modal: the map stays usable
 // behind it. Shows only what's known about the venue.
@@ -72,8 +73,8 @@ export function PinCard({ venue, definitions, distance, onClose, onWalkthrough, 
 
       <div className="flex flex-wrap gap-2">
         {actions.includes("walkthrough") && (
-          <Button className="flex-1" onClick={onWalkthrough}>
-            Enter 3D walkthrough
+          <Button className={cn("flex-1", STEP_INSIDE_CLASS)} onClick={onWalkthrough}>
+            <Box /> Step inside in 3D
           </Button>
         )}
         {actions.includes("demand") &&
