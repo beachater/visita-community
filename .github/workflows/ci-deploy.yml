@@ -92,10 +92,12 @@ jobs:
           version: 3.1.0
       - name: Link hosted project
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      # Supabase CLI v3 pushes to the local database by default; --remote
+      # targets the project linked above.
       - name: Preview pending migrations
-        run: supabase db push --dry-run
+        run: supabase db push --remote --dry-run
       - name: Apply pending migrations
-        run: supabase db push
+        run: supabase db push --remote
       # Astro prerenders cafe data during build, so hosted schema must match
       # the new consumer queries before either Worker is built.
       - name: Build consumer Worker
