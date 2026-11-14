@@ -20,6 +20,7 @@
     "@supabase/supabase-js": "^2.117.2",
     "@tailwindcss/vite": "^4.3.3",
     "@visita/shared-types": "workspace:*",
+    "@visita/splat": "workspace:*",
     "@visita/ui": "workspace:*",
     "@visita/uploads": "workspace:*",
     "astro": "^7.3.4",

@@ -25,14 +25,17 @@ export function createWalkController(pc: typeof PC, walkable: Point2[] = []): PC
     override update(frame: Parameters<FlyUpdate>[0], dt: number): ReturnType<FlyUpdate> {
       const self = this as unknown as PoseInternals;
       const { move, rotate } = frame.read();
-      self._targetPose.rotate(angles.set(-rotate[1], -rotate[0], 0));
+      // Input frames are fixed-length: move is [x, y, z], rotate is [yaw, pitch, roll].
+      const [moveX = 0, , moveZ = 0] = move;
+      const [yaw = 0, pitch = 0] = rotate;
+      self._targetPose.rotate(angles.set(-pitch, -yaw, 0));
 
       rotation.setFromEulerAngles(0, self._pose.angles.y, 0);
       rotation.transformVector(pc.Vec3.FORWARD, forward);
       rotation.transformVector(pc.Vec3.RIGHT, right);
       offset.set(0, 0, 0);
-      offset.add(forward.mulScalar(move[2]));
-      offset.add(right.mulScalar(move[0]));
+      offset.add(forward.mulScalar(moveZ));
+      offset.add(right.mulScalar(moveX));
       self._targetPose.move(offset);
 
       if (walkable.length >= 3) {
