@@ -157,7 +157,7 @@ export function WalkthroughScreen({ cafe, definitions, profile, onClose }: Props
 
       <SplatViewer ref={viewerRef} cafeName={cafe.name} src={splatSrc(cafe.splatKey)} previewSrc={cafe.previewKey ? splatSrc(cafe.previewKey) : undefined} profile={profile} experience={cafe.scanExperience} />
       {jumping && <div className="pointer-events-none absolute inset-0 z-10 bg-scan/80" aria-hidden="true" />}
-      {stops.length > 0 && <nav aria-label="Cafe tour stops" className="absolute bottom-[max(5rem,env(safe-area-inset-bottom))] left-1/2 z-20 md:left-[calc(50%+var(--panel-w)/2+0.375rem)] flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#042c53]/80 p-1 text-white shadow-lg backdrop-blur-md">
+      {stops.length > 0 && <nav aria-label="Cafe tour stops" className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] z-20 flex items-center md:right-auto md:bottom-[max(5rem,env(safe-area-inset-bottom))] md:left-[calc(50%+var(--panel-w)/2+0.375rem)] md:-translate-x-1/2 gap-2 rounded-full border border-white/20 bg-[#042c53]/80 p-1 text-white shadow-lg backdrop-blur-md">
         <Button variant="ghost" size="icon-sm" className="text-white hover:text-white" aria-label="Previous stop" disabled={jumping || stopIndex <= 0} onClick={() => goToStop(stopIndex - 1)}><ChevronLeft /></Button>
         <span className="max-w-28 truncate text-center text-xs sm:max-w-48">{stopIndex < 0 ? "Explore or start tour" : `${stopIndex + 1}/${stops.length} · ${stops[stopIndex]?.label}`}</span>
         <Button variant="ghost" size="icon-sm" className="text-white hover:text-white" aria-label="Next stop" disabled={jumping || stopIndex >= stops.length - 1} onClick={() => goToStop(stopIndex + 1)}><ChevronRight /></Button>
